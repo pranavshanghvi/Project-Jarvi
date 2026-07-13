@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Regulatory Reporting Expert</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+  #log { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .msg { padding: 10px 14px; border-radius: 10px; max-width: 85%; white-space: pre-wrap; }
+  .user { align-self: flex-end; background: #d6e4ff; }
+  .assistant { align-self: flex-start; background: #f0f0f0; }
+  .citations { font-size: 12px; color: #666; margin-top: 6px; }
+  #talk { width: 100%; padding: 20px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; }
+  #talk.recording { background: #d33; color: white; }
+  #status { text-align: center; color: #888; margin-top: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h2>Regulatory Reporting Expert</h2>
+  <div id="log"></div>
+  <button id="talk">Hold to talk</button>
+  <div id="status">Idle</div>
+
+<script>
+const BACKEND_URL = "http://localhost:8000";
+const log = document.getElementById("log");
+const talkBtn = document.getElementById("talk");
+const statusEl = document.getElementById("status");
+let history = [];
+
+function addMessage(role, text, citations) {
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  if (citations && citations.length) {
+    const cite = document.createElement("div");
+    cite.className = "citations";
+    cite.textContent = "Sources: " + citations.map(c => `${c.source} #${c.chunk}`).join(", ");
+    div.appendChild(cite);
+  }
+  log.appendChild(div);
+  div.scrollIntoView({ behavior: "smooth" });
+}
+
+async function sendMessage(text) {
+  addMessage("user", text);
+  history.push({ role: "user", content: text });
+  statusEl.textContent = "Thinking...";
+  try {
+    const res = await fetch(`${BACKEND_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, history: history.slice(0, -1) }),
+    });
+    const data = await res.json();
+    addMessage("assistant", data.answer, data.citations);
+    history.push({ role: "assistant", content: data.answer });
+    speak(data.answer);
+    statusEl.textContent = "Idle";
+  } catch (err) {
+    statusEl.textContent = "Error: " + err.message;
+  }
+}
+
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(utter);
+}
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    sendMessage(transcript);
+  };
+  recognition.onerror = (event) => {
+    statusEl.textContent = "Mic error: " + event.error;
+  };
+  recognition.onend = () => {
+    talkBtn.classList.remove("recording");
+  };
+} else {
+  statusEl.textContent = "Speech recognition not supported in this browser (use Chrome/Edge).";
+  talkBtn.disabled = true;
+}
+
+function startTalking() {
+  if (!recognition) return;
+  talkBtn.classList.add("recording");
+  statusEl.textContent = "Listening...";
+  recognition.start();
+}
+function stopTalking() {
+  if (!recognition) return;
+  recognition.stop();
+}
+
+talkBtn.addEventListener("mousedown", startTalking);
+talkBtn.addEventListener("mouseup", stopTalking);
+talkBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startTalking(); });
+talkBtn.addEventListener("touchend", (e) => { e.preventDefault(); stopTalking(); });
+</script>
+</body>
+</html>
