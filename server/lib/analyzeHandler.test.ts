@@ -105,4 +105,22 @@ describe('analyze handler (vercel dev substitute)', () => {
 
     expect(res.statusCode).toBe(405);
   });
+
+  it('returns 502 when Claude API fails', async () => {
+    // Get the mocked Anthropic constructor and make it return a failing client for this test
+    const Anthropic = require('@anthropic-ai/sdk');
+    Anthropic.mockImplementationOnce(() => ({
+      messages: {
+        create: jest.fn().mockRejectedValue(new Error('Claude API error')),
+      },
+    }));
+
+    const fakeBase64 = 'ZmFrZS1pbWFnZS1kYXRh';
+    const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' });
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(502);
+    expect(res.jsonBody.error).toBe('Claude API error');
+  });
 });
