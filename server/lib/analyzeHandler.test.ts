@@ -1,0 +1,108 @@
+/**
+ * Substitute for the manual `vercel dev` + curl verification step (Step 12
+ * of the task brief). This session cannot run a long-lived local server and
+ * curl it from a second terminal in parallel, and has no real food photo to
+ * test with. Instead, this test imports the actual handler from
+ * `api/analyze.ts` (which itself imports analyzeImageWithClaude and
+ * parseClaudeResponse) with a mocked Anthropic client and a tiny fake
+ * base64 string, and drives it with plain mock req/res objects to confirm:
+ *   - a well-formed mocked Claude response yields HTTP 200 with {"items": [...]}
+ *   - a missing imageBase64 field yields an appropriate error status
+ *
+ * A human should still run `vercel dev` with a real photo before shipping.
+ */
+
+jest.mock('@anthropic-ai/sdk', () => {
+  return jest.fn().mockImplementation(() => ({
+    messages: {
+      create: jest.fn().mockResolvedValue({
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              items: [
+                {
+                  name: 'Grilled chicken',
+                  confidence: 'normal',
+                  portionDescription: '1 breast, ~150g',
+                  nutrients: {
+                    calories: 250,
+                    proteinG: 40,
+                    carbsG: 0,
+                    fatG: 8,
+                    saturatedFatG: 2,
+                    fiberG: 0,
+                    sugarG: 0,
+                    sodiumMg: 90,
+                    cholesterolMg: 100,
+                  },
+                },
+              ],
+            }),
+          },
+        ],
+      }),
+    },
+  }));
+});
+
+import handler from '../api/analyze';
+
+/** Minimal mock of VercelRequest/VercelResponse sufficient for this handler. */
+function createMockReqRes(method: string, body: unknown) {
+  const req: any = { method, body };
+  const res: any = {
+    statusCode: undefined as number | undefined,
+    jsonBody: undefined as unknown,
+    status(code: number) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload: unknown) {
+      this.jsonBody = payload;
+      return this;
+    },
+  };
+  return { req, res };
+}
+
+describe('analyze handler (vercel dev substitute)', () => {
+  it('returns HTTP 200 with a well-formed {"items": [...]} for a mocked success case', async () => {
+    const fakeBase64 = 'ZmFrZS1pbWFnZS1kYXRh'; // not a real image; the mock never decodes it
+    const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' });
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.jsonBody.items).toHaveLength(1);
+    expect(res.jsonBody.items[0].name).toBe('Grilled chicken');
+    expect(res.jsonBody.items[0].nutrients).toEqual({
+      calories: 250,
+      proteinG: 40,
+      carbsG: 0,
+      fatG: 8,
+      saturatedFatG: 2,
+      fiberG: 0,
+      sugarG: 0,
+      sodiumMg: 90,
+      cholesterolMg: 100,
+    });
+  });
+
+  it('returns an error status when imageBase64 is missing', async () => {
+    const { req, res } = createMockReqRes('POST', {});
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.jsonBody.error).toBe('imageBase64 is required');
+  });
+
+  it('returns 405 for non-POST methods', async () => {
+    const { req, res } = createMockReqRes('GET', {});
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(405);
+  });
+});

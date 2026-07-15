@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "functions": {
+    "api/analyze.ts": { "memory": 512, "maxDuration": 30 }
+  }
+}
