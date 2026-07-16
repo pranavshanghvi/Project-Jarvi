@@ -1,22 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import MealSection from '../components/MealSection';
-import { getEntriesForDate, StoredEntry } from '../db/entriesRepository';
+import { getEntriesForDate, StoredEntry, updateMealType } from '../db/entriesRepository';
 import { aggregateDailyTotals } from '../nutrition/aggregation';
 import { MealType, NutrientProfile } from '../types/nutrition';
 
 const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export default function DailyViewScreen() {
   const [entries, setEntries] = useState<StoredEntry[]>([]);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     getEntriesForDate(todayKey()).then(setEntries);
   }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  async function handleMealTypeChange(entryId: number, nextMealType: MealType) {
+    await updateMealType(entryId, nextMealType);
+    refetch();
+  }
 
   const allItemNutrients: NutrientProfile[] = entries.flatMap((e) => e.items.map((i) => i.nutrients));
   const totals = aggregateDailyTotals(allItemNutrients);
@@ -26,7 +39,12 @@ export default function DailyViewScreen() {
       <Text style={styles.totalsHeading}>Today's totals</Text>
       <Text style={styles.totalsLine}>{Math.round(totals.calories)} cal · {Math.round(totals.proteinG)}g protein · {Math.round(totals.carbsG)}g carbs · {Math.round(totals.fatG)}g fat</Text>
       {MEAL_ORDER.map((mealType) => (
-        <MealSection key={mealType} mealType={mealType} entries={entries.filter((e) => e.mealType === mealType)} />
+        <MealSection
+          key={mealType}
+          mealType={mealType}
+          entries={entries.filter((e) => e.mealType === mealType)}
+          onMealTypeChange={handleMealTypeChange}
+        />
       ))}
     </ScrollView>
   );

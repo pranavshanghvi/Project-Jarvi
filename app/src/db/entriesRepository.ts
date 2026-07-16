@@ -104,19 +104,31 @@ async function fetchEntriesWithItems(entryRows: any[]): Promise<StoredEntry[]> {
 }
 
 export async function getEntriesForDate(dateKey: string): Promise<StoredEntry[]> {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endOfDay = new Date(year, month - 1, day + 1, 0, 0, 0, 0);
   const db = await getDatabase();
   const rows = await db.getAllAsync(
-    "SELECT * FROM entries WHERE substr(timestamp, 1, 10) = ? ORDER BY timestamp ASC;",
-    [dateKey]
+    'SELECT * FROM entries WHERE timestamp >= ? AND timestamp < ? ORDER BY timestamp ASC;',
+    [startOfDay.toISOString(), endOfDay.toISOString()]
   );
   return fetchEntriesWithItems(rows);
 }
 
 export async function getEntriesInRange(startKey: string, endKey: string): Promise<StoredEntry[]> {
+  const [sy, sm, sd] = startKey.split('-').map(Number);
+  const [ey, em, ed] = endKey.split('-').map(Number);
+  const startOfRange = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+  const endOfRange = new Date(ey, em - 1, ed + 1, 0, 0, 0, 0);
   const db = await getDatabase();
   const rows = await db.getAllAsync(
-    "SELECT * FROM entries WHERE substr(timestamp, 1, 10) BETWEEN ? AND ? ORDER BY timestamp ASC;",
-    [startKey, endKey]
+    'SELECT * FROM entries WHERE timestamp >= ? AND timestamp < ? ORDER BY timestamp ASC;',
+    [startOfRange.toISOString(), endOfRange.toISOString()]
   );
   return fetchEntriesWithItems(rows);
+}
+
+export async function updateMealType(entryId: number, mealType: MealType): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('UPDATE entries SET meal_type = ? WHERE id = ?;', [mealType, entryId]);
 }
