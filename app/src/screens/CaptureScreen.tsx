@@ -1,9 +1,20 @@
 import { useState } from 'react';
 import { Alert, Button, Image, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+// Expo SDK 57 replaced the old FileSystem API (documentDirectory/copyAsync) with the
+// File/Directory/Paths classes on the default export. The legacy submodule preserves
+// the old surface we use here.
+import * as FileSystem from 'expo-file-system/legacy';
 
 interface Props {
   onPhotoCaptured: (uri: string) => void;
+}
+
+async function persistPhoto(cacheUri: string): Promise<string> {
+  const filename = `${Date.now()}.jpg`;
+  const destUri = `${FileSystem.documentDirectory}${filename}`;
+  await FileSystem.copyAsync({ from: cacheUri, to: destUri });
+  return destUri;
 }
 
 export default function CaptureScreen({ onPhotoCaptured }: Props) {
@@ -17,8 +28,9 @@ export default function CaptureScreen({ onPhotoCaptured }: Props) {
     }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!result.canceled) {
-      setPreviewUri(result.assets[0].uri);
-      onPhotoCaptured(result.assets[0].uri);
+      const persistentUri = await persistPhoto(result.assets[0].uri);
+      setPreviewUri(persistentUri);
+      onPhotoCaptured(persistentUri);
     }
   }
 
@@ -30,8 +42,9 @@ export default function CaptureScreen({ onPhotoCaptured }: Props) {
     }
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
     if (!result.canceled) {
-      setPreviewUri(result.assets[0].uri);
-      onPhotoCaptured(result.assets[0].uri);
+      const persistentUri = await persistPhoto(result.assets[0].uri);
+      setPreviewUri(persistentUri);
+      onPhotoCaptured(persistentUri);
     }
   }
 
