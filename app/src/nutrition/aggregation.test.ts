@@ -31,7 +31,7 @@ describe('aggregateDailyTotals', () => {
 
 describe('buildTrend', () => {
   it('returns one point per day, oldest first, filling gaps with zero totals', () => {
-    const referenceDate = new Date(2026, 6, 13); // 2026-07-13
+    const referenceDate = new Date(Date.UTC(2026, 6, 13)); // 2026-07-13 (UTC)
     const entriesByDate = {
       '2026-07-13': [profile(500)],
       '2026-07-11': [profile(300)],
