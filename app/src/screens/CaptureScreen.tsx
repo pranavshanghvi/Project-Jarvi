@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Button, Image, StyleSheet, View } from 'react-native';
+import { Alert, Button, Image, Platform, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 // Expo SDK 57 replaced the old FileSystem API (documentDirectory/copyAsync) with the
 // File/Directory/Paths classes on the default export. The legacy submodule preserves
-// the old surface we use here.
+// the old surface we use here. This module isn't available on web, so persistPhoto
+// skips it there — the browser already hands back a stable blob/data URI.
 import * as FileSystem from 'expo-file-system/legacy';
 
 interface Props {
@@ -11,6 +12,9 @@ interface Props {
 }
 
 async function persistPhoto(cacheUri: string): Promise<string> {
+  if (Platform.OS === 'web') {
+    return cacheUri;
+  }
   const filename = `${Date.now()}.jpg`;
   const destUri = `${FileSystem.documentDirectory}${filename}`;
   await FileSystem.copyAsync({ from: cacheUri, to: destUri });

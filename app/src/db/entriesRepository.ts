@@ -1,5 +1,12 @@
+import { Platform } from 'react-native';
 import { getDatabase } from './client';
 import { DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
+import {
+  createEntryWeb,
+  getEntriesForDateWeb,
+  getEntriesInRangeWeb,
+  updateMealTypeWeb,
+} from './webStorage';
 
 export interface StoredItem {
   id: number;
@@ -67,6 +74,9 @@ export async function createEntry(
   mealType: MealType,
   itemsWithPortions: { item: DetectedFoodItem; portionMultiplier: number }[]
 ): Promise<number> {
+  if (Platform.OS === 'web') {
+    return createEntryWeb(photoPath, mealType, itemsWithPortions);
+  }
   const db = await getDatabase();
   const timestamp = new Date().toISOString();
   const entryResult = await db.runAsync(
@@ -104,6 +114,9 @@ async function fetchEntriesWithItems(entryRows: any[]): Promise<StoredEntry[]> {
 }
 
 export async function getEntriesForDate(dateKey: string): Promise<StoredEntry[]> {
+  if (Platform.OS === 'web') {
+    return getEntriesForDateWeb(dateKey);
+  }
   const [year, month, day] = dateKey.split('-').map(Number);
   const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
   const endOfDay = new Date(year, month - 1, day + 1, 0, 0, 0, 0);
@@ -116,6 +129,9 @@ export async function getEntriesForDate(dateKey: string): Promise<StoredEntry[]>
 }
 
 export async function getEntriesInRange(startKey: string, endKey: string): Promise<StoredEntry[]> {
+  if (Platform.OS === 'web') {
+    return getEntriesInRangeWeb(startKey, endKey);
+  }
   const [sy, sm, sd] = startKey.split('-').map(Number);
   const [ey, em, ed] = endKey.split('-').map(Number);
   const startOfRange = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
@@ -129,6 +145,9 @@ export async function getEntriesInRange(startKey: string, endKey: string): Promi
 }
 
 export async function updateMealType(entryId: number, mealType: MealType): Promise<void> {
+  if (Platform.OS === 'web') {
+    return updateMealTypeWeb(entryId, mealType);
+  }
   const db = await getDatabase();
   await db.runAsync('UPDATE entries SET meal_type = ? WHERE id = ?;', [mealType, entryId]);
 }
