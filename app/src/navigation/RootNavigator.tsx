@@ -73,7 +73,13 @@ function ConfirmScreenWrapper({ route, navigation }: any) {
     <ConfirmScreen
       items={items}
       photoUri={photoUri}
-      onSaved={() => navigation.navigate('DailyView')}
+      onSaved={() =>
+        // Reset (not navigate) so Confirm/Capture/Home are cleared from the
+        // stack entirely. Otherwise DailyView's header back button would
+        // return to Confirm with the same items still loaded and Save still
+        // enabled, letting the user create a duplicate entry with one tap.
+        navigation.reset({ index: 0, routes: [{ name: 'DailyView' }] })
+      }
     />
   );
 }
@@ -85,7 +91,23 @@ export default function RootNavigator() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Capture" component={CaptureScreenWrapper} options={{ title: 'Log food' }} />
         <Stack.Screen name="Confirm" component={ConfirmScreenWrapper} options={{ title: 'Confirm' }} />
-        <Stack.Screen name="DailyView" component={DailyViewScreen} options={{ title: "Today" }} />
+        <Stack.Screen
+          name="DailyView"
+          component={DailyViewScreen}
+          options={({ navigation }) => ({
+            title: 'Today',
+            headerBackVisible: false,
+            headerLeft: () => (
+              <Button
+                title="Home"
+                onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] })}
+              />
+            ),
+            headerRight: () => (
+              <Button title="Dashboard" onPress={() => navigation.navigate('Dashboard')} />
+            ),
+          })}
+        />
         <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
       </Stack.Navigator>
     </NavigationContainer>
