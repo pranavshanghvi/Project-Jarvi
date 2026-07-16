@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { Button, ScrollView, StyleSheet } from 'react-native';
 import FoodItemCard from '../components/FoodItemCard';
 import { DetectedFoodItem, NutrientProfile } from '../types/nutrition';
+import { createEntry } from '../db/entriesRepository';
+import { inferMealType } from '../nutrition/mealTagging';
 
 interface Props {
   items: DetectedFoodItem[];
-  onConfirm: (result: { item: DetectedFoodItem; portionMultiplier: number }[]) => void;
+  photoUri: string;
+  onSaved: (entryId: number) => void;
 }
 
-export default function ConfirmScreen({ items, onConfirm }: Props) {
+export default function ConfirmScreen({ items, photoUri, onSaved }: Props) {
   const [adjusted, setAdjusted] = useState(
     items.map((item) => ({ item, portionMultiplier: 1, nutrients: item.nutrients }))
   );
@@ -25,13 +28,14 @@ export default function ConfirmScreen({ items, onConfirm }: Props) {
     setAdjusted((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function handleConfirm() {
-    onConfirm(
-      adjusted.map(({ item, portionMultiplier, nutrients }) => ({
-        item: { ...item, nutrients },
-        portionMultiplier,
-      }))
-    );
+  async function handleConfirm() {
+    const mealType = inferMealType(new Date());
+    const itemsWithPortions = adjusted.map(({ item, portionMultiplier, nutrients }) => ({
+      item: { ...item, nutrients },
+      portionMultiplier,
+    }));
+    const entryId = await createEntry(photoUri, mealType, itemsWithPortions);
+    onSaved(entryId);
   }
 
   return (
