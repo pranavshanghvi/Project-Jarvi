@@ -6,7 +6,10 @@ import { buildTrend } from '../nutrition/aggregation';
 import { NutrientProfile } from '../types/nutrition';
 
 function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export default function DashboardScreen() {
@@ -20,7 +23,7 @@ export default function DashboardScreen() {
     getEntriesInRange(dateKey(start), dateKey(today)).then((entries) => {
       const grouped: Record<string, NutrientProfile[]> = {};
       for (const entry of entries) {
-        const key = entry.timestamp.slice(0, 10);
+        const key = dateKey(new Date(entry.timestamp));
         grouped[key] = grouped[key] ?? [];
         grouped[key].push(...entry.items.map((i) => i.nutrients));
       }
