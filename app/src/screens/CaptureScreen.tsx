@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Image, StyleSheet, View } from 'react-native';
+import { Alert, Button, Image, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 interface Props {
@@ -11,7 +11,10 @@ export default function CaptureScreen({ onPhotoCaptured }: Props) {
 
   async function takePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      Alert.alert('Camera Permission Required', 'Please enable camera access in your device settings to use this feature.');
+      return;
+    }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!result.canceled) {
       setPreviewUri(result.assets[0].uri);
@@ -21,7 +24,10 @@ export default function CaptureScreen({ onPhotoCaptured }: Props) {
 
   async function pickFromLibrary() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      Alert.alert('Photo Library Permission Required', 'Please enable photo library access in your device settings to use this feature.');
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
     if (!result.canceled) {
       setPreviewUri(result.assets[0].uri);
