@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, ScrollView, StyleSheet } from 'react-native';
+import { Alert, Button, ScrollView, StyleSheet } from 'react-native';
 import FoodItemCard from '../components/FoodItemCard';
 import { DetectedFoodItem, NutrientProfile } from '../types/nutrition';
 import { createEntry } from '../db/entriesRepository';
@@ -29,13 +29,17 @@ export default function ConfirmScreen({ items, photoUri, onSaved }: Props) {
   }
 
   async function handleConfirm() {
-    const mealType = inferMealType(new Date());
-    const itemsWithPortions = adjusted.map(({ item, portionMultiplier, nutrients }) => ({
-      item: { ...item, nutrients },
-      portionMultiplier,
-    }));
-    const entryId = await createEntry(photoUri, mealType, itemsWithPortions);
-    onSaved(entryId);
+    try {
+      const mealType = inferMealType(new Date());
+      const itemsWithPortions = adjusted.map(({ item, portionMultiplier, nutrients }) => ({
+        item: { ...item, nutrients },
+        portionMultiplier,
+      }));
+      const entryId = await createEntry(photoUri, mealType, itemsWithPortions);
+      onSaved(entryId);
+    } catch {
+      Alert.alert('Save failed', 'Could not save this entry. Please try again.');
+    }
   }
 
   return (
