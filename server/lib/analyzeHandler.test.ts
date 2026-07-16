@@ -49,8 +49,8 @@ jest.mock('@anthropic-ai/sdk', () => {
 import handler from '../api/analyze';
 
 /** Minimal mock of VercelRequest/VercelResponse sufficient for this handler. */
-function createMockReqRes(method: string, body: unknown) {
-  const req: any = { method, body };
+function createMockReqRes(method: string, body: unknown, headers: Record<string, string> = {}) {
+  const req: any = { method, body, headers };
   const res: any = {
     statusCode: undefined as number | undefined,
     jsonBody: undefined as unknown,
@@ -122,5 +122,45 @@ describe('analyze handler (vercel dev substitute)', () => {
 
     expect(res.statusCode).toBe(502);
     expect(res.jsonBody.error).toBe('Claude API error');
+  });
+});
+
+describe('analyze handler (shared-secret gate)', () => {
+  const fakeBase64 = 'ZmFrZS1pbWFnZS1kYXRh';
+
+  afterEach(() => {
+    delete process.env.PROXY_SHARED_SECRET;
+  });
+
+  it('allows requests through with no secret header when PROXY_SHARED_SECRET is unset', async () => {
+    delete process.env.PROXY_SHARED_SECRET;
+    const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' });
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('rejects requests with a missing or wrong secret when PROXY_SHARED_SECRET is set', async () => {
+    process.env.PROXY_SHARED_SECRET = 'correct-secret';
+    const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' }, {
+      'x-proxy-secret': 'wrong-secret',
+    });
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.jsonBody.error).toBe('Unauthorized');
+  });
+
+  it('allows requests with the correct secret when PROXY_SHARED_SECRET is set', async () => {
+    process.env.PROXY_SHARED_SECRET = 'correct-secret';
+    const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' }, {
+      'x-proxy-secret': 'correct-secret',
+    });
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
   });
 });

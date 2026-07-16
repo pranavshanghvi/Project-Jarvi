@@ -8,6 +8,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  const requiredSecret = process.env.PROXY_SHARED_SECRET;
+  if (requiredSecret) {
+    const providedSecret = req.headers['x-proxy-secret'];
+    if (providedSecret !== requiredSecret) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+  }
+
   const { imageBase64, mimeType } = req.body ?? {};
   if (typeof imageBase64 !== 'string' || imageBase64.length === 0) {
     res.status(400).json({ error: 'imageBase64 is required' });

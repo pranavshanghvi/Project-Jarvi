@@ -5,6 +5,7 @@ import { AnalyzePhotoResponse } from '../types/nutrition';
 
 const QUEUE_KEY = 'jarvi.pendingAnalysis';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
+const PROXY_SECRET = process.env.EXPO_PUBLIC_PROXY_SECRET;
 
 export async function analyzePhoto(photoUri: string): Promise<AnalyzePhotoResponse> {
   const imageBase64 = await FileSystem.readAsStringAsync(photoUri, {
@@ -12,7 +13,10 @@ export async function analyzePhoto(photoUri: string): Promise<AnalyzePhotoRespon
   });
   const response = await fetch(`${API_BASE_URL}/api/analyze`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(PROXY_SECRET ? { 'x-proxy-secret': PROXY_SECRET } : {}),
+    },
     body: JSON.stringify({ imageBase64, mimeType: 'image/jpeg' }),
   });
   if (!response.ok) {
