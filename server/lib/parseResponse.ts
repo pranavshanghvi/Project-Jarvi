@@ -12,10 +12,22 @@ const REQUIRED_NUTRIENT_KEYS: (keyof NutrientProfile)[] = [
   'cholesterolMg',
 ];
 
+function extractJson(raw: string): string {
+  const trimmed = raw.trim();
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  if (fenceMatch) return fenceMatch[1];
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    return trimmed.slice(firstBrace, lastBrace + 1);
+  }
+  return trimmed;
+}
+
 export function parseClaudeResponse(raw: string): AnalyzePhotoResponse {
   let parsed: any;
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(extractJson(raw));
   } catch {
     throw new Error('Claude response was not valid JSON');
   }
