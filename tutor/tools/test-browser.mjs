@@ -195,10 +195,20 @@ console.log('\nthe live tutor');
   });
 
   await page.locator('nav.tabs button[data-v="set"]').click();
+  ok('the tutor is set to answer anything by default, not just gaps',
+     await page.evaluate(() => liveMode()) === 'always');
+  // This page is on file://, as it is when opened from Files on a Mac. The baked-in relative
+  // address is meaningless there and must not be attempted.
+  ok('a relative address is inert when there is no server to be relative to',
+     await page.evaluate(() => prof.endpoint === '/api/ask' && usableEndpoint() === ''));
+  ok('and settings says so rather than claiming it is on',
+     /full https/.test(await page.locator('#livesum').textContent()),
+     await page.locator('#livesum').textContent());
   await page.locator('#endpoint').fill(ENDPOINT);
   await page.locator('#endpoint').blur();
   ok('setting an address turns the live tutor on',
-     /Fills gaps/.test(await page.locator('#livesum').textContent()));
+     /anything/.test(await page.locator('#livesum').textContent()),
+     await page.locator('#livesum').textContent());
 
   // Typing must never spend a call — a free tier does not survive one request per keystroke.
   await page.locator('nav.tabs button[data-v="ask"]').click();
@@ -242,23 +252,39 @@ console.log('\nthe live tutor');
   await context.setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
 
-  // In "gaps only" a question the book itself answers must not go out — the written answer was
-  // checked for this reader and a small free model is not an upgrade on it.
+  // The complaint this replaces: these are answerable, the book has a chapter next to each of
+  // them, and a gate that fires only on "nothing matched" would decide they were already
+  // answered — handing back a passage that never mentions the person asked about.
+  for (const q of ['who was Lorentz',
+                   'why did Einstein name that chapter after him',
+                   'who is Gauss']) {
+    const before2 = calls;
+    await page.locator('nav.tabs button[data-v="ask"]').click();
+    await page.locator('#qbox').fill('');
+    await page.locator('#qbox').fill(q);
+    await page.locator('#qbox').press('Enter');
+    await page.waitForSelector('#answers .ans.live');
+    ok('"' + q + '" reaches the tutor', calls === before2 + 1, calls - before2 + ' calls');
+  }
+  // And the written material is still there, below rather than instead.
+  ok('written explainers still appear under a live answer',
+     /Also written for you/.test(await page.locator('#answers').textContent()));
+
+  // "only the gaps" stays available for someone who wants to conserve a free tier.
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('[data-setlive="gaps"]').click();
   await page.locator('nav.tabs button[data-v="read"]').click();
   if (await page.locator('#backidx').isVisible()) await page.locator('#backidx').click();
   await page.locator('#toc button').nth(25).click();          // §XXV, Gaussian co-ordinates
   await page.waitForSelector('#read-section .sent');
   await page.locator('#read-section .sent').nth(1).click();
   const covered = calls;
-  await page.locator('#askinput').fill('who exactly was Gauss');
+  await page.locator('#askinput').fill('what are Gaussian co-ordinates');
   await page.locator('#askinput').press('Enter');
   await page.waitForSelector('#v-ask.on');
-  ok('a question the book covers is answered from the book, not the network',
-     calls === covered, calls - covered + ' calls');
-  ok('and that answer is the right section',
-     /Gaussian/i.test(await page.locator('#answers').textContent()));
+  ok('in "only the gaps" a covered question stays offline', calls === covered,
+     calls - covered + ' calls');
 
-  // "always" is for when the reader wants a conversation rather than a lookup.
   await page.locator('nav.tabs button[data-v="set"]').click();
   await page.locator('[data-setlive="always"]').click();
   await page.locator('nav.tabs button[data-v="read"]').click();
@@ -267,7 +293,7 @@ console.log('\nthe live tutor');
   await page.locator('#askinput').fill('why does he need co-ordinates at all here');
   await page.locator('#askinput').press('Enter');
   await page.waitForSelector('#answers .ans.live');
-  ok('in "always" mode a question about a line goes live', calls === beforeLine + 1);
+  ok('a question about a line goes live', calls === beforeLine + 1);
   ok('and carries the section text, so the model is not answering from memory',
      !!(lastBody.section && lastBody.section.text && lastBody.section.text.length > 200),
      JSON.stringify(lastBody.section && lastBody.section.title));
@@ -331,7 +357,7 @@ console.log('\nthe live tutor');
   ok('and the app says why rather than failing silently',
      /switched off/i.test(await page.locator('#answers .miss').first().textContent()));
   await page.locator('nav.tabs button[data-v="set"]').click();
-  await page.locator('[data-setlive="gaps"]').click();
+  await page.locator('[data-setlive="always"]').click();
 
   ok('saved answers are counted in settings',
      /kept on this device/.test(await page.locator('#cachecount').textContent()));

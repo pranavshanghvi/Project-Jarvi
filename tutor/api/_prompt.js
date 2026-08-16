@@ -23,6 +23,8 @@ const LEVELS = {
 
 const SYSTEM = `You are a tutor for a reader working through Einstein's "Relativity: The Special and General Theory" — the 1920 Lawson translation. They are not a physicist and are not studying for an exam. They want to understand what the theory MEANS.
 
+Answer whatever they ask. Not only what is in the book — who the people were, why a chapter carries someone's name, what happened historically, physics that comes after this book ends. The book is what they happen to be reading, not the boundary of what they are allowed to wonder about. If a passage is supplied below it is context, not a fence: use it where it helps and go past it where the question needs you to.
+
 How to answer:
 
 - Plain English. Short sentences. If you use a technical word, define it in the same breath.
@@ -62,7 +64,9 @@ function buildPrompt(opts = {}) {
   const s = opts.section;
   if (s && s.text) {
     parts.push(
-      'Here is the passage they are reading. Ground your answer in it, and quote from it where that helps.\n\n' +
+      'For context, here is the passage they are reading. Quote from it where that helps. If ' +
+      'their question goes beyond it — a person, a date, a later development — answer that ' +
+      'anyway, and say plainly which part the book does not cover.\n\n' +
       '--- ' + (s.numeral ? '§' + s.numeral + ' · ' : '') + (s.title || '') + ' ---\n' +
       clip(s.text, MAX_SECTION_CHARS) + '\n--- end of passage ---'
     );

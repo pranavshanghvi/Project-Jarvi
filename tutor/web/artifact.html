@@ -228,10 +228,11 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
       <input class="q" id="endpoint" style="margin-top:.7rem;font-family:var(--mono);font-size:.8rem"
              placeholder="https://…/api/ask" spellcheck="false" autocapitalize="off">
       <p class="dim" style="margin-top:.5rem;font-size:.78rem">
-        Used only when the written answers do not cover a question, and only when you have a
-        signal. It runs on free models — Groq, Mistral, OpenRouter, Cloudflare. When they are
+        With a signal you can ask it anything — who Lorentz was, why a chapter is named after
+        him, physics past the end of this book. It is not limited to what has been written here.
+        It runs on free models only — Groq, Mistral, OpenRouter, Cloudflare — and when those are
         exhausted it says so and saves the question rather than falling back to anything paid.
-        Answers are kept on this device, so once asked they work offline.
+        Answers are kept on this device, so once asked they work offline too.
       </p>
       <div class="setrow" style="margin-top:.7rem"><span>Answers saved from the live tutor<br>
         <span class="dim" id="cachecount"></span></span><button class="ghost" id="clearcache">Clear</button></div>
@@ -300,7 +301,7 @@ const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 // ── profile ───────────────────────────────────────────────────────────────
 const KEY = "jarvi.relativity.progress";
 const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},
-  queued:[],theme:"auto",endpoint:"https://relativity-tutor-api.vercel.app/api/ask",live:"auto"};
+  queued:[],theme:"auto",endpoint:"https://relativity-tutor-api.vercel.app/api/ask",live:"always"};
 let prof;
 try { prof = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
 catch { prof = structuredClone(defaults); }
@@ -435,10 +436,28 @@ function livePut(q, sec, a){
 }
 
 const endpoint = () => (prof.endpoint || "").trim();
-// "gaps" is the default: the written answers are better than a small model when they exist,
-// because they were written for this reader and checked. Live fills what they do not cover.
-const liveMode = () => prof.live || "gaps";
-function canLive(){ return !!endpoint() && navigator.onLine && liveMode() !== "off"; }
+// "always" is the default, and the reason is a question like "who was Lorentz". The pack has an
+// entry near it and the book has a chapter named after him, so a gate that fires only when
+// nothing matches decides the question is already answered — and hands back a passage about the
+// transformation that never mentions the man. Topically close is not the same as answered, and
+// no rule reliably tells the difference. With a signal, the tutor gets asked. The written
+// explainers still come back underneath it.
+// Anything unrecognised — an older stored value, a hand-edited profile — reads as the default
+// rather than silently behaving like a mode nobody chose.
+const LIVE_VALUES = ["always","gaps","off"];
+const liveMode = () => LIVE_VALUES.includes(prof.live) ? prof.live : "always";
+// A relative endpoint only means something when the page itself came off a web server. Opened
+// straight out of Files on a Mac, "/api/ask" resolves to file:///api/ask, and trying it produces
+// a failure card on a perfectly good offline session. In that case there is no endpoint.
+function usableEndpoint(){
+  const ep = endpoint();
+  if(!ep) return "";
+  const abs = ep.slice(0,8).toLowerCase();
+  if(abs.startsWith("http://") || abs.startsWith("https://")) return ep;
+  const p = location.protocol;
+  return (p === "http:" || p === "https:") ? ep : "";
+}
+function canLive(){ return !!usableEndpoint() && navigator.onLine && liveMode() !== "off"; }
 
 async function askLive(q, ctx){
   const sec = ctx && ctx.section;
@@ -456,7 +475,7 @@ async function askLive(q, ctx){
   const ctl = new AbortController();
   const timer = setTimeout(()=>ctl.abort(), 40000);
   try {
-    const res = await fetch(endpoint(), {
+    const res = await fetch(usableEndpoint(), {
       method: "POST", headers: {"content-type":"application/json"},
       body: JSON.stringify(body), signal: ctl.signal,
     });
@@ -503,7 +522,7 @@ function liveError(e, q){
                  : esc(e.message || "Could not reach the tutor."))
     + '</strong>'
     + (unreachable ? '<p style="margin:.6rem 0 0">Nothing answered at <span style="font-family:var(--mono);font-size:.8rem">'
-        + esc(endpoint()) + '</span>. If that address is wrong, change it in Settings.</p>' : '')
+        + esc(usableEndpoint()) + '</span>. If that address is wrong, change it in Settings.</p>' : '')
     + '<p style="margin:.6rem 0 0">Saved your question — try again later.</p>'
     + (e.declined ? '<details class="more"><summary>What each provider said</summary><p class="dim" '
         + 'style="font-family:var(--mono);font-size:.72rem">'+esc(e.declined.join(" · "))+'</p></details>' : '')
@@ -597,31 +616,53 @@ function answer(q, live){
   const hits = search(q);
   const weak = tooWeak(hits, q);
   const written = hits.map(h => h.kind==="entry" ? renderEntry(h.item) : renderSectionAnswer(h.item)).join("");
+  const wantLive = liveMode() === "always" || weak;
 
   // Already asked this once — the saved answer is as good offline as on, so it comes first and
   // costs nothing.
   const cached = liveGet(q, null);
-  if(cached && (weak || liveMode() === "always")){
-    box.innerHTML = renderLive(cached, q) + written;
+  if(cached && wantLive){
+    box.innerHTML = renderLive(cached, q) + alsoWritten(written);
     box.scrollIntoView({behavior:"smooth",block:"start"});
     return;
   }
-  if(live && canLive() && (weak || liveMode() === "always")){
-    runLive(q, {}, box, "", written);
+  if(live && canLive() && wantLive){
+    // The closest section goes along as context even when the question came from the Ask tab
+    // rather than the reader. "Why is the chapter named after him" needs the chapter.
+    const near = hits.find(h => h.kind === "section");
+    runLive(q, {section: near ? near.item : null}, box, "", alsoWritten(written));
     return;
   }
   if(!weak){
-    box.innerHTML = written;
+    box.innerHTML = written + (wantLive ? offlineNote(q) : "");
     box.scrollIntoView({behavior:"smooth",block:"start"});
     return;
   }
   box.innerHTML = missCard(q) + written;
 }
 
+// A section that mentions Gauss is not an answer to who Gauss was, and offline there is nothing
+// better to give. Saying so — and saving the question — beats letting the passage stand as
+// though it were the reply.
+function offlineNote(q){
+  if(!usableEndpoint() || liveMode() === "off") return "";
+  if(navigator.onLine) return "";
+  queueQuestion(q);
+  return '<p class="dim" style="margin-top:1rem">That is what the book has on it. If you wanted '
+       + 'more than the book says, the tutor can answer properly once you have a signal — '
+       + 'saved the question.</p>';
+}
+
+// Written explainers sit below a live answer rather than instead of it. They are still the
+// better material where they apply — they just are not a reply to the question that was asked.
+function alsoWritten(written){
+  return written ? '<div class="lbl" style="margin-top:1.6rem">Also written for you</div>' + written : "";
+}
+
 // The honest state: nothing written covers this. What it offers depends on what is actually
 // available — an unreachable button is worse than no button.
 function missCard(q){
-  const has = !!endpoint(), on = liveMode() !== "off";
+  const has = !!usableEndpoint(), on = liveMode() !== "off";
   let h = '<div class="miss"><strong>I don\u2019t have a written answer for that one.</strong>';
   if(has && on && navigator.onLine){
     h += '<p style="margin:.6rem 0 0">The live tutor can take it — free models, no cost.</p>'
@@ -824,8 +865,9 @@ function answerLine(question){
   // Asking about a specific line is the strongest case for going live: the section text goes
   // with the question, so even a small model is answering about the page rather than from
   // memory. A typed question here is always deliberate, so it may fire straight away.
-  // "always" means every typed question goes live, here as much as in the Ask box. Explain with
-  // no question typed stays offline either way — that is a lookup, not a conversation.
+  // A typed question about a line goes to the tutor, here as much as in the Ask box — this is
+  // the strongest case for it, since the section travels with the question. Explain with nothing
+  // typed stays offline: that is a lookup, not a question.
   const weak = q ? (tooWeak(search(q, 2), q) || liveMode() === "always") : !picks.length;
   const cached = q ? liveGet(q, s ? s.id : null) : null;
   if(cached && weak) h = header + renderLive(cached, q) + h.slice(header.length);
@@ -920,7 +962,8 @@ function renderPos(){
   document.getElementById("pospill").textContent = "§"+prof.readingPosition;
   const pv = document.getElementById("posval"); if(pv) pv.textContent = "§"+prof.readingPosition;
 }
-const LIVE_MODES = [["gaps","gaps only"],["always","always"],["off","off"]];
+// Named for what the reader gets, not for how the code branches.
+const LIVE_MODES = [["always","any question"],["gaps","only the gaps"],["off","never"]];
 function renderSettings(){
   document.getElementById("themeset").innerHTML = ["auto","light","dark"].map(t =>
     '<button class="pill'+((prof.theme||"auto")===t?' on':'')+'" data-settheme="'+t+'">'+t+'</button>').join("");
@@ -929,10 +972,12 @@ function renderSettings(){
   const ep = document.getElementById("endpoint");
   if(document.activeElement !== ep) ep.value = prof.endpoint || "";
   document.getElementById("livesum").textContent =
-    !endpoint()            ? "No address set — offline answers only"
-    : liveMode() === "off" ? "Switched off"
-    : navigator.onLine     ? (liveMode()==="always" ? "On for every question" : "Fills gaps in the written answers")
-    : "Waiting for a signal";
+    !endpoint()             ? "No address set — offline answers only"
+    : !usableEndpoint()     ? "Needs a full https:// address when opened from a file"
+    : liveMode() === "off"  ? "Never asked"
+    : !navigator.onLine     ? "Waiting for a signal"
+    : liveMode() === "always" ? "Ask it anything while you have a signal"
+    : "Only when nothing is written on it";
   const n = Object.keys(live).length;
   document.getElementById("cachecount").textContent = n ? n + " kept on this device" : "None yet";
   document.getElementById("lvlset").innerHTML = LEVELS.map(l =>
