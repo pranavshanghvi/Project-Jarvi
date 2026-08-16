@@ -119,9 +119,43 @@ p{margin:0 0 .95rem}
 .sec-num{font-family:var(--mono);font-size:.7rem;color:var(--muted);min-width:2.9rem;flex-shrink:0}
 .part-head{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--muted);margin:1.6rem 0 .5rem}
-.read p.para{font-family:var(--serif);font-size:1.06rem;line-height:1.62;cursor:pointer;
-  border-radius:3px;padding:.25rem .4rem;margin:0 -.4rem .9rem;transition:background .12s}
-.read p.para:hover,.read p.para:focus-visible{background:var(--wash)}
+.read p.para{font-family:var(--serif);font-size:1.06rem;line-height:1.72;
+  padding:.1rem 0;margin:0 0 .95rem}
+.sent{cursor:pointer;border-radius:3px;padding:.08em .12em;margin:0 -.12em;
+  transition:background .12s;-webkit-touch-callout:none}
+.sent:hover{background:var(--wash)}
+/* A highlighter pen over the line, not an inverted block — a selection can run to five lines
+   and solid accent across all of them is hard to read back. */
+.sent.sel{background:var(--wash);box-shadow:inset 0 -2px 0 var(--accent)}
+
+/* Ask bar — rises above the tab bar when a line is selected. */
+.askbar{position:fixed;left:0;right:0;z-index:30;background:var(--surface);
+  border-top:1px solid var(--accent);
+  bottom:calc(max(env(safe-area-inset-bottom,0px), 26px) + 44px);
+  padding:.8rem 1.15rem;transform:translateY(140%);
+  /* 140% of its own height still leaves the top border showing as a blue line above the tab
+     bar, so hide it outright once the slide has finished. */
+  visibility:hidden;transition:transform .18s ease-out, visibility 0s linear .18s;
+  box-shadow:0 -8px 24px rgba(0,0,0,.18)}
+.askbar.up{transform:translateY(0);visibility:visible;transition-delay:0s}
+.askbar .quote{font-family:var(--serif);font-size:.9rem;color:var(--soft);
+  border-left:2px solid var(--accent);padding-left:.6rem;margin:0 0 .6rem;
+  max-height:3.4em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.askrow{display:flex;gap:.45rem;align-items:stretch}
+.askrow input{flex:1;min-width:0;padding:.6rem .7rem;font-size:.95rem;font-family:var(--sans);
+  background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:3px}
+.askrow input:focus{outline:none;border-color:var(--accent)}
+.iconbtn{background:var(--surface2);border:1px solid var(--line);color:var(--soft);
+  border-radius:3px;padding:.5rem .7rem;cursor:pointer;font-size:1.05rem;line-height:1;flex-shrink:0}
+.iconbtn.go{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-size:.85rem;font-family:var(--sans)}
+.iconbtn.rec{background:#C0392B;border-color:#C0392B;color:#fff;animation:pulse 1.1s infinite}
+.iconbtn[disabled]{opacity:.35;cursor:default}
+@keyframes pulse{50%{opacity:.55}}
+.heard{font-size:.85rem;color:var(--accent);margin:.5rem 0 0;min-height:1.2em}
+.speak{background:none;border:1px solid var(--line);color:var(--muted);border-radius:3px;
+  padding:.25rem .5rem;font-size:.7rem;font-family:var(--mono);letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;margin-bottom:.9rem}
+.speak.on{border-color:var(--accent);color:var(--accent)}
 .read .eq{font-family:var(--mono);font-size:.8rem;color:var(--muted);padding:.5rem .6rem;
   background:var(--surface2);border:1px solid var(--line2);border-radius:3px;margin:0 0 .9rem}
 .tap-hint{font-size:.78rem;color:var(--muted);font-family:var(--mono);margin-bottom:1.1rem}
@@ -129,6 +163,8 @@ input.q{width:100%;padding:.8rem .9rem;font-size:1rem;font-family:var(--sans);
   background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:3px}
 input.q:focus{outline:none;border-color:var(--accent)}
 .ans{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:1.15rem 1.15rem .3rem;margin:1.2rem 0}
+.ans.hi{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.sent:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .ans h3{font-size:1.12rem;margin:0 0 .2rem;letter-spacing:-.01em}
 .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;
   color:var(--accent);margin:1.25rem 0 .35rem}
@@ -185,7 +221,9 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
   <section class="view" id="v-ask">
     <h1>Ask</h1>
     <p class="dim" style="margin-bottom:1rem">Plain English, with analogies. Works with no signal.</p>
-    <input class="q" id="qbox" placeholder="e.g. what is classical mechanics?" autocomplete="off" enterkeyhint="search">
+    <div class="askrow"><input class="q" id="qbox" placeholder="e.g. what is classical mechanics?" autocomplete="off" enterkeyhint="search">
+      <button class="iconbtn" id="qmic" title="Ask out loud">🎤</button></div>
+    <p class="heard" id="heard2"></p>
     <div id="answers"></div>
   </section>
 
@@ -229,6 +267,17 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
     </p>
   </section>
 
+</div>
+
+<div class="askbar" id="askbar">
+  <p class="quote" id="askquote"></p>
+  <div class="askrow">
+    <button class="iconbtn go" id="askexplain">Explain</button>
+    <input id="askinput" placeholder="ask about this line…" enterkeyhint="send">
+    <button class="iconbtn" id="askmic" title="Ask out loud">🎤</button>
+    <button class="iconbtn" id="askclose" title="Close">✕</button>
+  </div>
+  <p class="heard" id="heard"></p>
 </div>
 
 <nav class="tabs">
@@ -316,10 +365,20 @@ const SECIDX = C.sections.map(s => {
   return {s,f};
 });
 
+// Summing raw counts lets a long entry win on a common word: "does motion affect ageing" was
+// answering with classical mechanics, because "motion" is everywhere in this book and "ageing"
+// is in exactly one place. Weight each term by how rare it is, and saturate repeats, so the one
+// distinctive word in a question is the word that decides.
+const DF = {};
+for(const {f} of IDX)    for(const t in f) DF[t] = (DF[t]||0)+1;
+for(const {f} of SECIDX) for(const t in f) DF[t] = (DF[t]||0)+1;
+const NDOC = IDX.length + SECIDX.length;
+const idf = t => Math.log(1 + NDOC/(1 + (DF[t]||0)));
+
 function search(q, limit=3){
   const terms = norm(q).filter(t=>!STOP.has(t));
   if(!terms.length) return [];
-  const score = f => terms.reduce((n,t)=>n+(f[t]||0),0);
+  const score = f => terms.reduce((n,t)=>n + (f[t] ? Math.sqrt(f[t]) * idf(t) : 0), 0);
   const hits = [];
   for(const {e,f} of IDX){ const sc = score(f); if(sc>0) hits.push({kind:"entry",item:e,score:sc}); }
   for(const {s,f} of SECIDX){ const sc = score(f)*0.7; if(sc>0) hits.push({kind:"section",item:s,score:sc}); }
@@ -338,6 +397,7 @@ function renderEntry(e){
   let h = '<div class="ans"><h3>'+esc(e.title)+'</h3>';
   h += '<div class="lvlbar">'+LEVELS.map(l=>'<button data-lvl="'+l+'"'+(l===lvl?' class="on"':'')+'>'+LEVEL_LABEL[l]+'</button>').join("")+'</div>';
   h += '<div class="lvlbody">'+para(e.levels[lvl] || e.levels.plain)+'</div>';
+  if(TTS) h += '<button class="speak">▶ Listen</button>';
 
   for(const a of (e.analogies||[])){
     h += '<div class="lbl">Analogy</div>'+para(a.text);
@@ -468,6 +528,128 @@ function explainPasted(text){
   out.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
+// ── speech ────────────────────────────────────────────────────────────────
+// Two different capabilities with different offline stories, so they are tested separately.
+// Synthesis runs on-device and works on a plane. Recognition on iOS goes to Apple's servers,
+// so the mic is hidden when there is no signal rather than failing silently on tap.
+const TTS = window.speechSynthesis || null;
+const SR  = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+function speak(text){
+  if(!TTS) return;
+  TTS.cancel();
+  // Strip markdown emphasis so it isn't read out as "asterisk".
+  const u = new SpeechSynthesisUtterance(String(text).replace(/\\*\\*/g,"").slice(0, 4000));
+  u.rate = 1.0; u.pitch = 1.0; u.lang = "en-GB";
+  TTS.speak(u);
+}
+function stopSpeaking(){ if(TTS) TTS.cancel(); }
+
+// Read out the plain-English answer only — not the analogy, the caveats and the follow-ups,
+// which are for reading rather than listening.
+function speakAnswer(el){
+  if(!el) return;
+  const title = el.querySelector("h3");
+  const body = el.querySelector(".lvlbody");
+  // Arc cards and section cards have no level body — read their paragraphs instead, rather
+  // than having the Listen button do nothing at all.
+  const text = body ? body.textContent
+    : [...el.querySelectorAll(":scope > p")].map(p=>p.textContent).join(" ");
+  if(text.trim()) speak((title ? title.textContent + ". " : "") + text);
+}
+
+let recog = null, listening = false;
+function micAvailable(){ return !!SR && navigator.onLine; }
+
+function startListening(onText){
+  if(!SR) return;
+  if(listening){ try{ recog.stop(); }catch{} return; }
+  recog = new SR();
+  recog.lang = "en-GB"; recog.interimResults = true; recog.continuous = false;
+  const heard = document.getElementById("askbar").classList.contains("up")
+    ? document.getElementById("heard") : document.getElementById("heard2");
+  const btn = document.getElementById("askbar").classList.contains("up")
+    ? document.getElementById("askmic") : document.getElementById("qmic");
+  listening = true; btn.classList.add("rec"); heard.textContent = "Listening…";
+  recog.onresult = e => {
+    let txt = "";
+    for(const r of e.results) txt += r[0].transcript;
+    heard.textContent = txt;
+    if(e.results[e.results.length-1].isFinal){ onText(txt.trim()); }
+  };
+  recog.onerror = e => {
+    heard.textContent = e.error === "not-allowed"
+      ? "Microphone blocked — allow it in Safari settings."
+      : "Didn't catch that. Try again, or type it.";
+  };
+  recog.onend = () => { listening = false; btn.classList.remove("rec"); };
+  try { recog.start(); } catch { listening = false; btn.classList.remove("rec"); }
+}
+
+// ── the ask bar ───────────────────────────────────────────────────────────
+// Splitting on sentence enders, keeping the punctuation. Abbreviations like "e.g." will
+// occasionally split early; a wrong split costs a slightly short quote, which is harmless,
+// whereas merging sentences would defeat the point of line-level selection.
+function sentences(t){
+  const m = String(t).match(/[^.!?]+[.!?]+["'”’)\\]]*\\s*/g);
+  return (m && m.length) ? m.map(s=>s.trim()).filter(Boolean) : [String(t)];
+}
+
+let selectedLine = "", selectedSection = null, currentSection = null;
+
+function openAsk(line, section){
+  selectedLine = line; selectedSection = section;
+  document.getElementById("askquote").textContent = line;
+  document.getElementById("heard").textContent = "";
+  document.getElementById("askinput").value = "";
+  const mic = document.getElementById("askmic");
+  mic.disabled = !micAvailable();
+  mic.title = micAvailable() ? "Ask out loud" : "Voice needs a connection";
+  document.getElementById("askbar").classList.add("up");
+}
+function closeAsk(){
+  document.getElementById("askbar").classList.remove("up");
+  document.querySelectorAll(".sent.sel").forEach(s=>s.classList.remove("sel"));
+  selectedLine = "";
+  stopSpeaking();
+}
+
+// Answer about the selected line: the section anchor is exact, so retrieval barely matters.
+function answerLine(question){
+  const q = (question || "").trim();
+  const box = document.getElementById("answers");
+  const s = selectedSection;
+  let picks = [];
+
+  if(q){
+    picks = search(q, 2).map(x => x.item);
+  }
+  if(s){
+    const here = P.entries.filter(e => (e.anchors||[]).includes(s.id) && !picks.includes(e));
+    picks = [...picks, ...here];
+  }
+  if(!picks.length) picks = search(selectedLine, 2).map(x => x.item);
+
+  let h = '<div class="ans"><h3>'+(s && s.numeral ? "§"+esc(s.numeral)+" · " : "")+esc(s ? s.title : "This line")+'</h3>'
+        + '<p class="quote" style="font-family:var(--serif);color:var(--soft);border-left:2px solid var(--accent);padding-left:.6rem;margin:.4rem 0 0">'+esc(selectedLine)+'</p>'
+        + (q ? '<div class="lbl">You asked</div><p>'+esc(q)+'</p>' : '') + '</div>';
+
+  h += picks.slice(0,3).map(p => p.levels ? renderEntry(p) : renderSectionAnswer(p)).join("");
+  if(!picks.length) h += '<div class="miss"><strong>Nothing written for that yet.</strong>'
+     + '<p style="margin:.6rem 0 0">Saved for when you have a signal.</p></div>';
+
+  box.innerHTML = h;
+  closeAsk();
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v==="ask"));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-ask"));
+  window.scrollTo(0,0);
+  // Read it out automatically when the question was spoken — you asked with your voice, so
+  // you probably are not looking at the screen.
+  if(q && lastWasVoice){ const first = box.querySelector(".ans + .ans") || box.querySelector(".ans"); if(first) speakAnswer(first); }
+  lastWasVoice = false;
+}
+let lastWasVoice = false;
+
 // ── the book ──────────────────────────────────────────────────────────────
 function renderTOC(){
   const parts = {I:"Part I — The Special Theory",II:"Part II — The General Theory",III:"Part III — The Universe as a Whole",APPENDIX:"Appendices"};
@@ -484,12 +666,17 @@ function renderTOC(){
 
 function openSection(id){
   const s = byId[id]; if(!s) return;
+  currentSection = s; closeAsk();
   if(s.number){ prof.readingPosition = s.number; save(); renderPos(); }
   let h = '<button class="ghost" id="backidx" style="margin-bottom:1.1rem">← All sections</button>';
   h += '<h2>'+(s.numeral?"§"+esc(s.numeral)+" · ":"")+esc(s.title)+'</h2>';
-  h += '<p class="tap-hint">Tap a paragraph to ask about it.</p><div class="read">';
+  h += '<p class="tap-hint">Tap any sentence to ask about it.</p><div class="read">';
   for(const b of s.blocks){
-    if(b.t) h += '<p class="para" tabindex="0" data-ask="'+esc(b.t.slice(0,140))+'">'+esc(b.t)+'</p>';
+    if(b.t){
+      // Sentence-level, not paragraph-level: the question is almost always about one line.
+      h += '<p class="para">' + sentences(b.t).map(x =>
+        '<span class="sent" tabindex="0">'+esc(x)+'</span>').join(" ") + '</p>';
+    }
     else h += '<div class="eq">[ equation — '+esc(b.eq)+' ]</div>';
   }
   h += '</div>';
@@ -498,11 +685,32 @@ function openSection(id){
   rs.style.display="block"; rs.innerHTML = h; window.scrollTo(0,0);
 }
 
+function showView(v){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+  if(v !== "read") closeAsk();
+}
+
+// An arc is a thread running through several sections, so it is worth being able to walk it:
+// the chips are the sections in the order the argument is actually made.
 function renderArcs(){
-  document.getElementById("arcs").innerHTML = (P.arcs||[]).map(a =>
-    '<div class="ans"><h3>'+esc(a.title)+'</h3>'+para(a.meaning)
-    + (a.why ? '<div class="lbl">Why it matters</div>'+para(a.why) : '')
-    + '</div>').join("");
+  document.getElementById("arcs").innerHTML = (P.arcs||[]).map(a => {
+    const steps = (a.sections||[]).map(n=>C.sections.find(x=>x.number===n)).filter(Boolean);
+    return '<div class="ans arc" id="'+esc(a.id)+'"><h3>'+esc(a.title)+'</h3>'+para(a.meaning)
+      + (a.why ? '<div class="lbl">Why it matters</div>'+para(a.why) : '')
+      + (TTS ? '<button class="speak">▶ Listen</button>' : '')
+      + (steps.length ? '<div class="lbl">Follow it through the book</div><div class="chips">'
+          + steps.map(s=>'<button class="chip" data-read="'+s.id+'">§'+esc(s.numeral)+' &middot; '
+              + esc(s.title.length>38 ? s.title.slice(0,38)+"…" : s.title)+'</button>').join("")
+          + '</div>' : '')
+      + '</div>';
+  }).join("");
+}
+function highlightArc(id){
+  const card = document.getElementById(id); if(!card) return;
+  document.querySelectorAll(".ans.hi").forEach(c=>c.classList.remove("hi"));
+  card.classList.add("hi");
+  card.scrollIntoView({block:"start", behavior:"smooth"});
 }
 
 function renderPos(){
@@ -528,6 +736,7 @@ document.addEventListener("click", ev => {
   if(t.dataset.v){
     document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b===t));
     document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t.dataset.v));
+    if(t.dataset.v !== "read") closeAsk();
     window.scrollTo(0,0); return;
   }
   if(t.id==="backidx"){
@@ -540,7 +749,11 @@ document.addEventListener("click", ev => {
     openSection(t.dataset.read); return;
   }
   if(t.dataset.go){
-    const target = byId[t.dataset.go];
+    const go0 = t.dataset.go;
+    // Several follow-ups point at a whole arc rather than a single explainer — those live in
+    // Ideas, so send the reader there instead of running a text search that half-matches.
+    if(go0.startsWith("arc.")){ showView("ideas"); highlightArc(go0); return; }
+    const target = byId[go0];
     document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v==="ask"));
     document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-ask"));
     document.getElementById("qbox").value = t.dataset.q || "";
@@ -566,15 +779,46 @@ document.addEventListener("click", ev => {
   if(t.id==="resetprof"){ prof.learner.needsSupport=[]; prof.queued=[]; save(); renderSettings(); return; }
 });
 
-// Tapping a paragraph is the strongest signal we get — the anchor is exact, so retrieval
-// barely has to work.
+// Tapping a sentence is the strongest signal there is — we know the exact line and the exact
+// section, so retrieval barely has to work.
+function selectSentence(sp){
+  document.querySelectorAll(".sent.sel").forEach(s=>s.classList.remove("sel"));
+  sp.classList.add("sel");
+  openAsk(sp.textContent.trim(), currentSection);
+}
 document.addEventListener("click", ev => {
-  const p = ev.target.closest("p.para"); if(!p) return;
-  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v==="ask"));
-  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-ask"));
-  document.getElementById("qbox").value = "";
-  answer(p.dataset.ask);
-  window.scrollTo(0,0);
+  const sp = ev.target.closest(".sent"); if(!sp) return;
+  selectSentence(sp);
+});
+// On the Mac the book is read with a keyboard in reach, so tab-and-Enter has to work too.
+document.addEventListener("keydown", ev => {
+  if(ev.key !== "Enter" && ev.key !== " ") return;
+  const sp = ev.target.closest && ev.target.closest(".sent"); if(!sp) return;
+  ev.preventDefault(); selectSentence(sp);
+});
+
+document.getElementById("askclose").addEventListener("click", closeAsk);
+document.getElementById("askexplain").addEventListener("click", () => answerLine(""));
+document.getElementById("askinput").addEventListener("keydown", e => {
+  if(e.key === "Enter") answerLine(e.target.value);
+});
+document.getElementById("askmic").addEventListener("click", () => {
+  if(!micAvailable()) return;
+  startListening(text => { lastWasVoice = true; answerLine(text); });
+});
+
+// Read-aloud on any answer. Synthesis is on-device, so this keeps working with no signal.
+document.addEventListener("click", ev => {
+  const b = ev.target.closest(".speak"); if(!b) return;
+  const card = b.closest(".ans");
+  if(b.classList.contains("on")){ stopSpeaking(); b.classList.remove("on"); b.textContent = "▶ Listen"; return; }
+  document.querySelectorAll(".speak.on").forEach(x=>{x.classList.remove("on");x.textContent="▶ Listen";});
+  b.classList.add("on"); b.textContent = "■ Stop";
+  speakAnswer(card);
+  if(TTS) setTimeout(function poll(){
+    if(!TTS.speaking){ b.classList.remove("on"); b.textContent = "▶ Listen"; }
+    else setTimeout(poll, 400);
+  }, 500);
 });
 
 document.getElementById("pastego").addEventListener("click", () =>
@@ -587,6 +831,12 @@ document.getElementById("pasteclear").addEventListener("click", () => {
 document.getElementById("paste").addEventListener("paste", () =>
   setTimeout(() => explainPasted(document.getElementById("paste").value), 60));
 
+document.getElementById("qmic").addEventListener("click", () => {
+  if(!micAvailable()){ document.getElementById("qmic").title = "Voice needs a connection"; return; }
+  selectedLine = ""; selectedSection = null;
+  startListening(text => { document.getElementById("qbox").value = text; answer(text); });
+});
+
 let timer;
 document.getElementById("qbox").addEventListener("input", e => {
   clearTimeout(timer); const v = e.target.value;
@@ -598,6 +848,13 @@ function net(){
   const p = document.getElementById("netpill");
   p.textContent = navigator.onLine ? "online" : "offline";
   p.classList.toggle("on", navigator.onLine);
+  // Dictation goes to Apple's servers, so it comes and goes with the signal. Show that on the
+  // button rather than letting a tap do nothing.
+  for(const id of ["qmic","askmic"]){
+    const m = document.getElementById(id); if(!m) continue;
+    m.disabled = !micAvailable();
+    m.title = micAvailable() ? "Ask out loud" : "Dictation needs a connection — type instead";
+  }
 }
 addEventListener("online",net); addEventListener("offline",net);
 
@@ -631,7 +888,20 @@ if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWo
 
 const out = join(root, 'web');
 mkdirSync(out, { recursive: true });
-writeFileSync(join(out, 'index.html'), HTML.replace('__DATA__', DATA).replaceAll('__ICON__', ICON));
+const page = HTML.replace('__DATA__', DATA).replaceAll('__ICON__', ICON);
+writeFileSync(join(out, 'index.html'), page);
+
+// The artifact host supplies its own doctype/html/head/body, so ours have to come out or the
+// page ends up nested inside itself. Everything else — styles, markup, script — is unchanged,
+// and the runtime block above puts the icon and the web-app meta tags back into the real head.
+// Generated here rather than by hand so the hosted copy cannot drift from the file.
+const artifact = page
+  .replace(/^[\s\S]*?<title>/, '<title>')
+  .replace(/<\/head>\s*<body>/, '')
+  .replace(/<\/body>\s*<\/html>\s*$/, '')
+  .replace(/<link rel="manifest"[^>]*>\s*/, '')      // /manifest.json does not resolve there
+  .replace(/<link rel="(apple-touch-icon|icon)"[^>]*>\s*/g, '');
+writeFileSync(join(out, 'artifact.html'), artifact);
 
 writeFileSync(join(out, 'manifest.json'), JSON.stringify({
   name: 'Relativity — Einstein tutor',
