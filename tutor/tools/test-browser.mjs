@@ -197,10 +197,12 @@ console.log('\nthe live tutor');
   await page.locator('nav.tabs button[data-v="set"]').click();
   ok('the tutor is set to answer anything by default, not just gaps',
      await page.evaluate(() => liveMode()) === 'always');
-  // This page is on file://, as it is when opened from Files on a Mac. The baked-in relative
-  // address is meaningless there and must not be attempted.
+  // This page is on file://, as it is when opened from Files on a Mac. A relative address is
+  // meaningless there and must not be attempted — set explicitly rather than relying on what
+  // this particular build happened to bake in.
+  await page.evaluate(() => { prof.endpoint = '/api/ask'; save(); renderSettings(); });
   ok('a relative address is inert when there is no server to be relative to',
-     await page.evaluate(() => prof.endpoint === '/api/ask' && usableEndpoint() === ''));
+     await page.evaluate(() => usableEndpoint() === ''));
   ok('and settings says so rather than claiming it is on',
      /full https/.test(await page.locator('#livesum').textContent()),
      await page.locator('#livesum').textContent());
@@ -444,6 +446,97 @@ console.log('\nhosted copy');
   await p2.locator('#read-section .sent').nth(2).click();
   ok('tap-a-line works in the hosted copy too', await p2.locator('#askbar.up').count() === 1);
   ok('hosted copy runs clean', errs2.length === 0, errs2.join(' | '));
+}
+
+// ── the flight test ───────────────────────────────────────────────────────
+// The requirement this whole app exists for is a plane, and "it is one self-contained file" is
+// not the same as "the phone will open it with no signal". Served over HTTP the service worker
+// caches the shell; from a host that cannot serve /sw.js there is no worker and therefore no
+// cache. Both cases are checked here rather than left to be discovered at 35,000 feet.
+console.log('\nofflineable install');
+{
+  const { createServer } = await import('node:http');
+  const { readFileSync, existsSync } = await import('node:fs');
+  const TYPES = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript',
+                  '.png': 'image/png' };
+  const server = createServer((req, res) => {
+    let p = req.url.split('?')[0];
+    if (p === '/') p = '/index.html';
+    const file = join(WEB, p.replace(/^\/+/, ''));
+    if (!existsSync(file) || !file.startsWith(WEB)) { res.writeHead(404); return res.end('no'); }
+    const ext = file.slice(file.lastIndexOf('.'));
+    res.writeHead(200, {
+      'content-type': TYPES[ext] || 'application/octet-stream',
+      'service-worker-allowed': '/',
+      'cache-control': 'no-cache',
+    });
+    res.end(readFileSync(file));
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', r));
+  const origin = 'http://127.0.0.1:' + server.address().port;
+
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const p = await ctx.newPage();
+  const errs = [];
+  p.on('pageerror', e => errs.push(String(e)));
+
+  await p.goto(origin + '/');
+  ok('the app serves over HTTP', await p.locator('#toc button').count() === 37);
+
+  const reg = await p.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) return 'unsupported';
+    const r = await navigator.serviceWorker.ready.catch(() => null);
+    return r ? (r.active ? 'active' : 'registered') : 'none';
+  });
+  ok('the service worker installs and activates', reg === 'active', reg);
+
+  // Everything the shell needs must be in the cache before the signal goes, not fetched later.
+  const cached = await p.evaluate(async () => {
+    const names = await caches.keys();
+    const c = await caches.open(names[0]);
+    return (await c.keys()).map(r => new URL(r.url).pathname).sort();
+  });
+  ok('the page itself is cached', cached.includes('/index.html') || cached.includes('/'));
+  ok('the manifest is cached', cached.includes('/manifest.json'), JSON.stringify(cached));
+
+  // The actual test: kill the network and cold-load the app the way a relaunch does.
+  await ctx.setOffline(true);
+  const p2 = await ctx.newPage();
+  const errs2 = [];
+  p2.on('pageerror', e => errs2.push(String(e)));
+  const resp = await p2.goto(origin + '/').catch(e => ({ err: String(e) }));
+  ok('a cold launch with no network still loads', !resp.err, resp.err || '');
+  ok('and the whole book is there', await p2.locator('#toc button').count() === 37);
+  await p2.locator('#toc button').nth(8).click();
+  await p2.waitForSelector('#read-section .sent');
+  ok('sections open with no signal', await p2.locator('#read-section .sent').count() > 10);
+  await p2.locator('#read-section .sent').nth(2).click();
+  await p2.locator('#askexplain').click();
+  await p2.waitForSelector('#v-ask.on');
+  ok('and questions still get answered', await p2.locator('#answers .ans').count() >= 1);
+  ok('no errors offline', errs2.length === 0, errs2.join(' | '));
+  await ctx.setOffline(false);
+
+  // The artifact host cannot serve our /sw.js. Confirm what that actually costs, rather than
+  // assuming: the app must still work, but there is no cache behind it.
+  // serviceWorkers:'block' is the condition itself, not an approximation of it: a page that
+  // cannot get a worker registered. Routing /sw.js to a 404 does not work here — worker script
+  // fetches do not pass through page routes.
+  const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 },
+                                          serviceWorkers: 'block' });
+  const p3 = await ctx2.newPage();
+  await p3.goto(origin + '/');
+  ok('the app still boots where /sw.js is missing', await p3.locator('#toc button').count() === 37);
+  const names = await p3.evaluate(async () => await caches.keys());
+  const regs = await p3.evaluate(async () =>
+    (await navigator.serviceWorker.getRegistrations()).length);
+  ok('no service worker is registered', regs === 0, 'registrations: ' + regs);
+  ok('so nothing is cached and a cold offline launch would fail',
+     names.length === 0, 'caches: ' + JSON.stringify(names));
+  await ctx2.close();
+
+  await ctx.close();
+  await new Promise(r => server.close(r));
 }
 
 await browser.close();
