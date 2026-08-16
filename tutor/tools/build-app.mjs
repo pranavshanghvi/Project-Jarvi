@@ -242,6 +242,35 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
 <script>
 const DATA = __DATA__;
 const C = DATA.corpus, P = DATA.pack;
+
+// ── home-screen icon ──────────────────────────────────────────────────────
+// Safari reads apple-touch-icon out of document.head at the moment you tap "Add to Home
+// Screen". When this page is served inside a host page, our <link> tags sit in the body and
+// are ignored, so the host's own icon wins — which is why it kept showing Claude's mark.
+// Rewriting head at runtime is the only way to claim it from inside a hosted page.
+(function(){
+  const ICON = "data:image/png;base64,__ICON__";
+  document.querySelectorAll(
+    'link[rel~="apple-touch-icon"],link[rel~="apple-touch-icon-precomposed"],link[rel~="icon"],link[rel~="shortcut"],link[rel~="mask-icon"]'
+  ).forEach(l => l.remove());
+  for(const rel of ["apple-touch-icon","apple-touch-icon-precomposed","icon"]){
+    const l = document.createElement("link");
+    l.setAttribute("rel", rel);
+    l.setAttribute("href", ICON);
+    l.setAttribute("sizes", "512x512");
+    if(rel === "icon") l.setAttribute("type", "image/png");
+    document.head.appendChild(l);
+  }
+  const meta = (name, content) => {
+    let m = document.querySelector('meta[name="'+name+'"]');
+    if(!m){ m = document.createElement("meta"); m.setAttribute("name", name); document.head.appendChild(m); }
+    m.setAttribute("content", content);
+  };
+  meta("apple-mobile-web-app-title","Relativity");
+  meta("apple-mobile-web-app-capable","yes");
+  meta("apple-mobile-web-app-status-bar-style","black-translucent");
+  document.title = "Relativity";
+})();
 const LEVELS = ["plain","intuition","careful"];
 const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 
