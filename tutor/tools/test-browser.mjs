@@ -26,7 +26,13 @@ const page = await context.newPage();
 
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
-page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+// Script errors only. A failed request is not one — the exhaustion path below deliberately
+// serves a 503, and the app is supposed to handle that rather than avoid it.
+page.on('console', m => {
+  if (m.type() !== 'error') return;
+  if (/Failed to load resource/.test(m.text())) return;
+  errors.push(m.text());
+});
 
 await page.goto(pathToFileURL(join(WEB, 'index.html')).href);
 await page.waitForLoadState('domcontentloaded');
@@ -140,6 +146,9 @@ console.log('\nretrieval');
     ['how do we know any of this is real', 'How do we know any of this is real?'],
     ['can I travel in time',             'Does this mean time travel is possible?'],
     ['what is the ether',                'The ether, and why light was a problem'],
+    // The reported bug: the index holds "gaussian", the question says "gauss", and the book
+    // has a chapter named after him. It used to reach nothing and show the generic miss card.
+    ['who is Gauss',                     '§XXV · Gaussian Co-ordinates'],
   ];
   await page.locator('nav.tabs button[data-v="ask"]').click();
   // Answers are gated on how far you have read, so ask as someone near the end of the book.
@@ -155,6 +164,158 @@ console.log('\nretrieval');
     ok('"' + q + '" → ' + want, titles[0] === want, 'got: ' + titles.join(' / '));
   }
   await page.evaluate(() => { prof.readingPosition = 1; save(); });
+}
+
+// The endpoint is stubbed at the network layer so the client's real fetch, real caching and
+// real error handling all run — only the free provider on the far side is faked.
+console.log('\nthe live tutor');
+{
+  const ENDPOINT = 'https://tutor.test/api/ask';
+  let calls = 0, lastBody = null, mode = 'ok';
+  await context.route(ENDPOINT, async route => {
+    calls++;
+    lastBody = JSON.parse(route.request().postData() || '{}');
+    if (mode === 'exhausted') return route.fulfill({
+      status: 503, contentType: 'application/json',
+      body: JSON.stringify({ error: 'no_free_provider',
+        message: 'The free models are all out for now.',
+        declined: ['groq: 429, quota exceeded', 'mistral: 429'] }),
+    });
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        answer: 'Gauss worked out how to describe a curved surface from inside it.',
+        analogy: 'Like mapping a hilly field with only a tape measure.',
+        breaks: 'A field has an outside to stand in. Spacetime does not.',
+        means: 'Curvature is measurable without ever leaving.',
+        next: 'What would you measure to tell a flat field from a curved one?',
+        source: 'live', model: null, askedAt: '2026-08-16T00:00:00.000Z',
+      }),
+    });
+  });
+
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('#endpoint').fill(ENDPOINT);
+  await page.locator('#endpoint').blur();
+  ok('setting an address turns the live tutor on',
+     /Fills gaps/.test(await page.locator('#livesum').textContent()));
+
+  // Typing must never spend a call — a free tier does not survive one request per keystroke.
+  await page.locator('nav.tabs button[data-v="ask"]').click();
+  const before = calls;
+  await page.locator('#qbox').fill('what is a tensor bundle anyway');
+  await page.waitForTimeout(600);
+  ok('typing does not call the endpoint', calls === before, calls - before + ' calls');
+  ok('but it offers to ask', await page.locator('#answers [data-live]').count() === 1);
+
+  await page.locator('#answers [data-live]').click();
+  await page.waitForSelector('#answers .ans.live');
+  ok('the button asks the live tutor', calls === before + 1);
+  ok('the answer renders', /curved surface from inside/
+     .test(await page.locator('#answers .ans.live').textContent()));
+  ok('so does the analogy and its limits',
+     /tape measure/.test(await page.locator('#answers .ans.live').textContent()) &&
+     /has an outside to stand in/.test(await page.locator('#answers .ans.live').textContent()));
+  ok('it ends with a question to follow',
+     await page.locator('#answers .ans.live .chip[data-ask]').count() === 1);
+  ok('it is labelled as live, not as a written answer',
+     /Live tutor/.test(await page.locator('#answers .ans.live').textContent()));
+  ok('a live answer can be read aloud too',
+     await page.locator('#answers .ans.live .speak').count() === 1);
+
+  // Enter is the deliberate act, so it may fire; and the whole point of caching is the plane.
+  const afterFirst = calls;
+  await page.locator('#qbox').fill('');
+  await page.locator('#qbox').fill('what is a tensor bundle anyway');
+  await page.locator('#qbox').press('Enter');
+  await page.waitForSelector('#answers .ans.live');
+  ok('asking the same question again is served from the device', calls === afterFirst,
+     calls - afterFirst + ' extra calls');
+
+  await context.setOffline(true);
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await page.locator('#qbox').fill('');
+  await page.locator('#qbox').fill('what is a tensor bundle anyway');
+  await page.locator('#qbox').press('Enter');
+  await page.waitForSelector('#answers .ans.live');
+  ok('and it still answers with no signal at all', calls === afterFirst);
+  await context.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+
+  // In "gaps only" a question the book itself answers must not go out — the written answer was
+  // checked for this reader and a small free model is not an upgrade on it.
+  await page.locator('nav.tabs button[data-v="read"]').click();
+  if (await page.locator('#backidx').isVisible()) await page.locator('#backidx').click();
+  await page.locator('#toc button').nth(25).click();          // §XXV, Gaussian co-ordinates
+  await page.waitForSelector('#read-section .sent');
+  await page.locator('#read-section .sent').nth(1).click();
+  const covered = calls;
+  await page.locator('#askinput').fill('who exactly was Gauss');
+  await page.locator('#askinput').press('Enter');
+  await page.waitForSelector('#v-ask.on');
+  ok('a question the book covers is answered from the book, not the network',
+     calls === covered, calls - covered + ' calls');
+  ok('and that answer is the right section',
+     /Gaussian/i.test(await page.locator('#answers').textContent()));
+
+  // "always" is for when the reader wants a conversation rather than a lookup.
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('[data-setlive="always"]').click();
+  await page.locator('nav.tabs button[data-v="read"]').click();
+  await page.locator('#read-section .sent').nth(1).click();
+  const beforeLine = calls;
+  await page.locator('#askinput').fill('why does he need co-ordinates at all here');
+  await page.locator('#askinput').press('Enter');
+  await page.waitForSelector('#answers .ans.live');
+  ok('in "always" mode a question about a line goes live', calls === beforeLine + 1);
+  ok('and carries the section text, so the model is not answering from memory',
+     !!(lastBody.section && lastBody.section.text && lastBody.section.text.length > 200),
+     JSON.stringify(lastBody.section && lastBody.section.title));
+  ok('and the exact line that was tapped', (lastBody.line || '').length > 10,
+     JSON.stringify(lastBody.line));
+  ok('and the depth the reader chose', !!lastBody.level);
+  ok('the quoted line stays above the answer',
+     (await page.locator('#answers').textContent()).includes('why does he need co-ordinates'));
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('[data-setlive="gaps"]').click();
+
+  // Exhaustion is the expected end state of a free tier, so it has to read as a state.
+  mode = 'exhausted';
+  await page.locator('nav.tabs button[data-v="ask"]').click();
+  await page.locator('#qbox').fill('');
+  await page.locator('#qbox').fill('what did Riemann contribute to all this');
+  await page.locator('#qbox').press('Enter');
+  await page.waitForSelector('#answers .miss');
+  const missText = await page.locator('#answers .miss').first().textContent();
+  ok('exhaustion says so plainly', /free models are all out/i.test(missText), missText.slice(0, 120));
+  ok('and does not pretend it will retry forever', /try again later/i.test(missText));
+  ok('the question is saved rather than lost',
+     await page.evaluate(() => prof.queued.some(x => /Riemann/.test(x.q))));
+  ok('why each provider declined is available but not shouted',
+     await page.locator('#answers .miss details').count() === 1);
+
+  // Switching it off must actually stop it.
+  mode = 'ok';
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('[data-setlive="off"]').click();
+  const afterOff = calls;
+  await page.locator('nav.tabs button[data-v="ask"]').click();
+  await page.locator('#qbox').fill('');
+  await page.locator('#qbox').fill('what is a Killing vector');
+  await page.locator('#qbox').press('Enter');
+  await page.waitForTimeout(400);
+  ok('switching the live tutor off stops it calling out', calls === afterOff);
+  ok('and the app says why rather than failing silently',
+     /switched off/i.test(await page.locator('#answers .miss').first().textContent()));
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('[data-setlive="gaps"]').click();
+
+  ok('saved answers are counted in settings',
+     /kept on this device/.test(await page.locator('#cachecount').textContent()));
+  await page.locator('#clearcache').click();
+  ok('and can be cleared', /None yet/.test(await page.locator('#cachecount').textContent()));
+  await context.unroute(ENDPOINT);
+  await page.evaluate(() => { prof.endpoint = ''; prof.queued = []; save(); });
 }
 
 console.log('\nlevels and theme');

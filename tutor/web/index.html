@@ -123,6 +123,11 @@ input.q{width:100%;padding:.8rem .9rem;font-size:1rem;font-family:var(--sans);
 input.q:focus{outline:none;border-color:var(--accent)}
 .ans{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:1.15rem 1.15rem .3rem;margin:1.2rem 0}
 .ans.hi{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+/* A live answer is marked, because it came from a small free model rather than something
+   written and checked for this reader — that difference is worth being able to see. */
+.ans.live{border-left:3px solid var(--accent)}
+.live-tag{color:var(--accent)}
+.chip.go{background:var(--accent);border-color:var(--accent);color:var(--accentInk)}
 .sent:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .ans h3{font-size:1.12rem;margin:0 0 .2rem;letter-spacing:-.01em}
 .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;
@@ -142,6 +147,10 @@ details.more[open] summary::before{content:"▾ ";}
 .src{font-family:var(--mono);font-size:.68rem;color:var(--muted);border-top:1px solid var(--line2);
   padding:.7rem 0;margin-top:.7rem}
 .miss{background:var(--surface2);border:1px dashed var(--line);border-radius:3px;padding:1rem;margin:1.2rem 0;color:var(--soft);font-size:.93rem}
+/* Waiting is not the same state as having nothing, and they must not look alike — a slow free
+   tier would otherwise read as a failure for the twenty seconds before the answer lands. */
+.thinking{background:var(--surface2);border:1px solid var(--accent);border-radius:3px;
+  padding:1rem;margin:1.2rem 0;color:var(--soft);font-size:.93rem;animation:pulse 1.6s infinite}
 .lvlbar{display:flex;gap:.3rem;margin:.9rem 0 0}
 .lvlbar button{flex:1;font-family:var(--mono);font-size:.63rem;letter-spacing:.06em;text-transform:uppercase;
   padding:.4rem .2rem;background:var(--surface2);border:1px solid var(--line);color:var(--muted);border-radius:2px;cursor:pointer}
@@ -219,7 +228,22 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
     <div class="lvlbar" id="lvlset"></div>
     <div style="margin-top:1.6rem">
       <div class="setrow"><span>What I think you know<br><span class="dim" id="profsum"></span></span><button class="ghost" id="resetprof">Reset</button></div>
-      <div class="setrow"><span>Questions saved for later<br><span class="dim" id="qcount"></span></span></div>
+      <div class="setrow"><span>Questions saved for later<br><span class="dim" id="qcount"></span></span><button class="ghost" id="runqueued">Ask now</button></div>
+    </div>
+
+    <div style="margin-top:1.6rem">
+      <div class="setrow"><span>Live tutor<br><span class="dim" id="livesum"></span></span>
+        <span style="display:flex;gap:.3rem" id="liveset"></span></div>
+      <input class="q" id="endpoint" style="margin-top:.7rem;font-family:var(--mono);font-size:.8rem"
+             placeholder="https://…/api/ask" spellcheck="false" autocapitalize="off">
+      <p class="dim" style="margin-top:.5rem;font-size:.78rem">
+        Used only when the written answers do not cover a question, and only when you have a
+        signal. It runs on free models — Groq, Mistral, OpenRouter, Cloudflare. When they are
+        exhausted it says so and saves the question rather than falling back to anything paid.
+        Answers are kept on this device, so once asked they work offline.
+      </p>
+      <div class="setrow" style="margin-top:.7rem"><span>Answers saved from the live tutor<br>
+        <span class="dim" id="cachecount"></span></span><button class="ghost" id="clearcache">Clear</button></div>
     </div>
     <p class="dim" style="margin-top:2rem;font-size:.78rem">
       Text: Project Gutenberg #30155, public domain in the US. Appendix V is still in copyright and is not included.
@@ -284,7 +308,8 @@ const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 
 // ── profile ───────────────────────────────────────────────────────────────
 const KEY = "jarvi.relativity.progress";
-const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},queued:[],theme:"auto"};
+const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},
+  queued:[],theme:"auto",endpoint:"/api/ask",live:"auto"};
 let prof;
 try { prof = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
 catch { prof = structuredClone(defaults); }
@@ -317,10 +342,16 @@ const IDX = P.entries.map(e => {
   (e.analogies||[]).forEach(a=>add(a.text,1));
   return {e,f};
 });
+// The whole section, not just its opening. Indexing the first four paragraphs meant a name or
+// a term introduced halfway down a section was simply not findable — and this book introduces
+// most of its ideas in the middle of the argument, not in the first line.
 const SECIDX = C.sections.map(s => {
   const f = {};
   for(const t of norm(s.title)) if(!STOP.has(t)) f[t]=(f[t]||0)+5;
-  s.blocks.filter(b=>b.t).slice(0,4).forEach(b=>{ for(const t of norm(b.t)) if(!STOP.has(t)) f[t]=(f[t]||0)+0.4; });
+  s.blocks.filter(b=>b.t).forEach((b,i)=>{
+    const w = i < 4 ? 0.4 : 0.15;   // the opening still says what a section is about
+    for(const t of norm(b.t)) if(!STOP.has(t)) f[t]=(f[t]||0)+w;
+  });
   return {s,f};
 });
 
@@ -334,17 +365,175 @@ for(const {f} of SECIDX) for(const t in f) DF[t] = (DF[t]||0)+1;
 const NDOC = IDX.length + SECIDX.length;
 const idf = t => Math.log(1 + NDOC/(1 + (DF[t]||0)));
 
+// "Who is Gauss" found nothing, because the index holds "gaussian" and no amount of exact
+// matching gets from one to the other — while the book has a whole chapter named after him.
+// Each query term is expanded to vocabulary words that extend it, or that it extends, at a
+// discount so an exact hit still wins.
+const VOCAB = Object.keys(DF);
+const EXPCACHE = {};
+function expand(t){
+  if(EXPCACHE[t]) return EXPCACHE[t];
+  const out = [[t, 1]];
+  if(t.length >= 4) for(const v of VOCAB){
+    if(v === t) continue;
+    const long = v.length > t.length ? v : t, short = v.length > t.length ? t : v;
+    if(long.startsWith(short) && long.length - short.length <= 4) out.push([v, 0.75]);
+  }
+  return (EXPCACHE[t] = out);
+}
+
+// Below this, a "match" is one common word glancing off an unrelated entry. Answering anyway is
+// worse than saying nothing: it reads as the tutor having misunderstood the question.
+const FLOOR = 1.6;
+
 function search(q, limit=3){
   const terms = norm(q).filter(t=>!STOP.has(t));
   if(!terms.length) return [];
-  const score = f => terms.reduce((n,t)=>n + (f[t] ? Math.sqrt(f[t]) * idf(t) : 0), 0);
+  const exp = terms.map(expand);
+  // Max across a term's variants rather than sum — "gauss" and "gaussian" are one term matched
+  // once, not two.
+  const score = f => exp.reduce((n, vars) =>
+    n + Math.max(...vars.map(([t,w]) => f[t] ? Math.sqrt(f[t]) * idf(t) * w : 0)), 0);
+  const covered = f => exp.filter(vars => vars.some(([t]) => f[t])).length;
   const hits = [];
-  for(const {e,f} of IDX){ const sc = score(f); if(sc>0) hits.push({kind:"entry",item:e,score:sc}); }
-  for(const {s,f} of SECIDX){ const sc = score(f)*0.7; if(sc>0) hits.push({kind:"section",item:s,score:sc}); }
+  for(const {e,f} of IDX){ const sc = score(f); if(sc>0) hits.push({kind:"entry",item:e,score:sc,covered:covered(f)}); }
+  for(const {s,f} of SECIDX){ const sc = score(f)*0.7; if(sc>0) hits.push({kind:"section",item:s,score:sc,covered:covered(f)}); }
   hits.sort((a,b)=>b.score-a.score);
   // Spoiler gate: never lead with something from beyond where the reader has reached.
   const ok = hits.filter(h => (h.kind==="entry" ? (h.item.firstNeededAt||0) : (h.item.number||0)) <= prof.readingPosition + 2);
   return (ok.length ? ok : hits).slice(0, limit);
+}
+
+// A question the pack genuinely does not cover — the trigger for asking the live tutor.
+function tooWeak(hits, q){
+  if(!hits.length) return true;
+  const need = Math.ceil(norm(q).filter(t=>!STOP.has(t)).length / 2);
+  return hits[0].score < FLOOR || hits[0].covered < need;
+}
+
+// ── the live tutor ────────────────────────────────────────────────────────
+// The written pack is 47 explainers over a book with 30,000 words in it, so there will always
+// be a question it has nothing for. When there is a signal, the endpoint answers it — on free
+// models only, and never on a paid one; see CLAUDE.md and api/PROVENANCE.md.
+//
+// Every answer is kept on the device, which is the part that matters on a plane: a question
+// asked in the airport lounge is still answerable at 35,000 feet.
+const LIVEKEY = "jarvi.relativity.live";
+const LIVE_MAX = 200;
+let live = {};
+try { live = JSON.parse(localStorage.getItem(LIVEKEY) || "{}"); } catch { live = {}; }
+function liveSave(){
+  try { localStorage.setItem(LIVEKEY, JSON.stringify(live)); }
+  catch {
+    // Out of room. Drop the oldest half rather than losing the lot — and rather than letting
+    // a full localStorage silently stop the tutor from remembering anything.
+    const keys = Object.keys(live).sort((a,b)=>(live[a].askedAt||"").localeCompare(live[b].askedAt||""));
+    for(const k of keys.slice(0, Math.ceil(keys.length/2))) delete live[k];
+    try { localStorage.setItem(LIVEKEY, JSON.stringify(live)); } catch {}
+  }
+}
+const liveKey = (q, sec) => (sec ? sec+"|" : "|") + norm(q).filter(t=>!STOP.has(t)).sort().join(" ");
+function liveGet(q, sec){ return live[liveKey(q, sec)] || live[liveKey(q, null)] || null; }
+function livePut(q, sec, a){
+  const keys = Object.keys(live);
+  if(keys.length >= LIVE_MAX){
+    keys.sort((x,y)=>(live[x].askedAt||"").localeCompare(live[y].askedAt||""));
+    delete live[keys[0]];
+  }
+  live[liveKey(q, sec)] = a; liveSave();
+}
+
+const endpoint = () => (prof.endpoint || "").trim();
+// "gaps" is the default: the written answers are better than a small model when they exist,
+// because they were written for this reader and checked. Live fills what they do not cover.
+const liveMode = () => prof.live || "gaps";
+function canLive(){ return !!endpoint() && navigator.onLine && liveMode() !== "off"; }
+
+async function askLive(q, ctx){
+  const sec = ctx && ctx.section;
+  const body = {
+    question: q,
+    line: (ctx && ctx.line) || "",
+    level: prof.learner.defaultLevel,
+    needsSupport: prof.learner.needsSupport,
+    section: sec ? {
+      numeral: sec.numeral, title: sec.title,
+      text: sec.blocks.filter(b=>b.t).map(b=>b.t).join("\n\n"),
+    } : null,
+  };
+  // 40s: a free tier under load is slow, and the alternative to waiting is no answer at all.
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), 40000);
+  try {
+    const res = await fetch(endpoint(), {
+      method: "POST", headers: {"content-type":"application/json"},
+      body: JSON.stringify(body), signal: ctl.signal,
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      const e = new Error(data.message || ("The tutor returned " + res.status));
+      e.declined = data.declined; e.kind = data.error; throw e;
+    }
+    livePut(q, sec ? sec.id : null, data);
+    return data;
+  } finally { clearTimeout(timer); }
+}
+
+function renderLive(a, q){
+  let h = '<div class="ans live"><div class="lbl live-tag">Live tutor</div>'
+        + '<h3>'+esc(q)+'</h3><div class="lvlbody">'+para(a.answer||"")+'</div>';
+  if(TTS) h += '<button class="speak">▶ Listen</button>';
+  if(a.analogy){
+    h += '<div class="lbl">Analogy</div>'+para(a.analogy);
+    if(a.breaks) h += '<div class="breaks"><strong>Where it breaks:</strong> '+esc(a.breaks)+'</div>';
+  }
+  if(a.means) h += '<details class="more"><summary>What it means</summary>'+para(a.means)+'</details>';
+  if(a.next) h += '<div class="lbl">Does that land? Where to go next</div>'
+                + '<div class="chips"><button class="chip" data-ask="'+esc(a.next)+'">'+esc(a.next)+'</button></div>';
+  h += '<div class="src">Answered live on a free model'
+     + (a.askedAt ? ", "+esc(a.askedAt.slice(0,10)) : "")
+     + ". Saved on this device, so it works offline now.</div></div>";
+  return h + '</div>';
+}
+
+// Shown while waiting, because a free tier can take twenty seconds and a blank screen reads as
+// a broken app.
+const THINKING = '<div class="thinking" id="thinking"><strong>Asking the tutor…</strong>'
+  + '<p style="margin:.6rem 0 0" class="dim">Free models can be slow. This gets saved to the '
+  + 'device once it arrives.</p></div>';
+
+function liveError(e, q){
+  const exhausted = e.kind === "no_free_provider";
+  return '<div class="miss"><strong>'
+    + (exhausted ? "The free models are all out for now."
+                 : esc(e.message || "Could not reach the tutor."))
+    + '</strong><p style="margin:.6rem 0 0">Saved your question — try again later.</p>'
+    + (e.declined ? '<details class="more"><summary>What each provider said</summary><p class="dim" '
+        + 'style="font-family:var(--mono);font-size:.72rem">'+esc(e.declined.join(" · "))+'</p></details>' : '')
+    + '</div>';
+}
+
+// One place that runs a live question, so the thinking state, the caching, the queue and the
+// error card cannot drift apart between the three callers.
+async function runLive(q, ctx, box, above, below){
+  above = above || ""; below = below || "";
+  box.innerHTML = above + THINKING + below;
+  let card;
+  try {
+    card = renderLive(await askLive(q, ctx), q);
+  } catch(e) {
+    queueQuestion(q);
+    card = liveError(e, q);
+  }
+  box.innerHTML = above + card + below;
+  window.scrollTo(0,0);
+  return box.querySelector(".ans.live");
+}
+
+function queueQuestion(q){
+  if(prof.queued.some(x=>x.q === q)) return;
+  prof.queued.push({q, at: new Date().toISOString().slice(0,10)});
+  save(); renderSettings();
 }
 
 // ── rendering ─────────────────────────────────────────────────────────────
@@ -403,18 +592,53 @@ function renderSectionAnswer(s){
   return h;
 }
 
-function answer(q){
+// The live flag is false while the reader is still typing — this runs on every keystroke, and firing
+// a request per keystroke would empty a free tier in a sentence. Asking live is always the
+// result of a deliberate act: Enter, or the button on the card below.
+function answer(q, live){
   const box = document.getElementById("answers");
   const hits = search(q);
-  if(!hits.length){
-    prof.queued.push({q, at: new Date().toISOString().slice(0,10)}); save(); renderSettings();
-    box.innerHTML = '<div class="miss"><strong>I don\u2019t have a written answer for that one.</strong>'
-      + '<p style="margin:.6rem 0 0">Saved it — when you next have a signal, the online tutor will answer it and it gets added here permanently.</p>'
-      + '<p style="margin:.6rem 0 0" class="dim">Try naming a concept directly (&ldquo;simultaneity&rdquo;, &ldquo;the ether&rdquo;), or tap a paragraph while reading.</p></div>';
+  const weak = tooWeak(hits, q);
+  const written = hits.map(h => h.kind==="entry" ? renderEntry(h.item) : renderSectionAnswer(h.item)).join("");
+
+  // Already asked this once — the saved answer is as good offline as on, so it comes first and
+  // costs nothing.
+  const cached = liveGet(q, null);
+  if(cached && (weak || liveMode() === "always")){
+    box.innerHTML = renderLive(cached, q) + written;
+    box.scrollIntoView({behavior:"smooth",block:"start"});
     return;
   }
-  box.innerHTML = hits.map(h => h.kind==="entry" ? renderEntry(h.item) : renderSectionAnswer(h.item)).join("");
-  box.scrollIntoView({behavior:"smooth",block:"start"});
+  if(live && canLive() && (weak || liveMode() === "always")){
+    runLive(q, {}, box, "", written);
+    return;
+  }
+  if(!weak){
+    box.innerHTML = written;
+    box.scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
+  box.innerHTML = missCard(q) + written;
+}
+
+// The honest state: nothing written covers this. What it offers depends on what is actually
+// available — an unreachable button is worse than no button.
+function missCard(q){
+  const has = !!endpoint(), on = liveMode() !== "off";
+  let h = '<div class="miss"><strong>I don\u2019t have a written answer for that one.</strong>';
+  if(has && on && navigator.onLine){
+    h += '<p style="margin:.6rem 0 0">The live tutor can take it — free models, no cost.</p>'
+       + '<div class="chips" style="margin-top:.7rem"><button class="chip go" data-live="'+esc(q)+'">Ask the tutor</button></div>';
+  } else if(has && on){
+    h += '<p style="margin:.6rem 0 0">No signal. Saved it — it will be waiting under Settings when you are back online.</p>';
+    queueQuestion(q);
+  } else if(has){
+    h += '<p style="margin:.6rem 0 0">The live tutor is switched off in Settings.</p>';
+  } else {
+    h += '<p style="margin:.6rem 0 0">Set the live tutor\u2019s address in Settings and it can answer questions the pack does not cover.</p>';
+  }
+  h += '<p style="margin:.6rem 0 0" class="dim">Or try naming a concept directly (&ldquo;simultaneity&rdquo;, &ldquo;the ether&rdquo;), or tap a line while reading.</p></div>';
+  return h;
 }
 
 // ── anchoring pasted text to the book ─────────────────────────────────────
@@ -578,6 +802,10 @@ function answerLine(question){
   const q = (question || "").trim();
   const box = document.getElementById("answers");
   const s = selectedSection;
+  // Held onto now, because closeAsk() below clears the selection — and the line is the whole
+  // reason this path exists, so losing it would silently turn a question about one sentence
+  // into a question about nothing.
+  const line = selectedLine;
   let picks = [];
 
   if(q){
@@ -587,21 +815,40 @@ function answerLine(question){
     const here = P.entries.filter(e => (e.anchors||[]).includes(s.id) && !picks.includes(e));
     picks = [...picks, ...here];
   }
-  if(!picks.length) picks = search(selectedLine, 2).map(x => x.item);
+  if(!picks.length) picks = search(line, 2).map(x => x.item);
 
   let h = '<div class="ans"><h3>'+(s && s.numeral ? "§"+esc(s.numeral)+" · " : "")+esc(s ? s.title : "This line")+'</h3>'
-        + '<p class="quote" style="font-family:var(--serif);color:var(--soft);border-left:2px solid var(--accent);padding-left:.6rem;margin:.4rem 0 0">'+esc(selectedLine)+'</p>'
+        + '<p class="quote" style="font-family:var(--serif);color:var(--soft);border-left:2px solid var(--accent);padding-left:.6rem;margin:.4rem 0 0">'+esc(line)+'</p>'
         + (q ? '<div class="lbl">You asked</div><p>'+esc(q)+'</p>' : '') + '</div>';
 
+  const header = h;
   h += picks.slice(0,3).map(p => p.levels ? renderEntry(p) : renderSectionAnswer(p)).join("");
-  if(!picks.length) h += '<div class="miss"><strong>Nothing written for that yet.</strong>'
-     + '<p style="margin:.6rem 0 0">Saved for when you have a signal.</p></div>';
+
+  // Asking about a specific line is the strongest case for going live: the section text goes
+  // with the question, so even a small model is answering about the page rather than from
+  // memory. A typed question here is always deliberate, so it may fire straight away.
+  // "always" means every typed question goes live, here as much as in the Ask box. Explain with
+  // no question typed stays offline either way — that is a lookup, not a conversation.
+  const weak = q ? (tooWeak(search(q, 2), q) || liveMode() === "always") : !picks.length;
+  const cached = q ? liveGet(q, s ? s.id : null) : null;
+  if(cached && weak) h = header + renderLive(cached, q) + h.slice(header.length);
+  else if(!picks.length && !q) h += '<div class="miss"><strong>Nothing written for that line yet.</strong>'
+     + '<p style="margin:.6rem 0 0">Try asking about it in your own words.</p></div>';
+
+  closeAsk();
+  showView("ask");
+  window.scrollTo(0,0);
+
+  if(!cached && q && weak && canLive()){
+    // The quoted line stays above while it thinks — it is the context for the answer.
+    const spoke = lastWasVoice; lastWasVoice = false;
+    runLive(q, {line: line, section: s}, box, header, h.slice(header.length))
+      .then(el => { if(spoke && el) speakAnswer(el); });
+    return;
+  }
+  if(q && weak && !canLive()) h += missCard(q);
 
   box.innerHTML = h;
-  closeAsk();
-  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v==="ask"));
-  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-ask"));
-  window.scrollTo(0,0);
   // Read it out automatically when the question was spoken — you asked with your voice, so
   // you probably are not looking at the screen.
   if(q && lastWasVoice){ const first = box.querySelector(".ans + .ans") || box.querySelector(".ans"); if(first) speakAnswer(first); }
@@ -676,9 +923,21 @@ function renderPos(){
   document.getElementById("pospill").textContent = "§"+prof.readingPosition;
   const pv = document.getElementById("posval"); if(pv) pv.textContent = "§"+prof.readingPosition;
 }
+const LIVE_MODES = [["gaps","gaps only"],["always","always"],["off","off"]];
 function renderSettings(){
   document.getElementById("themeset").innerHTML = ["auto","light","dark"].map(t =>
     '<button class="pill'+((prof.theme||"auto")===t?' on':'')+'" data-settheme="'+t+'">'+t+'</button>').join("");
+  document.getElementById("liveset").innerHTML = LIVE_MODES.map(([v,label]) =>
+    '<button class="pill'+(liveMode()===v?' on':'')+'" data-setlive="'+v+'">'+label+'</button>').join("");
+  const ep = document.getElementById("endpoint");
+  if(document.activeElement !== ep) ep.value = prof.endpoint || "";
+  document.getElementById("livesum").textContent =
+    !endpoint()            ? "No address set — offline answers only"
+    : liveMode() === "off" ? "Switched off"
+    : navigator.onLine     ? (liveMode()==="always" ? "On for every question" : "Fills gaps in the written answers")
+    : "Waiting for a signal";
+  const n = Object.keys(live).length;
+  document.getElementById("cachecount").textContent = n ? n + " kept on this device" : "None yet";
   document.getElementById("lvlset").innerHTML = LEVELS.map(l =>
     '<button data-setlvl="'+l+'"'+(l===prof.learner.defaultLevel?' class="on"':'')+'>'+LEVEL_LABEL[l]+'</button>').join("");
   const ns = prof.learner.needsSupport;
@@ -689,7 +948,7 @@ function renderSettings(){
 
 // ── events ────────────────────────────────────────────────────────────────
 document.addEventListener("click", ev => {
-  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],#backidx,#resetprof");
+  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],#backidx,#resetprof,#clearcache,#runqueued");
   if(!t) return;
 
   if(t.dataset.v){
@@ -736,6 +995,39 @@ document.addEventListener("click", ev => {
   if(t.dataset.setlvl){ prof.learner.defaultLevel = t.dataset.setlvl; save(); renderSettings(); return; }
   if(t.dataset.settheme){ prof.theme = t.dataset.settheme; save(); applyTheme(); renderSettings(); return; }
   if(t.id==="resetprof"){ prof.learner.needsSupport=[]; prof.queued=[]; save(); renderSettings(); return; }
+  if(t.dataset.setlive){ prof.live = t.dataset.setlive; save(); renderSettings(); return; }
+  if(t.id==="clearcache"){ live = {}; liveSave(); renderSettings(); return; }
+
+  // "Ask the tutor" on the miss card, and the follow-up question a live answer ends with.
+  if(t.dataset.live || t.dataset.ask){
+    const q = t.dataset.live || t.dataset.ask;
+    showView("ask");
+    document.getElementById("qbox").value = q;
+    if(canLive()) runLive(q, {}, document.getElementById("answers"), "", "");
+    else answer(q, false);
+    return;
+  }
+
+  // Everything asked with no signal, run in one go now that there is one.
+  if(t.id==="runqueued"){
+    if(!canLive() || !prof.queued.length) return;
+    const pending = prof.queued.slice(0, 5);
+    showView("ask");
+    const box = document.getElementById("answers");
+    box.innerHTML = THINKING;
+    (async () => {
+      let out = "";
+      for(const item of pending){
+        try { out += renderLive(await askLive(item.q, {}), item.q);
+              prof.queued = prof.queued.filter(x=>x.q !== item.q); save(); }
+        catch(e){ out += liveError(e, item.q); break; }   // stop on the first refusal, don't hammer
+        box.innerHTML = out + (prof.queued.length ? THINKING : "");
+      }
+      box.innerHTML = out || '<div class="miss">Nothing waiting.</div>';
+      renderSettings();
+    })();
+    return;
+  }
 });
 
 // Tapping a sentence is the strongest signal there is — we know the exact line and the exact
@@ -800,8 +1092,22 @@ let timer;
 document.getElementById("qbox").addEventListener("input", e => {
   clearTimeout(timer); const v = e.target.value;
   if(v.trim().length < 3){ document.getElementById("answers").innerHTML=""; return; }
-  timer = setTimeout(()=>answer(v), 220);
+  timer = setTimeout(()=>answer(v, false), 220);   // typing never spends a free-tier call
 });
+// Enter is the deliberate act, so this is where the live tutor is allowed to run.
+document.getElementById("qbox").addEventListener("keydown", e => {
+  if(e.key !== "Enter") return;
+  clearTimeout(timer); e.target.blur();
+  const v = e.target.value.trim();
+  if(v.length >= 3) answer(v, true);
+});
+
+// The endpoint is typed in once and remembered. Trailing whitespace off a paste is the most
+// likely way to get a URL that looks right and does not work.
+document.getElementById("endpoint").addEventListener("input", e => {
+  prof.endpoint = e.target.value.trim(); save();
+});
+document.getElementById("endpoint").addEventListener("change", () => renderSettings());
 
 function net(){
   const p = document.getElementById("netpill");
