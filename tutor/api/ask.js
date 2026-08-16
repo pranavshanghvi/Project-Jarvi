@@ -1,0 +1,124 @@
+// The online tutor. One endpoint, free providers only.
+//
+// CLAUDE.md governs this file completely: `freeOnly: true` is not a default that can be
+// overridden by a query parameter, and when the rotation is exhausted this returns 503 with the
+// reason each provider declined. It never falls back to a paid model — see PROVENANCE.md for why
+// that is structurally impossible here rather than merely intended.
+//
+// The app works with no signal at all; this only ever adds to it. So every failure path returns
+// something the client can degrade from, and none of them are retried aggressively enough to
+// burn a free tier that is already struggling.
+
+const { callModel } = require('./_modelRouter');
+const { buildPrompt, parseAnswer } = require('./_prompt');
+
+const MAX_TOKENS = 900;          // three paragraphs and a question; free tiers charge context
+const MAX_BODY = 64 * 1024;      // a section of the book plus a question, with room to spare
+
+// Anyone who finds this URL can spend the free quota, and there is no key to protect it with —
+// a secret in a PWA bundle is readable by whoever opens the page, which the directive forbids.
+// So: a light origin check to stop casual embedding, and a per-IP rate limit to bound the
+// damage. The worst case is quota exhaustion, whose failure mode is the one we already handle.
+const ALLOWED = [
+  /^https?:\/\/localhost(:\d+)?$/,
+  /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
+  /^https:\/\/([a-z0-9-]+\.)*claude\.ai$/,
+  /^https:\/\/([a-z0-9-]+\.)*vercel\.app$/,
+];
+function originAllowed(origin) {
+  if (!origin || origin === 'null') return true;   // file:// and home-screen PWAs send null
+  return ALLOWED.some(re => re.test(origin));
+}
+
+const WINDOW_MS = 60 * 1000, PER_WINDOW = 12;
+const seen = new Map();
+function rateLimited(ip) {
+  const now = Date.now();
+  const hits = (seen.get(ip) || []).filter(t => now - t < WINDOW_MS);
+  hits.push(now);
+  seen.set(ip, hits);
+  if (seen.size > 5000) for (const [k, v] of seen) if (!v.some(t => now - t < WINDOW_MS)) seen.delete(k);
+  return hits.length > PER_WINDOW;
+}
+
+function send(res, status, body, origin) {
+  res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Type', 'application/json');
+  res.status(status).send(JSON.stringify(body));
+}
+
+async function handler(req, res) {
+  const origin = req.headers.origin;
+  if (req.method === 'OPTIONS') return send(res, 204, '', origin);
+  if (req.method !== 'POST') return send(res, 405, { error: 'POST only' }, origin);
+  if (!originAllowed(origin)) return send(res, 403, { error: 'Origin not allowed' }, origin);
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (rateLimited(ip)) {
+    return send(res, 429, {
+      error: 'rate_limited',
+      // Phrased for the reader, not the developer — this string is shown in the app.
+      message: 'That is a lot of questions in one minute. Give it a moment.',
+    }, origin);
+  }
+
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = null; } }
+  if (!body || typeof body !== 'object') return send(res, 400, { error: 'Expected a JSON body' }, origin);
+  if (JSON.stringify(body).length > MAX_BODY) return send(res, 413, { error: 'Body too large' }, origin);
+
+  const question = String(body.question || '').trim();
+  if (!question) return send(res, 400, { error: 'No question' }, origin);
+
+  const { system, user } = buildPrompt({
+    question,
+    line: body.line,
+    section: body.section,
+    level: body.level,
+    needsSupport: body.needsSupport,
+  });
+
+  let response;
+  try {
+    // The one call. `freeOnly` is hardcoded — it is the cost ceiling, not a parameter.
+    response = await callModel({
+      model: 'claude-haiku-4-5-20251001',   // only names the paid tier; freeOnly never reaches it
+      max_tokens: MAX_TOKENS,
+      temperature: 0.4,
+      system,
+      messages: [{ role: 'user', content: user }],
+    }, { freeOnly: true });
+  } catch (e) {
+    // Every free provider declined. This is the expected end state of a free tier, not a bug,
+    // so it is reported as a state the app can sit in rather than as an error.
+    console.log('[ask] free rotation exhausted: ' + String(e.message).slice(0, 400));
+    return send(res, 503, {
+      error: 'no_free_provider',
+      message: 'The free models are all out for now. Your question is saved — try again later.',
+      declined: e.declined || [String(e.message)],
+    }, origin);
+  }
+
+  const text = (response.content || [])
+    .filter(b => b && b.type === 'text').map(b => b.text).join('\n').trim();
+  if (!text) return send(res, 502, { error: 'empty_answer', message: 'The model returned nothing usable.' }, origin);
+
+  return send(res, 200, {
+    ...parseAnswer(text),
+    // The free providers' translation layer does not carry a model name back — it is logged
+    // server-side, not returned. Say null rather than guessing one; the client only needs to
+    // know the answer came from the live tutor, which `source` tells it.
+    source: 'live',
+    model: response.model || null,
+    askedAt: new Date().toISOString(),
+  }, origin);
+}
+
+module.exports = handler;
+module.exports.default = handler;
+// Exported for the tests, which drive these directly rather than standing up a server.
+module.exports._internals = { originAllowed, rateLimited, MAX_TOKENS };

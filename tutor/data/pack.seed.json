@@ -1,0 +1,437 @@
+{
+  "version": "seed-1",
+  "note": "Hand-authored seed pack. These entries are the gold standard the generator few-shots against, and they cover the critical path: the background vocabulary Einstein assumes, and the Part I sections. Generated entries are appended by tools/generate-pack.mjs and marked provenance:'generated'.",
+  "misconceptions": {
+    "biological-ageing": {
+      "claim": "High speed physically affects the body — you age more slowly because motion does something to your tissue.",
+      "correction": "Nothing happens to tissue. Every process — clocks, cells, thoughts, atomic decay — stays exactly in step, which is precisely why nothing is detectable from inside.",
+      "surface": "Ask what a blood test aboard the ship would show. Then ask what it would mean for the principle of relativity in §V if it showed anything at all."
+    },
+    "relativistic-mass": {
+      "claim": "Mass increases with speed.",
+      "correction": "Rest mass is invariant. Momentum grows nonlinearly with speed, which is what the older 'relativistic mass' language was clumsily describing.",
+      "surface": "Ask: whose measurement? Push on the frame-dependence."
+    },
+    "clocks-malfunction": {
+      "claim": "Time dilation is an illusion, or the clocks are simply going wrong.",
+      "correction": "The elapsed time genuinely differs. The clocks are keeping perfect time along different paths.",
+      "surface": "Point at muon decay and at Hafele–Keating, 1971."
+    },
+    "twin-unresolved": {
+      "claim": "The twin paradox is an unresolved contradiction.",
+      "correction": "It is asymmetric — one twin accelerates and changes frames, the other does not.",
+      "surface": "Ask them to draw both worldlines and see which one has a kink in it."
+    },
+    "rubber-sheet": {
+      "claim": "Spacetime is like a rubber sheet with a heavy ball on it.",
+      "correction": "The analogy is circular — the ball rolls 'down' because of gravity, which is the very thing being explained.",
+      "surface": "Ask what makes the ball roll down on the sheet."
+    },
+    "everything-is-relative": {
+      "claim": "Relativity says everything is relative — there are no absolutes, all viewpoints are equally valid about everything.",
+      "correction": "Almost the opposite. The theory is built on things that are absolute for everyone: the speed of light, and the spacetime interval. It says exactly which things are frame-dependent and which are not.",
+      "surface": "Ask what the theory is named after — the constancy of c is the fixed point the whole structure hangs from."
+    },
+    "gravity-is-a-force": {
+      "claim": "Gravity is a force in general relativity.",
+      "correction": "Free fall is inertial motion — the natural, unforced path. Tidal effects are the real signature of gravity.",
+      "surface": "Ask what an accelerometer reads while in free fall."
+    },
+    "expands-into-something": {
+      "claim": "The universe is expanding into some surrounding space.",
+      "correction": "Metric expansion. No external space is required or implied.",
+      "surface": "Ask where the edge would be, and what would be on the other side of it."
+    }
+  },
+  "arcs": [
+    {
+      "id": "arc.absolute-time-dies",
+      "title": "The death of absolute time",
+      "meaning": "Before 1905 everyone assumed there was one universal clock ticking away behind the universe — that 'now' meant the same thing everywhere, for everyone. Newton wrote it into his foundations explicitly. Einstein's argument is that this belief was never based on evidence; it was an assumption so natural nobody thought to check it. When you do check it, by asking how you would actually synchronise two distant clocks, it falls apart. There is no universal now. Two events that are simultaneous for you are not simultaneous for someone moving past you, and neither of you is mistaken.",
+      "why": "This is the single most radical thing in the book, and Einstein puts it at §VIII–§IX, before any of the famous consequences. Time dilation and length contraction are downstream of it.",
+      "sections": [8, 9, 11]
+    },
+    {
+      "id": "arc.geometry-replaces-force",
+      "title": "Geometry replaces force",
+      "meaning": "Newton explained a falling apple with a force reaching invisibly across space. Einstein removes the force entirely. Mass and energy bend spacetime; objects then travel the straightest available path through the bent geometry. Nothing pulls the apple. The apple is going straight — it is space and time that are curved. This changed what counts as an explanation in physics: not a mechanism acting between things, but the shape of the arena itself.",
+      "why": "It is why general relativity is considered a deeper theory rather than a correction. It replaced the concept, not the numbers.",
+      "sections": [19, 20, 24, 25, 29]
+    },
+    {
+      "id": "arc.what-is-fundamental",
+      "title": "Why this is called fundamental — with the hype removed",
+      "meaning": "Genuinely foundational: it rewrote what space and time are, so every theory built since has had to respect that. It set the causal structure of reality — the light cone defines what can possibly affect what. It gave us mass–energy equivalence, and therefore nuclear physics and why the sun shines. And it created cosmology: the Big Bang, black holes, the expanding universe are all consequences of the field equations. It is also one of the two pillars of modern physics, and the fact that it and quantum mechanics are mutually incompatible is the largest unsolved problem in the subject.\n\nOversold: relativity is not why your laptop works — that is quantum mechanics. Chemistry, biology, materials and electronics need essentially none of it. GPS gets cited endlessly precisely because it is one of very few everyday technologies that does. Its importance is conceptual and cosmological rather than technological. It changed what physicists believe reality is, more than it changed what engineers can build.",
+      "why": "You said this is why you are reading the book. This is the honest answer.",
+      "sections": [17, 29, 30, 32]
+    }
+  ],
+  "entries": [
+    {
+      "id": "concept.euclidean-geometry",
+      "kind": "concept",
+      "title": "Euclidean geometry",
+      "aliases": ["geometry", "plane geometry", "flat geometry", "school geometry"],
+      "anchors": ["s01"],
+      "firstNeededAt": 1,
+      "beyondBook": false,
+      "levels": {
+        "plain": "The geometry you did at school. Flat surfaces, straight lines, parallel lines that never meet, and the angles of a triangle adding up to 180 degrees. It is named after Euclid, who wrote it all down about 2,300 years ago.",
+        "intuition": "Euclid did something clever: he started from a handful of statements so obvious nobody would argue with them — you can draw a straight line between any two points, all right angles are equal — and then proved everything else from those. Two thousand years of mathematicians treated the result as simply true about the world, in the way that 2+2=4 is true.",
+        "careful": "A formal system: five postulates plus definitions, from which every theorem follows by pure logic. The fifth postulate — that through a point not on a line there is exactly one parallel — is the one that turns out to be optional. Drop it and you get perfectly consistent non-Euclidean geometries, which is what Einstein needs in §XXIV.",
+        "math": null
+      },
+      "meaning": "Einstein opens the entire book with this, and it is not a warm-up. He is attacking a hidden assumption: that geometry is a set of truths about physical space, known in advance of any measurement. His answer is that a geometrical statement is only true of the world if measurements say so — and measurement means rigid rods, which is physics, not mathematics. Once geometry becomes an experimental question rather than an a priori one, the door is open for space to turn out non-flat. Everything in Part II walks through that door.",
+      "analogies": [
+        {
+          "text": "Think of the rules of chess. Within chess, 'a bishop moves diagonally' is absolutely true — it follows from the rules. But that tells you nothing about whether any physical object in the world moves that way. Euclid's theorems are true within Euclid's system in the same way. Whether real space obeys them is a separate question, and only measurement can answer it.",
+          "breaks": "Chess rules are arbitrary and we invented them knowing that. Euclid's postulates feel forced on us by the world, which is exactly why it took two millennia to notice they were assumptions. The analogy makes the choice look more obvious than it was."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": [],
+        "next": [
+          { "q": "If geometry has to be checked by measurement, what do we measure it with?", "target": "concept.rigid-body" },
+          { "q": "Is there any other kind of geometry?", "target": "section.s24" }
+        ],
+        "contrast": ["section.s24"],
+        "deeper": ["section.s24"]
+      },
+      "sources": ["book:s01.p1", "book:s01.p2"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.rigid-body",
+      "kind": "concept",
+      "title": "Rigid body and the measuring rod",
+      "aliases": ["rigid body", "measuring rod", "metre rod", "practically rigid"],
+      "anchors": ["s01", "s02"],
+      "firstNeededAt": 1,
+      "beyondBook": false,
+      "levels": {
+        "plain": "An object that keeps its shape and size — a metal ruler rather than a piece of elastic. Einstein needs one because to say anything about distance, you have to have something to measure with.",
+        "intuition": "It sounds trivial, but it is doing real work. 'This table is two metres long' means nothing until you specify: laid against what, and does that thing stay the same length while you move it around? Einstein calls it 'practically rigid' — an honest hedge, because no real object is perfectly rigid.",
+        "careful": "The rigid body is the physical bridge between abstract geometry and measurable fact. Distance becomes an experimental result obtained by laying a standard rod end to end. This is why §XII lands so hard: the rod, the thing we trusted to define length, turns out to have a length that depends on who is looking.",
+        "math": null
+      },
+      "meaning": "Einstein is being deliberately careful about foundations here — he refuses to let 'distance' be an undefined intuition. Everything must reduce to an operation you could actually perform. That instinct, of asking 'what would I physically do to measure this?', is the method that produces the whole theory. It is what he applies to time in §VIII, and that is where the sparks fly.",
+      "analogies": [
+        {
+          "text": "Before 1960 the metre was literally a platinum bar in a vault in Paris. Every measurement of length in the world traced back to that one object being genuinely unchanging. If the bar quietly grew on Tuesdays, every length ever measured would be wrong and nobody could tell.",
+          "breaks": "The Paris bar was a single agreed standard, and the worry was about it changing over time. Einstein's problem is different and stranger: the rod does not change *over time*, it has different lengths *at the same moment* according to different observers, and none of them is wrong."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.euclidean-geometry"],
+        "next": [
+          { "q": "So how do we describe where something is?", "target": "concept.coordinate-system" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s12"]
+      },
+      "sources": ["book:s01.p3", "book:s02.p1"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.coordinate-system",
+      "kind": "concept",
+      "title": "Coordinate system and reference body",
+      "aliases": ["coordinate system", "co-ordinates", "reference body", "frame of reference", "system of coordinates"],
+      "anchors": ["s02", "s03"],
+      "firstNeededAt": 2,
+      "beyondBook": false,
+      "levels": {
+        "plain": "A way of saying where something is by giving numbers. Three numbers fix a point in space — how far along, how far across, how far up — measured from something you have agreed to call the starting point.",
+        "intuition": "The crucial bit is the *something you agreed on*. There is no such thing as position by itself, only position relative to a chosen body. 'Two metres up' means two metres up from the floor, or the table, or sea level. Einstein calls that chosen thing the reference-body, and the numbers you get depend entirely on which one you pick.",
+        "careful": "A reference-body with a coordinate system rigidly attached to it, plus rods to measure with and clocks to time with. Any event can then be tagged with three space numbers and one time number. Different reference-bodies assign different numbers to the same event — the transformation between those sets of numbers is the whole subject of §XI.",
+        "math": null
+      },
+      "meaning": "This is the move that makes the book possible. Once you accept that all position is relative to a chosen body, the natural question is: which choices are legitimate, and do the laws of physics look the same in all of them? That question is the principle of relativity, and answering it takes Einstein the rest of the book. Notice he has smuggled in something enormous — the idea that physics should not care which reference-body you happen to be standing on.",
+      "analogies": [
+        {
+          "text": "Giving someone your seat on a plane. 'Row 14, seat C' is complete and useful, and it says nothing about where you are over the Atlantic. You could equally give latitude and longitude — also complete, also useful, and useless for finding your seat. Neither is the real position. They answer relative to different reference bodies.",
+          "breaks": "The plane and the earth are both available to you at once and you can convert freely between them, because they agree about time. Einstein's frames disagree about *when* things happen too, and that is the part no everyday example prepares you for."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.rigid-body"],
+        "next": [
+          { "q": "What did physics before Einstein assume about all this?", "target": "concept.classical-mechanics" },
+          { "q": "Which reference bodies are the good ones?", "target": "concept.inertial-frame" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s11"]
+      },
+      "sources": ["book:s02.p1", "book:s02.p3"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.classical-mechanics",
+      "kind": "concept",
+      "title": "Classical mechanics",
+      "aliases": ["classical mechanics", "Newtonian mechanics", "Newton's laws", "classical physics", "mechanics"],
+      "anchors": ["s03", "s06", "s21"],
+      "firstNeededAt": 3,
+      "beyondBook": false,
+      "levels": {
+        "plain": "The physics everyone used before Einstein — Newton's system for working out how things move when they are pushed or pulled. It is what Einstein means every time he says 'classical mechanics', and he assumes you already know it.",
+        "intuition": "It is the physics of ordinary life, and it is superb at it. A thrown ball, a planet's orbit, a braking car. Three rules do most of the work: things keep moving unless something pushes them, force equals mass times acceleration, and every push has an equal push back. Underneath sit two assumptions so natural they are hard to notice — space is a fixed stage that things move around on, and time ticks at the same rate for everyone, everywhere.",
+        "careful": "Newton's three laws plus universal gravitation, set in absolute space and absolute time. Its predictions are accurate to many decimal places at everyday speeds. Its two hidden postulates — absolute space and absolute simultaneity — are exactly what Einstein removes, which is why classical mechanics survives as a limiting case rather than being discarded.",
+        "math": null
+      },
+      "meaning": "Einstein is not putting classical mechanics on the table to teach it. He is putting it there because he is about to examine one of those quiet assumptions — the one about time — and show it does not survive. The lesson worth taking is broader than physics: the most dangerous ideas are not the ones you believe, they are the ones so obvious you never noticed you believed them. Newton wrote absolute time into his foundations as though it needed no defence. It took two hundred years for anyone to ask why.",
+      "analogies": [
+        {
+          "text": "Classical mechanics is a map of your city that is accurate to the metre — but drawn as though the earth were flat. For anything you will ever do in that city, the flat map is perfect and the curvature is far too small to matter. Sail across an ocean with it and you will end up in the wrong place. Nothing was wrong with the map. It was being used past its range.",
+          "breaks": "The flatness of the map is an error you can see once you know to look. Absolute time is not a small error that shows up under a microscope — it is a wrong idea about what time *is*, and the correction is conceptual rather than a matter of precision."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.coordinate-system"],
+        "next": [
+          { "q": "Is Einstein saying Newton was wrong?", "target": "concept.classical-mechanics.wrong" },
+          { "q": "What exactly is the law of inertia?", "target": "concept.inertial-frame" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s21"]
+      },
+      "sources": ["book:s03.p1", "book:s03.p4"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.classical-mechanics.wrong",
+      "kind": "concept",
+      "title": "Is Newton wrong, then?",
+      "aliases": ["Newton wrong", "was Newton wrong", "does relativity disprove Newton"],
+      "anchors": ["s03", "s21"],
+      "firstNeededAt": 3,
+      "beyondBook": false,
+      "levels": {
+        "plain": "No. Newton's physics still works, and engineers use it every day to build bridges and fly aircraft. Einstein did not show it was wrong — he found the edges of where it applies.",
+        "intuition": "At everyday speeds the difference between Newton and Einstein is so small you could never measure it. At 1% of the speed of light — which is 3,000 km per second, far faster than anything you will ever ride — the correction is about five parts in a hundred thousand. Newton is not an approximation in the dismissive sense. He is right, up to a point, and Einstein tells you where the point is.",
+        "careful": "Special relativity reduces exactly to Newtonian mechanics in the limit v ≪ c, and general relativity reduces to Newtonian gravitation in weak fields. This is a requirement, not a coincidence: any successor theory must reproduce its predecessor wherever the predecessor was confirmed. Newton's framework was not deleted, it was contained.",
+        "math": null
+      },
+      "meaning": "This is how physics actually progresses, and it is worth understanding because the popular story gets it wrong. Theories are rarely overturned; they are usually enclosed by a larger theory that explains both the old results and the anomalies. What changes most is not the numbers but the concepts. Newton's numbers survive almost everywhere. Newton's *absolute space and time* do not survive at all. The revolution was in meaning, not in measurement.",
+      "analogies": [
+        {
+          "text": "Newton's mechanics is a superb translation of a book from a language nobody had fully deciphered. Every sentence you could check was right. Then someone learns the language properly and finds the translator had guessed at the grammar — the sentences still read correctly, but the underlying structure was different from what he assumed.",
+          "breaks": "A translator's guess is an error the moment it is made. Newton's assumptions were not errors within his evidence — they were correct summaries of everything anyone could measure for two centuries. He was not guessing carelessly."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.classical-mechanics"],
+        "next": [
+          { "q": "Where does classical mechanics actually break?", "target": "section.s07" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s21"]
+      },
+      "sources": ["book:s21.p1"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.inertial-frame",
+      "kind": "concept",
+      "title": "The law of inertia and the Galileian frame",
+      "aliases": ["law of inertia", "inertia", "Galileian system", "inertial frame", "uniform motion"],
+      "anchors": ["s04", "s05"],
+      "firstNeededAt": 4,
+      "beyondBook": false,
+      "levels": {
+        "plain": "The law of inertia says a body left alone — far from everything else — either sits still or keeps gliding in a straight line at a steady speed. A 'Galileian system' is any reference body for which that law actually holds true.",
+        "intuition": "That definition is sneakier than it looks. Attach your coordinates to the spinning earth and the fixed stars appear to sweep in enormous circles every day — which breaks the law of inertia, since nothing is pushing them. So the earth is not quite a Galileian frame. The law of inertia is not just a statement about bodies; it quietly picks out which reference bodies are allowed.",
+        "careful": "A frame in which a free body has zero acceleration. Any frame moving uniformly with respect to a Galileian frame is itself Galileian, so they form an infinite family related by constant velocities. Rotating and accelerating frames are excluded — a restriction that stands until §XVIII, where Einstein sets about removing it.",
+        "math": null
+      },
+      "meaning": "This is where the word 'restricted' in 'restricted theory of relativity' comes from. Special relativity only applies to this privileged family of uniformly moving frames — and Einstein is visibly uncomfortable about it. Why should the laws of nature care about your state of motion at all? That discomfort is the engine of Part II. The whole of general relativity is an attempt to abolish the privilege and let *any* reference body be as good as any other.",
+      "analogies": [
+        {
+          "text": "A smooth train at constant speed with the blinds down: spill your coffee, throw a ball, everything behaves exactly as on the platform, and no experiment inside tells you whether you are moving. Now the train brakes. Coffee slides forward, you lurch — suddenly things accelerate with nothing pushing them. The first train is a Galileian frame. The braking one is not.",
+          "breaks": "It suggests smoothness is the criterion. A train gliding round a perfectly banked curve at constant speed feels smooth and is *not* inertial — direction is changing. And strictly no frame on the earth qualifies, since the planet spins."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.classical-mechanics"],
+        "next": [
+          { "q": "So do the laws of physics look the same in all of these frames?", "target": "section.s05" },
+          { "q": "Why can't accelerating frames be used?", "target": "section.s18" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s18"]
+      },
+      "sources": ["book:s04.p1"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.ether",
+      "kind": "concept",
+      "title": "The ether, and why light was a problem",
+      "aliases": ["ether", "aether", "luminiferous ether", "light medium"],
+      "anchors": ["s07", "s16"],
+      "firstNeededAt": 7,
+      "beyondBook": false,
+      "levels": {
+        "plain": "Nineteenth-century physicists believed light was a wave, and every wave they knew of was a wave *in* something — sound in air, ripples in water. So they assumed there must be an invisible substance filling all of space for light to wave in. They called it the ether. It does not exist.",
+        "intuition": "The ether was not a silly idea; it was the obvious one. But it made a testable prediction. If light travels at a fixed speed through the ether, then the earth ploughing through that ether should give different light speeds in different directions — like a swimmer going with or against a current. Experiments looked very hard for that difference. It was never there.",
+        "careful": "The ether provided the absolute rest frame that Maxwell's electrodynamics seemed to demand: his equations give a definite speed for light, and a speed must be relative to *something*. Michelson and Morley's 1887 interferometer found no motion of the earth relative to any such medium. Einstein's resolution is radical — abandon the medium, keep the constant speed, and change the notions of space and time that made the combination look impossible.",
+        "math": null
+      },
+      "meaning": "This is the crisis the book exists to resolve, and it shows how a theory really dies. Not from a single knockout experiment, but from a clash between two things that both worked. Mechanics said all uniform motion is relative; electrodynamics said light has one definite speed. Both were superbly confirmed and they could not both be true in the old framework. Einstein's move was to keep the two facts and sacrifice something everyone assumed was untouchable — that time is the same for everyone.",
+      "analogies": [
+        {
+          "text": "Sound needs air, and its speed is fixed relative to the air. Run towards an approaching sound and you meet it faster; run away and it catches you slower. Everyone expected light to behave the same way with respect to the ether. It does not. Light arrives at the same speed whether you run towards it or away from it, which for sound would be flatly impossible.",
+          "breaks": "This is the analogy's whole point, and its whole limitation — light is like sound right up until the crucial moment, then behaves in a way no medium-borne wave ever could. Use it to see what physicists expected, never to see what light actually does."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.inertial-frame"],
+        "next": [
+          { "q": "So how fast does light actually travel for someone chasing it?", "target": "section.s07" },
+          { "q": "What was the experiment that killed the ether?", "target": "section.s16" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s16"]
+      },
+      "sources": ["book:s07.p1"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.defining-simultaneity",
+      "kind": "concept",
+      "title": "What it means to define simultaneity",
+      "aliases": ["simultaneity", "simultaneous", "at the same time", "synchronise clocks", "definition of time"],
+      "anchors": ["s08", "s09"],
+      "firstNeededAt": 8,
+      "beyondBook": false,
+      "levels": {
+        "plain": "Two things happening 'at the same time' sounds obvious until you ask how you would check it for two events far apart. You cannot be in both places at once. Whatever answer you give involves signals travelling — and signals take time.",
+        "intuition": "Einstein's insight is that 'simultaneous' has no meaning at all until you specify a procedure for testing it. It is not a fact waiting to be discovered; it is something you have to *define*. And any honest definition uses light signals, because light is the fastest thing there is. Once your definition of 'same time' depends on light, and light behaves the same for everyone regardless of their motion, simultaneity stops being universal.",
+        "careful": "Einstein defines two distant events as simultaneous in a frame if light signals emitted from them arrive together at the midpoint, as measured in that frame. Perfectly reasonable — and frame-dependent, because the midpoint of a moving system is itself moving. Two events simultaneous in one frame are not simultaneous in another, with no fact of the matter to settle it.",
+        "math": null
+      },
+      "meaning": "This is the hinge of the entire book, and Einstein places it deliberately before time dilation. The famous consequences are not separate discoveries — they are all this one idea seen from different angles. What makes it philosophically extraordinary is the method: he does not discover a new fact about time, he notices that a word everyone used confidently had never been given a meaning. Ask what you would physically *do* to verify it, and the old certainty evaporates. That method — demanding an operational definition — is arguably his real contribution.",
+      "analogies": [
+        {
+          "text": "Two people in different countries claim they messaged 'at the same moment'. To check, you compare timestamps — which means trusting that both phones are synchronised, which means something once travelled between them to set the clocks. Push on how that synchronisation happened and 'the same moment' turns out to rest on a convention rather than a fact.",
+          "breaks": "Phone clocks could in principle be synchronised perfectly, and the problem is merely practical. Einstein's point is not practical: even with flawless clocks and infinite care, observers in relative motion genuinely disagree, and neither has made a mistake."
+        }
+      ],
+      "misconceptions": ["clocks-malfunction"],
+      "edges": {
+        "prereq": ["concept.ether"],
+        "next": [
+          { "q": "Show me two people actually disagreeing about what is simultaneous", "target": "section.s09" },
+          { "q": "If nobody is wrong, is there anything everyone does agree on?", "target": "arc.absolute-time-dies" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s09"]
+      },
+      "sources": ["book:s08.p1", "book:s08.p2"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.time-dilation-body",
+      "kind": "concept",
+      "title": "Does travelling fast affect your body?",
+      "aliases": ["age slower", "live longer", "organic tissue", "biological", "ageing", "body", "does it affect me"],
+      "anchors": ["s12"],
+      "firstNeededAt": 12,
+      "beyondBook": false,
+      "levels": {
+        "plain": "No. Nothing happens to your body. You would feel nothing, notice nothing, and your cells would divide at their normal rate. You also do not get more life — you get the same life, while more time passes for everyone else.",
+        "intuition": "The reason nothing happens to you specifically is that *everything* keeps pace. Your watch, your heartbeat, your thoughts, the decay of atoms in your bones — all in step with each other, exactly as at rest. Nothing is singled out, so from the inside there is nothing to detect. It is not your body slowing down. It is that you and the people you left behind took different paths, and time elapsed differently along them.",
+        "careful": "The principle of relativity forbids any detectable effect. If biological processes ran differently at speed, an internal experiment could reveal your absolute motion, which would give you a preferred rest frame and destroy the theory's foundation. Einstein writes of the moving clock only that 'as a consequence of its motion the clock goes more slowly than when at rest' — it is keeping perfect time, measuring a different elapsed interval along a different worldline.",
+        "math": null
+      },
+      "meaning": "The temptation is to look for a mechanism — something speed *does* to matter. There is no mechanism, and that is the point. Relativity is not a theory about how clocks and bodies are affected by motion; it is a theory about the structure of time itself. Once you stop asking 'what does speed do to the clock?' and start asking 'how much time is there along this path?', the strangeness reorganises into something coherent. This is the mental shift the book is really asking you to make.",
+      "analogies": [
+        {
+          "text": "Two friends drive from London to Edinburgh, one by motorway and one by the coast road. Both drive normally, both odometers work perfectly, and they arrive with different mileage. Neither car was faulty — the routes were different lengths. Your watch and your body are odometers for your path through spacetime.",
+          "breaks": "Roads sit in space and you can see them, and the longer road racks up *more* miles. Through spacetime it is inverted: the fast traveller's path yields *less* elapsed time. Keep 'different routes, different totals'. Discard the direction."
+        }
+      ],
+      "misconceptions": ["biological-ageing", "clocks-malfunction"],
+      "edges": {
+        "prereq": ["concept.defining-simultaneity"],
+        "next": [
+          { "q": "How do we know this is real and not just theory?", "target": "concept.evidence" },
+          { "q": "So could I travel to the future?", "target": "concept.time-travel" },
+          { "q": "If motion is relative, why is the traveller the younger one?", "target": "misconception.twin-unresolved" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s12"]
+      },
+      "sources": ["book:s12.p13", "book:s12.p14"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.evidence",
+      "kind": "concept",
+      "title": "How do we know any of this is real?",
+      "aliases": ["evidence", "proof", "experiment", "how do we know", "is it real", "tested"],
+      "anchors": ["s16"],
+      "firstNeededAt": 12,
+      "beyondBook": false,
+      "levels": {
+        "plain": "Because it has been measured, repeatedly, with instruments rather than arguments. Two examples are worth remembering, because they are simple and decisive.",
+        "intuition": "**Muons.** Cosmic rays hitting the upper atmosphere create particles called muons about 15 km up. A muon survives roughly 2.2 millionths of a second before decaying. Even at almost the speed of light that gives it about 660 metres — it should never reach the ground. They arrive at sea level in large numbers. Time runs slower along their path, so they last long enough.\n\n**Hafele–Keating, 1971.** Caesium atomic clocks were flown around the world on ordinary scheduled airliners, then compared with identical clocks left at home. They disagreed, by the amount the theory predicted, in both directions of travel.",
+        "careful": "Add: particle accelerators, where unstable particles live measurably longer at high energies and beams cannot be steered without relativistic corrections; the Mercury perihelion advance and the deflection of starlight, both in Appendix III; and GPS, which requires both special and general relativistic corrections or accumulates errors of kilometres per day.",
+        "math": null
+      },
+      "meaning": "Worth holding onto because relativity is so often presented as a thought experiment — trains, lightning, imaginary twins. It is not philosophy that happened to catch on. It is among the most precisely tested theories in science, and the tests are not exotic: particles falling out of the sky, clocks on commercial flights, satellites overhead. When Einstein reasons about a train in §IX, he is not speculating. He is deriving something that was later measured.",
+      "analogies": [],
+      "misconceptions": ["clocks-malfunction"],
+      "edges": {
+        "prereq": [],
+        "next": [
+          { "q": "What did the experiment that killed the ether actually do?", "target": "section.s16" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s16"]
+      },
+      "sources": ["book:s16.p1"],
+      "provenance": "gold"
+    },
+    {
+      "id": "concept.time-travel",
+      "kind": "concept",
+      "title": "Does this mean time travel is possible?",
+      "aliases": ["time travel", "travel to the future", "go back in time", "future"],
+      "anchors": ["s12"],
+      "firstNeededAt": 12,
+      "beyondBook": false,
+      "levels": {
+        "plain": "Forwards, yes — and it is not even controversial. Backwards, no.",
+        "intuition": "Travelling into the future is exactly what time dilation is. Fly out at high speed and return, and less time will have passed for you than for everyone at home. You have arrived in their future. Astronauts on long missions do this, by fractions of a second. The only limit is engineering, not physics.\n\nBackwards is different. Going back would let you affect your own past, and the causal structure of relativity — what the light cone permits — rules it out for anything travelling at or below light speed.",
+        "careful": "Forward displacement follows directly from the twin scenario and is experimentally confirmed. Backward travel would require closed timelike curves. Certain exotic solutions of the field equations admit them mathematically, but they demand conditions — negative energy densities, infinite rotating cylinders — with no evidence of existing. Note also that you can never travel forward and return: the journey is one-way.",
+        "math": null
+      },
+      "meaning": "The reason this is more interesting than a curiosity: it shows the future is not a place that already exists which you might visit early. Time dilation does not skip you over intervening events — you live every second of your own journey. What changes is only how much time elapses elsewhere. 'Travelling to the future' is really just taking a shorter path through time than everyone else, and the word 'travel' misleads more than it helps.",
+      "analogies": [
+        {
+          "text": "Two people walk from one corner of a field to the opposite corner. One goes straight across, the other via a wide arc. Both walk the whole way; neither teleports. They simply cover different distances and arrive at different times.",
+          "breaks": "In the field the wandering walker takes *longer*. In spacetime the traveller who deviates experiences *less* time. Same structure, inverted sign — the same trap as the road analogy."
+        }
+      ],
+      "misconceptions": [],
+      "edges": {
+        "prereq": ["concept.time-dilation-body"],
+        "next": [
+          { "q": "What stops anything going faster than light?", "target": "section.s12" }
+        ],
+        "contrast": [],
+        "deeper": ["section.s12"]
+      },
+      "sources": ["book:s12.p5"],
+      "provenance": "gold"
+    }
+  ]
+}

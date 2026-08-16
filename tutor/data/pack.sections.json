@@ -1,0 +1,630 @@
+{
+  "version": "sections-1",
+  "note": "One entry per section of the book, so no passage anywhere returns bare text. These are shorter than the gold concept entries by design — they orient you inside the section and say why it matters, then hand off to the concept entries for depth.",
+  "entries": [
+    {
+      "id": "section.s01", "kind": "section", "title": "§I · Physical Meaning of Geometrical Propositions",
+      "aliases": ["geometry", "geometrical propositions", "axioms", "Euclid", "true"],
+      "anchors": ["s01"], "firstNeededAt": 1,
+      "levels": {
+        "plain": "Einstein opens by asking a strange question: is geometry actually *true* about the world, or is it just a set of rules that follow from each other? He decides you cannot answer that by thinking. You have to measure.",
+        "intuition": "In school, geometry felt like truth — a straight line is the shortest distance, full stop. Einstein points out that Euclid's theorems only prove things *within Euclid's system*. Whether real space behaves that way is a question for rulers, not logic. And rulers are physics.",
+        "careful": "He separates the axiomatic content of geometry from its physical interpretation. Geometry becomes true of the world only once you specify a physical realisation of 'straight line' and 'distance' — practically rigid bodies. This makes geometry an experimental science."
+      },
+      "meaning": "This is not a preamble, it is the foundation stone. By making geometry answerable to measurement, Einstein opens the possibility that space might not be flat — a possibility he cashes in at §XXIV and needs for the whole of general relativity. Nobody could bend space while geometry was a matter of pure reason.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": [], "next": [
+        { "q": "What is Euclidean geometry, exactly?", "target": "concept.euclidean-geometry" },
+        { "q": "What do we measure with?", "target": "concept.rigid-body" }], "contrast": [], "deeper": ["section.s24"] },
+      "sources": ["book:s01.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s02", "kind": "section", "title": "§II · The System of Co-ordinates",
+      "aliases": ["coordinates", "position", "where something is", "cloud", "Trafalgar"],
+      "anchors": ["s02"], "firstNeededAt": 2,
+      "levels": {
+        "plain": "How do you say where something is? You pick something to measure from, then give distances. Einstein works through it carefully, including the awkward case of a cloud with nothing underneath it to measure against.",
+        "intuition": "Every statement of position is secretly a statement about a *relationship*. There is no 'here' without a 'here relative to what'. Einstein is being pedantic on purpose, because the pedantry is where the physics hides.",
+        "careful": "He builds up the notion of a reference-body with a rigid coordinate framework attached, and defines the position of an event as the set of measurements made against it. Extended to include time readings, this becomes the four-number description that the Lorentz transformation acts on in §XI."
+      },
+      "meaning": "Once all position is relative to a chosen body, the obvious next question is whether the laws of physics depend on which body you choose. That question is the entire book. Notice what he has quietly assumed here and will keep until §IX: that everyone at least agrees about *time*.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s01"], "next": [
+        { "q": "What exactly is a coordinate system?", "target": "concept.coordinate-system" },
+        { "q": "What did the old physics assume about space and time?", "target": "section.s03" }], "contrast": [], "deeper": ["section.s11"] },
+      "sources": ["book:s02.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s03", "kind": "section", "title": "§III · Space and Time in Classical Mechanics",
+      "aliases": ["classical mechanics", "railway carriage", "stone", "embankment", "trajectory", "path"],
+      "anchors": ["s03"], "firstNeededAt": 3,
+      "levels": {
+        "plain": "Einstein drops a stone from a moving train window. From the train it falls straight down. From the embankment it traces a curve. Same stone, same fall — two different paths. So which is the real one?",
+        "intuition": "His answer: neither, and the question is badly formed. There is no such thing as *the* path. There is only the path relative to a chosen reference body. This feels obvious once said, and almost nobody notices they believed otherwise.",
+        "careful": "He is dismantling the idea of absolute space — the notion of position independent of any reference-body. He also flags, in passing, that a complete description of motion requires a definition of time, and that classical mechanics simply helped itself to one."
+      },
+      "meaning": "This is the template for the whole book: take something everyone assumes without noticing, ask what it would actually mean, and watch it dissolve. Here he does it to space. In §VIII he does it to time, and that one does not merely dissolve — it takes the rest of physics with it.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s02"], "next": [
+        { "q": "What is classical mechanics?", "target": "concept.classical-mechanics" },
+        { "q": "Is Einstein saying Newton was wrong?", "target": "concept.classical-mechanics.wrong" }], "contrast": [], "deeper": ["section.s21"] },
+      "sources": ["book:s03.p2"], "provenance": "gold"
+    },
+    {
+      "id": "section.s04", "kind": "section", "title": "§IV · The Galileian System of Co-ordinates",
+      "aliases": ["Galileian", "inertia", "fixed stars", "law of inertia"],
+      "anchors": ["s04"], "firstNeededAt": 4,
+      "levels": {
+        "plain": "The law of inertia says a body left completely alone keeps moving in a straight line at a steady speed. Einstein points out this quietly tells you which reference bodies are legitimate — the ones where that law actually holds.",
+        "intuition": "Attach your coordinates to the spinning earth and the fixed stars sweep round in vast circles every day, with nothing pushing them. So strictly the earth is not a valid frame. The law of inertia is doing double duty: describing bodies, and selecting frames.",
+        "careful": "A Galileian system is one in which a free body has zero acceleration. Any frame in uniform translation relative to one is also Galileian, giving an infinite family. Rotating and accelerating frames are excluded — the restriction that makes this the *restricted* theory."
+      },
+      "meaning": "Here is the discomfort that eventually produces general relativity. Why should nature care which of infinitely many frames you stand in? Einstein accepts the restriction for Part I and spends the whole of Part II abolishing it.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s03"], "next": [
+        { "q": "What is an inertial frame?", "target": "concept.inertial-frame" },
+        { "q": "Why can't accelerating frames be used?", "target": "section.s18" }], "contrast": [], "deeper": ["section.s18"] },
+      "sources": ["book:s04.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s05", "kind": "section", "title": "§V · The Principle of Relativity (in the Restricted Sense)",
+      "aliases": ["principle of relativity", "restricted", "same laws", "uniform motion"],
+      "anchors": ["s05"], "firstNeededAt": 5,
+      "levels": {
+        "plain": "The principle: the laws of nature are identical in every uniformly moving frame. Inside a smooth train with the blinds down, no experiment you can perform tells you whether you are moving.",
+        "intuition": "This is not new with Einstein — Galileo knew it. It is why you can pour coffee on a plane. What makes it explosive is combining it with the constancy of light speed in §VII, because the two together look flatly contradictory.",
+        "careful": "Stated as: if K is a Galileian frame, every frame K′ in uniform translation relative to K is equally valid, and physical laws take the same form in both. This is a strong constraint on what a law may look like, and it is what forbids any experiment revealing absolute motion."
+      },
+      "meaning": "Keep this section in your pocket. It is the argument that settles a whole class of confusions later — including whether high speed does anything to your body. If motion changed you in any detectable way, you could measure your own absolute speed, and this principle would be dead.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["concept.inertial-frame"], "next": [
+        { "q": "So what goes wrong when we add light?", "target": "section.s07" },
+        { "q": "Does travelling fast affect my body?", "target": "concept.time-dilation-body" }], "contrast": [], "deeper": ["section.s18"] },
+      "sources": ["book:s05.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s06", "kind": "section", "title": "§VI · The Addition of Velocities in Classical Mechanics",
+      "aliases": ["addition of velocities", "W = v + w", "walking on a train", "adding speeds"],
+      "anchors": ["s06"], "firstNeededAt": 6,
+      "levels": {
+        "plain": "A man walks forward at speed w along a train moving at speed v. Relative to the embankment he moves at v + w. One short paragraph, one obvious formula.",
+        "intuition": "It is obvious because it is how the world has always seemed to work. Einstein states it plainly, then adds — almost casually — that it 'cannot be maintained'. He is loading a gun to be fired in §XIII.",
+        "careful": "The classical velocity-addition theorem, which follows directly from the Galilean transformation and absolute time. Its replacement in §XIII keeps light's speed invariant and reduces to v + w whenever both speeds are small compared to c."
+      },
+      "meaning": "The shortest section in the book and one of the most important, because it is the specific casualty. When something as self-evident as *speeds add* turns out to be an approximation, you learn that obviousness is not evidence.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s05"], "next": [
+        { "q": "So what is the real rule for adding speeds?", "target": "section.s13" },
+        { "q": "Why does light break this?", "target": "section.s07" }], "contrast": [], "deeper": ["section.s13"] },
+      "sources": ["book:s06.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s07", "kind": "section", "title": "§VII · The Apparent Incompatibility of the Law of Propagation of Light",
+      "aliases": ["speed of light", "incompatibility", "chasing light", "c"],
+      "anchors": ["s07"], "firstNeededAt": 7,
+      "levels": {
+        "plain": "Here is the crisis. Light travels at a fixed speed. But if you chase a light beam at half that speed, common sense says it should be receding from you at half speed. Experiment says no — it still recedes at full speed. Both facts are solid and they cannot both fit the old picture.",
+        "intuition": "Einstein sets the two beliefs side by side and shows they collide: the principle of relativity from §V, and the constant speed of light. Everyone before him tried to save the situation by weakening one of them. He keeps both and gives up something else entirely.",
+        "careful": "The conflict arises only if you assume the Galilean velocity-addition rule of §VI, which itself rests on absolute time. Einstein's resolution is to discard absolute simultaneity — which he can only do after showing, in §VIII, that simultaneity was never properly defined."
+      },
+      "meaning": "This is the hinge of the book. Notice the move: rather than choosing between two well-supported facts, he asks what unexamined assumption made them look incompatible in the first place. Almost every deep advance in physics has this shape.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s05"], "next": [
+        { "q": "What was the ether, and why did it matter?", "target": "concept.ether" },
+        { "q": "How does he escape the contradiction?", "target": "concept.defining-simultaneity" }], "contrast": [], "deeper": ["section.s09"] },
+      "sources": ["book:s07.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s08", "kind": "section", "title": "§VIII · On the Idea of Time in Physics",
+      "aliases": ["time", "idea of time", "lightning", "synchronise", "clocks"],
+      "anchors": ["s08"], "firstNeededAt": 8,
+      "levels": {
+        "plain": "Two bolts of lightning strike the track. Did they strike at the same time? Einstein asks how you would actually check — and finds that no answer exists until you invent a procedure. So he invents one, using light signals.",
+        "intuition": "The stunning part is not the answer, it is the question. 'At the same time' had been used confidently by everyone for centuries and had never been given a meaning for events far apart. Einstein does not discover a fact about time; he notices a hole where a definition should be.",
+        "careful": "He defines simultaneity operationally: two events are simultaneous in a frame if light from them meets at the midpoint. Reasonable, testable — and inescapably tied to a particular frame, because that frame's midpoint is moving relative to another's."
+      },
+      "meaning": "This is the most philosophically radical section in the book, and the method matters more than the result. Demand an operational definition — what would you physically *do* to test this? — and a two-thousand-year-old certainty collapses. That method is arguably Einstein's real invention.",
+      "analogies": [],
+      "misconceptions": ["clocks-malfunction"],
+      "edges": { "prereq": ["section.s07"], "next": [
+        { "q": "What does defining simultaneity actually involve?", "target": "concept.defining-simultaneity" },
+        { "q": "Show me two people disagreeing about it", "target": "section.s09" }], "contrast": [], "deeper": ["section.s09"] },
+      "sources": ["book:s08.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s09", "kind": "section", "title": "§IX · The Relativity of Simultaneity",
+      "aliases": ["simultaneity", "relativity of simultaneity", "train", "embankment", "same time"],
+      "anchors": ["s09"], "firstNeededAt": 9,
+      "levels": {
+        "plain": "The payoff. Two lightning strikes are simultaneous for someone on the embankment. For someone on the passing train they are *not* — and neither observer is mistaken. Simultaneity turns out to depend on who is asking.",
+        "intuition": "The train passenger is moving towards where one flash came from and away from the other, so the light reaches her at different moments. She concludes the strikes happened at different times. She is not confused, and she is not wrong. There is simply no universal fact about which happened first.",
+        "careful": "Applying the §VIII definition in two frames gives contradictory verdicts on the same pair of events, and the principle of relativity forbids preferring either. Every subsequent result — time dilation, length contraction, the Lorentz transformation — is this fact seen from a different angle."
+      },
+      "meaning": "There is no universal 'now'. The present moment, everywhere at once, which feels like the most basic fact about existence, does not exist. This is the single deepest claim in the book, and Einstein reaches it before anything famous — because everything famous is downstream of it.",
+      "analogies": [],
+      "misconceptions": ["clocks-malfunction"],
+      "edges": { "prereq": ["section.s08"], "next": [
+        { "q": "What does the death of absolute time actually mean?", "target": "arc.absolute-time-dies" },
+        { "q": "Does this affect distance too?", "target": "section.s10" }], "contrast": [], "deeper": ["section.s11"] },
+      "sources": ["book:s09.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s10", "kind": "section", "title": "§X · On the Relativity of the Conception of Distance",
+      "aliases": ["distance", "length", "relativity of distance"],
+      "anchors": ["s10"], "firstNeededAt": 10,
+      "levels": {
+        "plain": "If people disagree about *when*, they must also disagree about *how far*. Measuring the length of something moving means marking both ends at the same moment — and 'the same moment' is exactly what just stopped being universal.",
+        "intuition": "Measuring a moving train's length from the embankment means noting where both ends are simultaneously. Passengers disagree about what was simultaneous, so they get a different length. The disagreement about time propagates straight into space.",
+        "careful": "Length is defined by simultaneous determination of endpoint positions in a given frame; since simultaneity is frame-dependent, so is length. Made quantitative in §XII."
+      },
+      "meaning": "Space and time stop being separate topics here. A disagreement about time forces a disagreement about distance — which is the first real hint that they are two aspects of one thing, the idea Minkowski formalises in §XVII.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s09"], "next": [
+        { "q": "How much does the length actually change?", "target": "section.s12" }], "contrast": [], "deeper": ["section.s12"] },
+      "sources": ["book:s10.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s11", "kind": "section", "title": "§XI · The Lorentz Transformation",
+      "aliases": ["Lorentz transformation", "transformation", "equations", "gamma"],
+      "anchors": ["s11"], "firstNeededAt": 11,
+      "levels": {
+        "plain": "The bookkeeping. Given where and when something happened according to you, these equations give where and when it happened according to someone moving past. This is the longest section in Part I and the most mathematical.",
+        "intuition": "You do not need to follow the algebra to get the point. The equations are the precise machinery for everything §IX and §X described in words, and their key feature is that the time coordinate gets mixed into the space coordinates. In the old physics, time transformed on its own. Not any more.",
+        "careful": "Derived by requiring the speed of light to be invariant in both frames. The factor γ = 1/√(1 − v²/c²) governs the size of every effect — 1.005 at a tenth of light speed, 7.09 at 0.99c. That shape is the meaning: nothing happens at ordinary speeds, then it runs away."
+      },
+      "meaning": "If you are reading for understanding rather than calculation, this is the section to skim. Take away one thing: **time mixes with space**. That mixing is what makes them a single four-dimensional structure rather than a stage and a clock.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s10"], "next": [
+        { "q": "What do the equations actually do to rods and clocks?", "target": "section.s12" },
+        { "q": "Is there a simpler derivation?", "target": "section.x33" }], "contrast": [], "deeper": ["section.x33"] },
+      "sources": ["book:s11.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s12", "kind": "section", "title": "§XII · The Behaviour of Measuring-Rods and Clocks in Motion",
+      "aliases": ["time dilation", "length contraction", "clocks slow", "rod shorter", "moving clock"],
+      "anchors": ["s12"], "firstNeededAt": 12,
+      "levels": {
+        "plain": "The two famous results, in two pages. A moving rod is shorter than the same rod at rest. A moving clock ticks more slowly than the same clock at rest. Both follow from the equations in §XI, and neither involves anything breaking.",
+        "intuition": "Einstein's own words are worth holding onto: 'as a consequence of its motion the clock goes more slowly than when at rest.' The clock is fine. It is keeping perfect time along a different path. He also notes that c comes out as a limiting speed — beyond it the equations produce imaginary numbers, so no real body can get there.",
+        "careful": "Length contracts by the factor √(1 − v²/c²); the interval between ticks dilates by 1/√(1 − v²/c²). Both are reciprocal — each observer sees the *other's* rods shortened and clocks slowed — which is precisely what the principle of relativity requires."
+      },
+      "meaning": "Resist the urge to look for a mechanism. Nothing is squeezing the rod or interfering with the clock. Once you stop asking 'what does speed do to objects?' and start asking 'how much time and space are there along this path?', the strangeness reorganises into geometry. That shift is what the book is really for.",
+      "analogies": [],
+      "misconceptions": ["biological-ageing", "clocks-malfunction", "relativistic-mass"],
+      "edges": { "prereq": ["section.s11"], "next": [
+        { "q": "Does this affect my body? Do I live longer?", "target": "concept.time-dilation-body" },
+        { "q": "How do we know it's real?", "target": "concept.evidence" },
+        { "q": "Could I travel to the future?", "target": "concept.time-travel" }], "contrast": [], "deeper": ["section.s15"] },
+      "sources": ["book:s12.p4", "book:s12.p14"], "provenance": "gold"
+    },
+    {
+      "id": "section.s13", "kind": "section", "title": "§XIII · Addition of Velocities. The Experiment of Fizeau",
+      "aliases": ["Fizeau", "addition of velocities", "light in water", "adding speeds"],
+      "anchors": ["s13"], "firstNeededAt": 13,
+      "levels": {
+        "plain": "The replacement for v + w. Speeds no longer simply add — the new rule always keeps the result below light speed, no matter what you put in. And there was already an experiment sitting in the literature that confirmed it, decades before anyone understood why.",
+        "intuition": "Fizeau measured light travelling through moving water in 1851. The answer was not the speed of light in water plus the speed of the water; it was a peculiar fraction of it, which nobody could explain. Einstein's formula produces exactly that fraction without adjustment.",
+        "careful": "The relativistic composition law reduces to v + w when both are small compared to c, and returns c whenever either input is c. Fizeau's 'dragging coefficient' falls out of it as a straightforward consequence."
+      },
+      "meaning": "The most persuasive section for a sceptic. This is not a theory bending to fit new data — it is a theory explaining a fifty-year-old anomaly it was not designed for. That is the strongest kind of evidence there is.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s12"], "next": [
+        { "q": "What other experiments back this up?", "target": "concept.evidence" }], "contrast": ["section.s06"], "deeper": ["section.s16"] },
+      "sources": ["book:s13.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s14", "kind": "section", "title": "§XIV · The Heuristic Value of the Theory of Relativity",
+      "aliases": ["heuristic", "value", "usefulness", "guide"],
+      "anchors": ["s14"], "firstNeededAt": 14,
+      "levels": {
+        "plain": "A short reflective section. Einstein argues the theory's worth is not only that it explains known results, but that it acts as a filter — it tells you in advance which candidate laws of nature are even permissible.",
+        "intuition": "Any proposed law must look the same in every uniformly moving frame. That is a severe restriction, and it rules out most guesses before you test them. The theory becomes a tool for finding new physics, not just for tidying up old physics.",
+        "careful": "Lorentz covariance as a selection principle on physical theories — the constraint that shaped quantum field theory and everything after it."
+      },
+      "meaning": "This is Einstein telling you why the theory is *fundamental* in the sense you were asking about. It is not one more result among many. It is a condition every later theory has had to satisfy, which is a far stronger kind of importance.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s13"], "next": [
+        { "q": "Why is relativity called fundamental?", "target": "arc.what-is-fundamental" }], "contrast": [], "deeper": [] },
+      "sources": ["book:s14.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s15", "kind": "section", "title": "§XV · General Results of the Theory",
+      "aliases": ["E = mc2", "mass energy", "energy", "general results", "momentum"],
+      "anchors": ["s15"], "firstNeededAt": 15,
+      "levels": {
+        "plain": "The consequences beyond rods and clocks — and the one everybody has heard of. Mass and energy turn out to be the same thing in different units, related by the speed of light squared.",
+        "intuition": "The point is not that mass can be 'converted' into energy, as though they were two substances. It is that they were never two things. A hot object weighs fractionally more than a cold one. c² is enormous, which is why a tiny amount of mass corresponds to a colossal amount of energy — and why the sun shines.",
+        "careful": "Energy and momentum form a single four-dimensional quantity, as space and time do. The rest energy E = mc² is one component. Note that Einstein's own language of mass 'increasing' with velocity has since been abandoned — rest mass is invariant; it is momentum that grows nonlinearly."
+      },
+      "meaning": "The most consequential equation of the twentieth century arrives as an almost incidental corollary of thinking clearly about simultaneity. Nuclear power, stellar physics and particle accelerators all descend from a train and two lightning bolts.",
+      "analogies": [],
+      "misconceptions": ["relativistic-mass"],
+      "edges": { "prereq": ["section.s12"], "next": [
+        { "q": "Why is 'mass increases with speed' wrong?", "target": "misconception.relativistic-mass" },
+        { "q": "What experiments confirm all this?", "target": "section.s16" }], "contrast": [], "deeper": [] },
+      "sources": ["book:s15.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s16", "kind": "section", "title": "§XVI · Experience and the Special Theory of Relativity",
+      "aliases": ["experiment", "evidence", "Michelson", "Morley", "experience", "confirmed"],
+      "anchors": ["s16"], "firstNeededAt": 16,
+      "levels": {
+        "plain": "The evidence for Part I. Einstein reviews what had actually been measured by 1916 — including the experiments that had hunted for the ether and found nothing.",
+        "intuition": "Michelson and Morley split a light beam, sent the halves in perpendicular directions, and recombined them. If the earth were moving through an ether, the two halves should arrive out of step. They never did, no matter the season or direction.",
+        "careful": "Together with Fizeau's result and stellar aberration, this made the special theory the only surviving account. Later confirmations — muon lifetimes, particle accelerators, atomic clocks flown around the world — are far more precise than anything available to Einstein."
+      },
+      "meaning": "Worth reading because relativity is so often presented as pure thought. It is not philosophy that happened to catch on; it is one of the most heavily tested theories in science. Einstein was not speculating about that train — he was deriving something that got measured.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s13"], "next": [
+        { "q": "What's the modern evidence?", "target": "concept.evidence" },
+        { "q": "What was the ether?", "target": "concept.ether" }], "contrast": [], "deeper": [] },
+      "sources": ["book:s16.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s17", "kind": "section", "title": "§XVII · Minkowski's Four-Dimensional Space",
+      "aliases": ["Minkowski", "four dimensional", "spacetime", "world", "fourth dimension"],
+      "anchors": ["s17"], "firstNeededAt": 17,
+      "levels": {
+        "plain": "Minkowski's contribution: stop treating space and time as separate. Merge them into a single four-dimensional structure and everything in Part I becomes geometry.",
+        "intuition": "Because observers disagree about times and distances *in a coordinated way*, there is a combination of the two that everyone agrees on. Space alone is frame-dependent. Time alone is frame-dependent. Spacetime is not.",
+        "careful": "The interval s² = x² + y² + z² − c²t² is invariant under Lorentz transformation. That minus sign is everything — it is what makes spacetime geometry different from four-dimensional Euclidean geometry, and what creates the light cone."
+      },
+      "meaning": "This is the answer to the question §IX makes urgent: if everyone disagrees, is there anything absolute left? Yes — the interval. Relativity is badly named. It is a theory about what stays the same, and it identifies the invariants precisely. Anyone who tells you it proves everything is relative has it backwards.",
+      "analogies": [
+        {
+          "text": "Three people photograph the same building from different angles. They disagree completely about its width and depth in their pictures — but they would all agree on its actual dimensions, because width and depth are just one shape seen from different positions. Space and time are the width and depth; spacetime is the building.",
+          "breaks": "Rotating a camera mixes two spatial directions symmetrically. Mixing space and time carries that minus sign, so the geometry is genuinely different — which is why time still feels nothing like a direction you can walk along."
+        }
+      ],
+      "misconceptions": ["everything-is-relative"],
+      "edges": { "prereq": ["section.s15"], "next": [
+        { "q": "Is anything absolute in relativity?", "target": "misconception.everything-is-relative" },
+        { "q": "Tell me more about Minkowski's world", "target": "section.x34" }], "contrast": [], "deeper": ["section.x34"] },
+      "sources": ["book:s17.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s18", "kind": "section", "title": "§XVIII · Special and General Principle of Relativity",
+      "aliases": ["general principle", "special principle", "accelerating", "any frame"],
+      "anchors": ["s18"], "firstNeededAt": 18,
+      "levels": {
+        "plain": "Part II opens by naming the discomfort. Part I only worked for uniformly moving frames. Einstein asks: why should nature privilege those? Could the laws be the same in *any* frame, including accelerating and rotating ones?",
+        "intuition": "It looks like an aesthetic complaint about arbitrariness. It turns out to be the doorway to gravity — because, as the next sections show, an accelerating frame and a gravitational field are indistinguishable from the inside.",
+        "careful": "The general principle demands laws covariant under arbitrary coordinate transformations, not merely Lorentz transformations. Achieving it requires the mathematics of curved manifolds, which is why §XXIV–§XXVII exist."
+      },
+      "meaning": "Watch the method: he takes an unexplained restriction, refuses to accept it, and follows the consequences. The reward is a theory of gravity nobody was looking for. Generalising for its own sake, and finding physics at the other end, is about as good as theoretical work gets.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s17"], "next": [
+        { "q": "How does this lead to gravity?", "target": "section.s19" },
+        { "q": "What is the equivalence principle?", "target": "section.s20" }], "contrast": ["section.s05"], "deeper": ["section.s28"] },
+      "sources": ["book:s18.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s19", "kind": "section", "title": "§XIX · The Gravitational Field",
+      "aliases": ["gravitational field", "gravity", "falling", "Newton gravity"],
+      "anchors": ["s19"], "firstNeededAt": 19,
+      "levels": {
+        "plain": "Newton said masses pull each other across empty space, instantly. Einstein finds that troubling — action at a distance with no mechanism, and instantaneous, which special relativity forbids.",
+        "intuition": "Newton himself was uneasy about it. Nothing travels between the sun and the earth in his theory; the pull simply *is*. And after §IX, 'instantaneous' is meaningless anyway — instantaneous according to whom?",
+        "careful": "Relativity requires a finite propagation speed for all influences, which Newtonian gravity violates outright. Einstein introduces the field as an intermediary, then discovers the field is the geometry of spacetime itself."
+      },
+      "meaning": "Special relativity did not merely add to Newton — it made Newtonian gravity impossible. General relativity is not an optional extension; it was forced. That is often lost in the popular account, which presents the two theories as separate achievements rather than one demanding the other.",
+      "analogies": [],
+      "misconceptions": ["gravity-is-a-force"],
+      "edges": { "prereq": ["section.s18"], "next": [
+        { "q": "What's the equivalence principle?", "target": "section.s20" },
+        { "q": "Is gravity a force or not?", "target": "misconception.gravity-is-a-force" }], "contrast": [], "deeper": ["section.s29"] },
+      "sources": ["book:s19.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s20", "kind": "section", "title": "§XX · The Equality of Inertial and Gravitational Mass",
+      "aliases": ["equivalence principle", "inertial mass", "gravitational mass", "lift", "elevator", "falling"],
+      "anchors": ["s20"], "firstNeededAt": 20,
+      "levels": {
+        "plain": "The keystone of general relativity. In a windowless lift you cannot tell whether you are sitting still on earth or being accelerated through deep space. Gravity and acceleration feel identical because, Einstein says, they *are* identical.",
+        "intuition": "Behind it sits a coincidence nobody had explained: the mass that resists being pushed and the mass that responds to gravity are always exactly equal, which is why a feather and a hammer fall together on the moon. In Newton that is an unexplained fluke. Einstein makes it the foundation.",
+        "careful": "The equivalence of inertial and gravitational mass, promoted from empirical accident to principle: a uniform gravitational field is locally indistinguishable from uniform acceleration. 'Locally' matters — over a large enough region, tidal effects give the game away, and those are the real signature of curvature."
+      },
+      "meaning": "This is the model for how deep physics gets done. Take a coincidence everyone had accepted as brute fact, refuse to accept it, and insist it must be telling you something. What it was telling him: gravity is not a force acting *in* spacetime, it is the shape *of* spacetime.",
+      "analogies": [
+        {
+          "text": "In a lift accelerating upward through empty space, a dropped ball falls to the floor — not because anything pulls it, but because the floor rushes up to meet it. Einstein says the earth case is the same thing. The ball is not being pulled down; it is going straight, and the ground is in the way.",
+          "breaks": "It only holds over a small region. Two balls dropped far apart on earth fall very slightly towards each other, converging on the centre. In the lift they stay parallel. That difference is the tidal effect — and it is exactly what distinguishes real curvature from mere acceleration."
+        }
+      ],
+      "misconceptions": ["gravity-is-a-force"],
+      "edges": { "prereq": ["section.s19"], "next": [
+        { "q": "What follows from this?", "target": "section.s22" },
+        { "q": "How does geometry replace force?", "target": "arc.geometry-replaces-force" }], "contrast": [], "deeper": ["section.s29"] },
+      "sources": ["book:s20.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s21", "kind": "section", "title": "§XXI · In What Respects Are the Foundations of Classical Mechanics Unsatisfactory?",
+      "aliases": ["unsatisfactory", "foundations", "Mach", "rotating bucket", "why change"],
+      "anchors": ["s21"], "firstNeededAt": 21,
+      "levels": {
+        "plain": "Einstein makes his case for why the old framework had to go — not because it gave wrong answers, but because it explained things by appealing to absolute space, which nobody can observe.",
+        "intuition": "Take two fluid bodies rotating relative to each other. One bulges at its equator, the other does not. Newton must say: one is really rotating with respect to absolute space. But you cannot detect absolute space. So the explanation appeals to something unobservable — which Einstein regards as no explanation at all.",
+        "careful": "The argument descends from Mach: physical explanation should invoke only observable relations between bodies. Absolute space fails that test."
+      },
+      "meaning": "A short section that tells you what Einstein thought physics is *for*. Not just predicting numbers — explaining them, using only things that can be observed. The demand may sound like philosophy, and it produced the most successful theory of gravity ever written.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s20"], "next": [
+        { "q": "Was Newton wrong, then?", "target": "concept.classical-mechanics.wrong" }], "contrast": [], "deeper": ["section.s28"] },
+      "sources": ["book:s21.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s22", "kind": "section", "title": "§XXII · A Few Inferences from the General Principle of Relativity",
+      "aliases": ["inferences", "light bending", "clocks in gravity", "predictions"],
+      "anchors": ["s22"], "firstNeededAt": 22,
+      "levels": {
+        "plain": "The first real predictions. Light should bend when it passes a massive body. Clocks should run slower deeper in a gravitational field. Both were testable, and both turned out to be right.",
+        "intuition": "Both follow from the lift. Shine a torch across an accelerating lift and the beam lands slightly low, because the lift moved while the light crossed. If acceleration and gravity are the same thing, light must bend near the sun too.",
+        "careful": "Gravitational light deflection and gravitational time dilation. The deflection was confirmed by Eddington's 1919 eclipse expedition; the time dilation now matters daily, since GPS satellites need correcting for it."
+      },
+      "meaning": "This is where a chain of thought experiments about lifts starts making claims about starlight that an expedition can check. The distance travelled — from 'gravity feels like acceleration' to 'the sun bends starlight by this many arcseconds' — is what makes general relativity extraordinary rather than merely elegant.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s20"], "next": [
+        { "q": "Were these predictions confirmed?", "target": "section.x35" }], "contrast": [], "deeper": ["section.x35"] },
+      "sources": ["book:s22.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s23", "kind": "section", "title": "§XXIII · Behaviour of Clocks and Measuring-Rods on a Rotating Body",
+      "aliases": ["rotating disc", "rotating body", "disc", "circumference", "pi"],
+      "anchors": ["s23"], "firstNeededAt": 23,
+      "levels": {
+        "plain": "A spinning disc. Rods laid along the rim are moving, so they contract; rods along a radius are not. Measure the circumference and the diameter and you no longer get π. Geometry on a rotating disc is not Euclidean.",
+        "intuition": "This is the moment gravity becomes geometry. By the equivalence principle a rotating frame is a kind of gravitational field — and here that field has visibly bent the geometry. Space itself is non-Euclidean where gravity is present.",
+        "careful": "Rim rods contract by the Lorentz factor while radial rods do not, giving a circumference-to-diameter ratio greater than π. Clocks at the rim also run slow relative to the centre. Einstein takes this as a signpost: gravitational fields require non-Euclidean geometry."
+      },
+      "meaning": "One of the most underrated sections in the book. It is where the abstract demand of §XVIII turns into a concrete, visualisable fact: put gravity in the room and the rules of school geometry stop holding. Everything from §XXIV on is the mathematics needed to cope with that.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s20"], "next": [
+        { "q": "What is non-Euclidean geometry?", "target": "section.s24" }], "contrast": ["concept.euclidean-geometry"], "deeper": ["section.s25"] },
+      "sources": ["book:s23.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s24", "kind": "section", "title": "§XXIV · Euclidean and Non-Euclidean Continuum",
+      "aliases": ["non-Euclidean", "curved space", "marble slab", "continuum", "curvature"],
+      "anchors": ["s24"], "firstNeededAt": 24,
+      "levels": {
+        "plain": "What does it actually mean for space to be curved? Einstein uses a marble slab and little rods. Lay them out in a grid and, if they always fit, the surface is flat. If they refuse to fit — gaps or overlaps — the surface is curved, and you can discover this without ever leaving it.",
+        "intuition": "That last part is the crucial bit. You do not need to step outside and look. Curvature is detectable *from inside*, purely by measuring. Which is fortunate, since nobody can step outside the universe.",
+        "careful": "He builds up intrinsic geometry: curvature as a property discoverable by measurements made within the surface, requiring no embedding in a higher-dimensional space. This is what makes 'curved spacetime' a meaningful physical claim rather than a metaphor."
+      },
+      "meaning": "**If you read one section in Part II for understanding rather than mathematics, read this one.** It is where 'space is curved' stops being a slogan and becomes something with a definite meaning you could test with rulers. And it kills the rubber-sheet picture: real curvature needs no outside, no higher dimension, nothing for space to be bent *into*.",
+      "analogies": [
+        {
+          "text": "You can prove the earth is round without leaving the ground and without a photograph from orbit. Walk a large triangle and measure its angles: they add to more than 180 degrees. The surface tells you about its own shape, from inside.",
+          "breaks": "The earth's surface is genuinely embedded in a three-dimensional space you could photograph it from, which quietly reassures you there is an 'outside'. For spacetime there need not be one, and the intrinsic measurement is not just a clever alternative — it is the only kind there is."
+        }
+      ],
+      "misconceptions": ["rubber-sheet"],
+      "edges": { "prereq": ["section.s23"], "next": [
+        { "q": "Why is the rubber-sheet picture wrong?", "target": "misconception.rubber-sheet" },
+        { "q": "How do you put coordinates on a curved surface?", "target": "section.s25" }], "contrast": ["concept.euclidean-geometry"], "deeper": ["section.s25"] },
+      "sources": ["book:s24.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s25", "kind": "section", "title": "§XXV · Gaussian Co-ordinates",
+      "aliases": ["Gaussian coordinates", "Gauss", "curved coordinates", "grid"],
+      "anchors": ["s25"], "firstNeededAt": 25,
+      "levels": {
+        "plain": "If space is curved, you cannot lay a rigid rectangular grid over it. Gauss's method: draw any arbitrary system of curves you like, label them with numbers, and record the actual measured distances between neighbouring points.",
+        "intuition": "The labels themselves stop meaning anything. What carries the physics is the *table of distances* between nearby points — the metric. Coordinates become mere names; the geometry lives in the measurements.",
+        "careful": "Gaussian coordinates plus a metric describe a curved continuum with no need for a preferred grid. This is exactly the machinery general covariance requires, and it is the mathematical form the gravitational field ultimately takes."
+      },
+      "meaning": "This completes the programme begun in §XVIII. Once coordinates are arbitrary labels with no physical content, *any* reference body is as good as any other — no privileged frames, no absolute space. The demand and the mathematics finally meet.",
+      "analogies": [
+        {
+          "text": "Contour lines on a hiking map. The lines are invented — someone chose where to draw them. What is real is the distances and heights they encode. Redraw them differently and the mountain is unchanged.",
+          "breaks": "Map contours are drawn onto a surface already sitting in ordinary space that you can see. Gaussian coordinates describe geometry with no external viewpoint available at all."
+        }
+      ],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s24"], "next": [
+        { "q": "How does this apply to spacetime?", "target": "section.s26" }], "contrast": ["concept.coordinate-system"], "deeper": ["section.s27"] },
+      "sources": ["book:s25.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s26", "kind": "section", "title": "§XXVI · The Space-Time Continuum of the Special Theory",
+      "aliases": ["space-time continuum", "special theory continuum", "flat spacetime"],
+      "anchors": ["s26"], "firstNeededAt": 26,
+      "levels": {
+        "plain": "A stocktake. Special relativity's spacetime is four-dimensional but flat — Euclidean-like, once you account for that minus sign in front of time. Rigid rectangular coordinates still work.",
+        "intuition": "Einstein is drawing the contrast deliberately. Part I got away with a flat continuum because it excluded gravity. Bring gravity in and flatness has to go, which is why §XXVII follows immediately.",
+        "careful": "Minkowski spacetime as a flat pseudo-Euclidean four-dimensional continuum, admitting global inertial coordinates — a special case of the general framework, not the general case."
+      },
+      "meaning": "Useful for keeping the architecture straight. Special relativity is the flat-space limit of general relativity, in the same way Newton is the slow-speed limit of special relativity. Three theories, each containing the last.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s25"], "next": [
+        { "q": "What changes when gravity arrives?", "target": "section.s27" }], "contrast": ["section.s27"], "deeper": ["section.s27"] },
+      "sources": ["book:s26.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s27", "kind": "section", "title": "§XXVII · The Space-Time Continuum of the General Theory",
+      "aliases": ["general theory continuum", "curved spacetime", "gravity geometry"],
+      "anchors": ["s27"], "firstNeededAt": 27,
+      "levels": {
+        "plain": "The payoff of the last four sections. With gravity present, spacetime is a curved continuum described by Gaussian coordinates and a metric. The gravitational field *is* that curvature.",
+        "intuition": "Gravity stops being something that happens in spacetime and becomes a property of spacetime. There is no force to transmit and nothing to travel between the sun and the earth — the earth is going as straight as it can through a region that is not flat.",
+        "careful": "The metric of the four-dimensional continuum both defines the geometry and encodes the gravitational field: one object doing two jobs that Newton had kept entirely separate."
+      },
+      "meaning": "This is the conceptual summit of the book. Force is gone. Geometry has replaced it. It also changed what physicists accept as an explanation — not a mechanism acting between objects, but the shape of the arena in which they move.",
+      "analogies": [],
+      "misconceptions": ["gravity-is-a-force", "rubber-sheet"],
+      "edges": { "prereq": ["section.s26"], "next": [
+        { "q": "Read the through-line on geometry replacing force", "target": "arc.geometry-replaces-force" },
+        { "q": "How is this stated exactly?", "target": "section.s28" }], "contrast": ["section.s26"], "deeper": ["section.s29"] },
+      "sources": ["book:s27.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s28", "kind": "section", "title": "§XXVIII · Exact Formulation of the General Principle of Relativity",
+      "aliases": ["general covariance", "exact formulation", "all reference bodies"],
+      "anchors": ["s28"], "firstNeededAt": 28,
+      "levels": {
+        "plain": "Einstein states the general principle precisely: all reference bodies are equivalent for describing nature, whatever their state of motion. The laws must hold in every coordinate system.",
+        "intuition": "The restriction that bothered him back in §IV and §XVIII is now formally lifted. No frame is privileged. The price is that the mathematics must be written so it does not care which coordinates you chose — which is what Gaussian coordinates make possible.",
+        "careful": "General covariance: physical laws expressed as tensor equations, valid in arbitrary coordinate systems. This is the constraint from which the field equations are eventually derived."
+      },
+      "meaning": "Worth pausing on how far he has come. §IV noticed an awkward restriction. Twenty-four sections later it is removed, and removing it produced a theory of gravity. The whole arc is one sustained refusal to accept an unexplained privilege.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s27"], "next": [
+        { "q": "So what are the field equations?", "target": "section.s29" }], "contrast": ["section.s05"], "deeper": ["section.s29"] },
+      "sources": ["book:s28.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s29", "kind": "section", "title": "§XXIX · The Solution of the Problem of Gravitation",
+      "aliases": ["field equations", "solution", "gravitation", "Einstein equations", "Mercury"],
+      "anchors": ["s29"], "firstNeededAt": 29,
+      "levels": {
+        "plain": "The destination. Matter and energy determine the curvature of spacetime; that curvature determines how matter moves. The equations expressing this are the field equations of general relativity.",
+        "intuition": "Wheeler's summary is the one to remember: spacetime tells matter how to move, matter tells spacetime how to curve. It is circular in a productive way — the geometry and its contents determine each other, which is why the equations are hard to solve and why the theory is so rich.",
+        "careful": "The Einstein field equations relate the curvature of spacetime to the energy-momentum it contains, reducing to Newtonian gravitation in the weak-field slow-motion limit. Einstein presents results rather than the tensor derivation, which needs mathematics beyond this book."
+      },
+      "meaning": "The equations predicted Mercury's orbital anomaly, which had defeated astronomers for sixty years, with no adjustment. That is the moment general relativity stopped being a beautiful idea and became the accepted theory of gravity. Do not worry about following the mathematics — the physical statement is the thing worth carrying.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s28"], "next": [
+        { "q": "What was actually confirmed?", "target": "section.x35" },
+        { "q": "What does this mean for the universe as a whole?", "target": "section.s30" }], "contrast": [], "deeper": ["section.x35"] },
+      "sources": ["book:s29.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s30", "kind": "section", "title": "§XXX · Cosmological Difficulties of Newton's Theory",
+      "aliases": ["cosmology", "Newton universe", "infinite universe", "stars"],
+      "anchors": ["s30"], "firstNeededAt": 30,
+      "levels": {
+        "plain": "Part III turns to the universe as a whole, and starts with a problem Newton could not solve. An infinite universe filled evenly with stars does not work — the arithmetic of gravity breaks down. A finite island of stars in infinite empty space does not work either; it would evaporate.",
+        "intuition": "Newtonian gravity gives you no consistent picture of the universe at large scale. Either option fails. This had been known and quietly set aside, because there was no alternative.",
+        "careful": "The Newtonian potential of an infinite homogeneous mass distribution is not well defined; a finite distribution loses stars to escape over time. Neither is stable or coherent."
+      },
+      "meaning": "Cosmology as a science barely existed before general relativity, because the old theory could not even frame the question. Being able to ask what shape the universe is, and get an answer, is one of the theory's largest gifts — and it arrives in the last three sections almost as an afterthought.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s29"], "next": [
+        { "q": "What's the alternative?", "target": "section.s31" }], "contrast": [], "deeper": ["section.s31"] },
+      "sources": ["book:s30.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s31", "kind": "section", "title": "§XXXI · The Possibility of a Finite and yet Unbounded Universe",
+      "aliases": ["finite unbounded", "closed universe", "sphere", "edge of universe", "unbounded"],
+      "anchors": ["s31"], "firstNeededAt": 31,
+      "levels": {
+        "plain": "Einstein's way out: the universe could be finite in size and yet have no edge. That sounds impossible until you look at the surface of a sphere — a finite area with no boundary anywhere on it.",
+        "intuition": "Walk in any direction on the earth's surface and you never reach a wall. The area is finite; the surface is unbounded. Now imagine that one dimension up. A finite three-dimensional space, closed on itself, with no edge and nothing outside it.",
+        "careful": "A positively curved spatial geometry has finite volume and no boundary. Einstein's static model required a cosmological constant to prevent collapse — a term he later regretted, and which returned decades afterwards to account for accelerating expansion."
+      },
+      "meaning": "This is where curvature stops being local mathematics and becomes a statement about everything that exists. It also disposes of the question people always ask — what is the universe expanding into? Nothing. 'Outside' need not exist, any more than there is somewhere north of the North Pole.",
+      "analogies": [
+        {
+          "text": "An ant on a beach ball can walk forever, never meet an edge, and eventually return to where it started. Its world is finite and boundless at once, and it can establish this without ever leaving the surface.",
+          "breaks": "The ball sits in our three-dimensional space, so we can see the 'outside' it curves into. A closed universe needs no such surrounding space, and there is no vantage point from which to view it. Take the finite-and-edgeless part; drop the outside."
+        }
+      ],
+      "misconceptions": ["expands-into-something"],
+      "edges": { "prereq": ["section.s30"], "next": [
+        { "q": "What is the universe expanding into?", "target": "misconception.expands-into-something" },
+        { "q": "So what shape is space?", "target": "section.s32" }], "contrast": [], "deeper": ["section.s32"] },
+      "sources": ["book:s31.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.s32", "kind": "section", "title": "§XXXII · The Structure of Space According to the General Theory",
+      "aliases": ["structure of space", "shape of universe", "density", "closing section"],
+      "anchors": ["s32"], "firstNeededAt": 32,
+      "levels": {
+        "plain": "The closing section. The theory says the shape of space depends on how much matter it contains. Enough matter and space closes on itself; too little and it stays open. Which one we live in is a question for measurement.",
+        "intuition": "This is a remarkable thing for a theory to do — turn 'what shape is the universe?' from a metaphysical question into an empirical one, answerable by weighing what is in it.",
+        "careful": "Spatial curvature is determined by mean mass-energy density relative to a critical value. Modern measurements find the universe very nearly flat, with dark energy driving accelerated expansion — territory well past this book, but downstream of exactly these equations."
+      },
+      "meaning": "A fitting end. He began in §I asking whether geometry is true of the world and concluding only measurement can say. He ends by making the largest geometrical question there is — the shape of the whole universe — a matter of measurement too. The book closes the loop it opened.",
+      "analogies": [],
+      "misconceptions": ["expands-into-something"],
+      "edges": { "prereq": ["section.s31"], "next": [
+        { "q": "Why is relativity called fundamental?", "target": "arc.what-is-fundamental" },
+        { "q": "Back to where he started", "target": "section.s01" }], "contrast": [], "deeper": ["section.x36"] },
+      "sources": ["book:s32.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.x33", "kind": "section", "title": "Appendix I · Simple Derivation of the Lorentz Transformation",
+      "aliases": ["appendix 1", "derivation", "Lorentz derivation"],
+      "anchors": ["x33"], "firstNeededAt": 11,
+      "levels": {
+        "plain": "Einstein's own step-by-step derivation of the §XI equations, for readers who want to see where they come from. Algebra only — no calculus needed.",
+        "intuition": "Worth a look even if you skip the working, because the logic is short: demand that light travels at c in both frames, and the transformation is forced. Nothing else is put in.",
+        "careful": "Derives the transformation from the invariance of the light-propagation equation plus linearity and the relativity principle."
+      },
+      "meaning": "Reading this shows you how little Einstein assumed. Two principles in, the entire kinematics of special relativity out. That economy is a large part of why the theory was believed so quickly.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s11"], "next": [
+        { "q": "What do the equations mean physically?", "target": "section.s12" }], "contrast": [], "deeper": [] },
+      "sources": ["book:x33.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.x34", "kind": "section", "title": "Appendix II · Minkowski's Four-Dimensional Space",
+      "aliases": ["appendix 2", "Minkowski world", "four dimensional space"],
+      "anchors": ["x34"], "firstNeededAt": 17,
+      "levels": {
+        "plain": "A short supplement to §XVII, showing how treating time as a fourth coordinate makes the Lorentz transformation look like a rotation.",
+        "intuition": "The point: relativity's oddities become geometrically ordinary once you use the right four-dimensional language. What looked like a bizarre mixing of time and space is a rotation seen in unfamiliar coordinates.",
+        "careful": "Introduces the imaginary time coordinate device, making the interval formally Euclidean. Modern treatments prefer an explicit minus sign, but the geometric content is identical."
+      },
+      "meaning": "This is the moment relativity stopped being a collection of strange results and became a geometry. Minkowski gave Einstein the language that general relativity would later be written in — and Einstein initially thought it was unnecessary mathematical decoration.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s17"], "next": [
+        { "q": "How does this extend to curved spacetime?", "target": "section.s27" }], "contrast": [], "deeper": ["section.s27"] },
+      "sources": ["book:x34.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.x35", "kind": "section", "title": "Appendix III · The Experimental Confirmation of the General Theory",
+      "aliases": ["appendix 3", "confirmation", "Mercury", "perihelion", "eclipse", "red shift", "Eddington"],
+      "anchors": ["x35"], "firstNeededAt": 29,
+      "levels": {
+        "plain": "The three classic tests. Mercury's orbit shifts by an amount Newton could not account for and Einstein predicts exactly. Starlight bends around the sun. Light from massive stars is shifted towards the red.",
+        "intuition": "Mercury is the strongest of the three, because the anomaly had been measured and unexplained for decades. Einstein's theory produced the right number with nothing tuned to fit. Eddington's 1919 eclipse measurement of the bending is what made Einstein world-famous overnight.",
+        "careful": "Perihelion advance of 43 arcseconds per century; gravitational deflection of starlight at 1.75 arcseconds at the solar limb; gravitational redshift. All three confirmed, the latter two to progressively higher precision since."
+      },
+      "meaning": "The longest appendix, and the most important for anyone asking whether to believe all this. A theory built from thought experiments about lifts and discs made three quantitative predictions about the solar system and got all three right. This is what separates general relativity from elegant speculation.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s29"], "next": [
+        { "q": "What's the modern evidence?", "target": "concept.evidence" }], "contrast": [], "deeper": [] },
+      "sources": ["book:x35.p1"], "provenance": "gold"
+    },
+    {
+      "id": "section.x36", "kind": "section", "title": "Appendix IV · The Structure of Space According to the General Theory",
+      "aliases": ["appendix 4", "structure of space", "cosmological", "ether general relativity"],
+      "anchors": ["x36"], "firstNeededAt": 32,
+      "levels": {
+        "plain": "A later supplement to §XXXII, added as the theory matured. Einstein reflects on what space *is* once it has become a physical object with structure and shape rather than an empty container.",
+        "intuition": "The striking conclusion: space with no matter in it is not nothing. It still has geometry, and geometry is physical. In an odd way the ether comes back — not as a substance things move through, but as the field itself having real properties.",
+        "careful": "Discusses the metric field as a physical entity with its own degrees of freedom, and the relationship between matter distribution and global spatial structure."
+      },
+      "meaning": "The final word, and it inverts the book's starting point. Einstein began by removing absolute space as an unobservable fiction. He ends with space as one of the most concrete physical objects there is — something that bends, carries energy, and has a shape you can measure. Not the container of physics. Part of it.",
+      "analogies": [],
+      "misconceptions": [],
+      "edges": { "prereq": ["section.s32"], "next": [
+        { "q": "Why is relativity called fundamental?", "target": "arc.what-is-fundamental" }], "contrast": [], "deeper": [] },
+      "sources": ["book:x36.p1"], "provenance": "gold"
+    }
+  ]
+}

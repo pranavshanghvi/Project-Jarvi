@@ -1,0 +1,15 @@
+{
+  "name": "relativity-tutor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline-first tutor for Einstein's Relativity. Free inference only — see CLAUDE.md.",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node tools/build-app.mjs",
+    "test": "node tools/test-app.mjs && node tools/test-server.mjs",
+    "test:browser": "node tools/test-browser.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "file:./stubs/anthropic-sdk"
+  }
+}
