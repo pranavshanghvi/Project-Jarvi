@@ -1,0 +1,16 @@
+{
+  "name": "Relativity — Einstein tutor",
+  "short_name": "Relativity",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0E15",
+  "theme_color": "#0A0E15",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
