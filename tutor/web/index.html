@@ -41,7 +41,9 @@ body{
                    repeating-linear-gradient(to bottom,var(--grid) 0 1px,transparent 1px 44px);
   color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;
   -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  /* Clear the tab bar plus its lift. Safari's own toolbar sits in this space when the page is
+     open as a tab rather than from the home screen, so the reserve has to be generous. */
+  padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));
 }
 .wrap{max-width:46rem;margin:0 auto;padding:0 1.15rem}
 header.top{
@@ -51,12 +53,18 @@ header.top{
 .topin{max-width:46rem;margin:0 auto;padding:.65rem 1.15rem;display:flex;align-items:center;gap:.7rem}
 .brand{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);flex:1}
 .pill{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
-  padding:.16rem .45rem;border-radius:2px;border:1px solid var(--line);color:var(--muted)}
+  padding:.16rem .45rem;border-radius:2px;border:1px solid var(--line);color:var(--muted);
+  background:none;line-height:1.5}
 .pill.on{border-color:var(--accent);color:var(--accent)}
+button.pill{cursor:pointer}
+/* Lifted clear of Safari's bottom toolbar. In a browser tab that toolbar overlaps anything
+   pinned to bottom:0, which buried the tabs; from the home screen the safe-area inset does the
+   same job for the home indicator. max() covers both without double-counting. */
 nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--surface);
-  border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+  border-top:1px solid var(--line);display:flex;
+  padding-bottom:max(env(safe-area-inset-bottom,0px), 26px)}
 nav.tabs button{flex:1;background:none;border:none;color:var(--muted);font-family:var(--sans);
-  font-size:.72rem;padding:.7rem 0 .75rem;cursor:pointer;letter-spacing:.02em}
+  font-size:.72rem;padding:.75rem 0 .5rem;cursor:pointer;letter-spacing:.02em}
 nav.tabs button.on{color:var(--accent);font-weight:600;box-shadow:inset 0 2px 0 var(--accent)}
 .view{display:none;padding-top:1.4rem}.view.on{display:block}
 h1{font-size:1.5rem;letter-spacing:-.02em;margin:0 0 .3rem;line-height:1.2;text-wrap:balance}
@@ -115,6 +123,7 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
 <header class="top">
   <div class="topin">
     <span class="brand">Relativity</span>
+    <button class="pill" id="themebtn" title="Light / dark">Auto</button>
     <span class="pill" id="netpill">offline</span>
     <span class="pill" id="pospill">§—</span>
   </div>
@@ -165,6 +174,8 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
     <h1>Settings</h1>
     <div style="margin-top:1rem">
       <div class="setrow"><span>Reading position<br><span class="dim">Answers avoid spoilers past here</span></span><span id="posval" class="dim"></span></div>
+      <div class="setrow"><span>Appearance<br><span class="dim">Auto follows your device</span></span>
+        <span style="display:flex;gap:.3rem" id="themeset"></span></div>
       <div class="setrow"><span>Default depth<br><span class="dim">Which level you get first</span></span></div>
     </div>
     <div class="lvlbar" id="lvlset"></div>
@@ -195,7 +206,7 @@ const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 
 // ── profile ───────────────────────────────────────────────────────────────
 const KEY = "jarvi.relativity.progress";
-const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},queued:[]};
+const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},queued:[],theme:"auto"};
 let prof;
 try { prof = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
 catch { prof = structuredClone(defaults); }
@@ -429,6 +440,8 @@ function renderPos(){
   const pv = document.getElementById("posval"); if(pv) pv.textContent = "§"+prof.readingPosition;
 }
 function renderSettings(){
+  document.getElementById("themeset").innerHTML = ["auto","light","dark"].map(t =>
+    '<button class="pill'+((prof.theme||"auto")===t?' on':'')+'" data-settheme="'+t+'">'+t+'</button>').join("");
   document.getElementById("lvlset").innerHTML = LEVELS.map(l =>
     '<button data-setlvl="'+l+'"'+(l===prof.learner.defaultLevel?' class="on"':'')+'>'+LEVEL_LABEL[l]+'</button>').join("");
   const ns = prof.learner.needsSupport;
@@ -439,7 +452,7 @@ function renderSettings(){
 
 // ── events ────────────────────────────────────────────────────────────────
 document.addEventListener("click", ev => {
-  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],#backidx,#resetprof");
+  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],#backidx,#resetprof");
   if(!t) return;
 
   if(t.dataset.v){
@@ -479,6 +492,7 @@ document.addEventListener("click", ev => {
     return;
   }
   if(t.dataset.setlvl){ prof.learner.defaultLevel = t.dataset.setlvl; save(); renderSettings(); return; }
+  if(t.dataset.settheme){ prof.theme = t.dataset.settheme; save(); applyTheme(); renderSettings(); return; }
   if(t.id==="resetprof"){ prof.learner.needsSupport=[]; prof.queued=[]; save(); renderSettings(); return; }
 });
 
@@ -516,6 +530,28 @@ function net(){
   p.classList.toggle("on", navigator.onLine);
 }
 addEventListener("online",net); addEventListener("offline",net);
+
+// ── theme ─────────────────────────────────────────────────────────────────
+// Three states, not two. "Auto" follows the device — but when this page is opened inside a
+// host that stamps its own theme, auto follows the host rather than the phone, which is why
+// an explicit choice has to be available.
+const THEMES = ["auto","light","dark"];
+function applyTheme(){
+  const t = prof.theme || "auto";
+  const r = document.documentElement;
+  if(t === "auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", t);
+  const b = document.getElementById("themebtn");
+  b.textContent = t;
+  b.classList.toggle("on", t !== "auto");
+  const m = document.querySelector('meta[name="theme-color"]');
+  const dark = t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme:dark)").matches);
+  if(m) m.setAttribute("content", dark ? "#0A0E15" : "#F6F8FB");
+}
+document.getElementById("themebtn").addEventListener("click", () => {
+  prof.theme = THEMES[(THEMES.indexOf(prof.theme || "auto") + 1) % 3];
+  save(); applyTheme(); renderSettings();
+});
+applyTheme();
 
 renderTOC(); renderArcs(); renderSettings(); net();
 if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
