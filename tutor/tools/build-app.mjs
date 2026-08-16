@@ -169,6 +169,22 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
     <div id="answers"></div>
   </section>
 
+  <section class="view" id="v-screen">
+    <h1>From your screen</h1>
+    <p class="dim" style="margin-bottom:.4rem">Reading in Books, Kindle or a PDF? Paste the passage here and I'll find it in the text and explain it.</p>
+    <details class="more" style="margin-bottom:.9rem"><summary>How to copy from a screenshot</summary>
+      <p class="dim" style="margin-top:.5rem"><strong>iPhone / iPad:</strong> open the screenshot in Photos, press and hold on the text, drag to select, tap Copy. (That's Live Text — your phone does the reading.)<br>
+      <strong>Mac:</strong> open the screenshot in Preview or Quick Look, select the text with the cursor, ⌘C.<br>
+      <strong>Or skip the screenshot</strong> — select the text directly in Books or your PDF reader and copy it.</p>
+    </details>
+    <textarea class="q" id="paste" rows="5" placeholder="Paste the sentence or paragraph you're stuck on…" style="resize:vertical;font-family:var(--serif)"></textarea>
+    <div style="display:flex;gap:.5rem;margin-top:.6rem">
+      <button class="ghost" id="pastego" style="flex:1;padding:.6rem">Find it and explain</button>
+      <button class="ghost" id="pasteclear">Clear</button>
+    </div>
+    <div id="screenout"></div>
+  </section>
+
   <section class="view" id="v-ideas">
     <h1>The big picture</h1>
     <p class="dim" style="margin-bottom:1.2rem">What the theory <em>means</em> — the through-lines you would remember in a year.</p>
@@ -195,9 +211,10 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
 
 <nav class="tabs">
   <button data-v="read" class="on">Read</button>
+  <button data-v="screen">Screen</button>
   <button data-v="ask">Ask</button>
-  <button data-v="ideas">Big picture</button>
-  <button data-v="set">Settings</button>
+  <button data-v="ideas">Ideas</button>
+  <button data-v="set">More</button>
 </nav>
 
 <script>
@@ -330,6 +347,76 @@ function answer(q){
   box.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
+// ── anchoring pasted text to the book ─────────────────────────────────────
+// The whole point of the screen feature. Given text copied off a screenshot, find where in
+// the book it came from. Word-shingle overlap rather than exact matching, because OCR and
+// hyphenated line breaks mangle a few characters and an exact search would return nothing.
+const deHyphen = s => s.replace(/(\\w)-\\s*\\n\\s*(\\w)/g,"$1$2").replace(/\\s+/g," ");
+const shingles = (s,n=3) => {
+  const w = norm(deHyphen(s));
+  const out = new Set();
+  for(let i=0;i+n<=w.length;i++) out.add(w.slice(i,i+n).join(" "));
+  return out;
+};
+
+const PARA_INDEX = [];
+for(const s of C.sections){
+  let n = 0;
+  for(const b of s.blocks){
+    if(!b.t) continue;
+    n++;
+    PARA_INDEX.push({ sec: s, idx: n, text: b.t, sh: shingles(b.t) });
+  }
+}
+
+function anchor(pasted){
+  const q = shingles(pasted);
+  if(q.size === 0) return null;
+  let best = null;
+  for(const p of PARA_INDEX){
+    let hit = 0;
+    for(const g of q) if(p.sh.has(g)) hit++;
+    if(hit === 0) continue;
+    // Normalise by the shorter side so a short quote from a long paragraph still scores high.
+    const score = hit / Math.min(q.size, p.sh.size || 1);
+    if(!best || score > best.score) best = { p, score, hit };
+  }
+  return best && best.score > 0.18 ? best : null;
+}
+
+function explainPasted(text){
+  const out = document.getElementById("screenout");
+  if(!text.trim()){ out.innerHTML = ""; return; }
+
+  const a = anchor(text);
+  let h = "";
+
+  if(a){
+    const s = a.p.sec;
+    if(s.number){ prof.readingPosition = s.number; save(); renderPos(); }
+    const conf = a.score > 0.5 ? "" : ' <span class="dim">(best match — check it looks right)</span>';
+    h += '<div class="ans"><h3>You\\u2019re in '+(s.numeral?"§"+esc(s.numeral):"")+' &middot; '+esc(s.title)+'</h3>'
+       + '<p class="dim">Paragraph '+a.idx+conf+'</p>'
+       + '<div class="chips"><button class="chip" data-read="'+s.id+'">Open this section</button></div></div>';
+
+    // Anything the pack has anchored to this section, plus anything the pasted words retrieve.
+    const here = P.entries.filter(e => (e.anchors||[]).includes(s.id));
+    const extra = search(text, 2).filter(x => x.kind==="entry" && !here.includes(x.item)).map(x=>x.item);
+    const show = [...here, ...extra].slice(0,3);
+    if(show.length) h += show.map(renderEntry).join("");
+    else h += '<div class="miss"><strong>No explainer written for this section yet.</strong>'
+            + '<p style="margin:.6rem 0 0">The book text is there — open the section above. Ask a question in the Ask tab and I\\u2019ll do my best from the concepts I do have.</p></div>';
+  } else {
+    h += '<div class="miss"><strong>I couldn\\u2019t place that in the book.</strong>'
+       + '<p style="margin:.6rem 0 0">It may be from a different edition, or the copy picked up too little text. Try selecting a longer stretch — a full sentence or two works best.</p></div>';
+    const hits = search(text, 2);
+    if(hits.length) h += '<p class="dim" style="margin-top:1rem">Closest things I know about:</p>'
+       + hits.map(x => x.kind==="entry" ? renderEntry(x.item) : renderSectionAnswer(x.item)).join("");
+  }
+  out.innerHTML = h;
+  out.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 // ── the book ──────────────────────────────────────────────────────────────
 function renderTOC(){
   const parts = {I:"Part I — The Special Theory",II:"Part II — The General Theory",III:"Part III — The Universe as a Whole",APPENDIX:"Appendices"};
@@ -435,6 +522,16 @@ document.addEventListener("click", ev => {
   answer(p.dataset.ask);
   window.scrollTo(0,0);
 });
+
+document.getElementById("pastego").addEventListener("click", () =>
+  explainPasted(document.getElementById("paste").value));
+document.getElementById("pasteclear").addEventListener("click", () => {
+  document.getElementById("paste").value = "";
+  document.getElementById("screenout").innerHTML = "";
+});
+// Pasting is the whole interaction — don't make them hunt for a button afterwards.
+document.getElementById("paste").addEventListener("paste", () =>
+  setTimeout(() => explainPasted(document.getElementById("paste").value), 60));
 
 let timer;
 document.getElementById("qbox").addEventListener("input", e => {
