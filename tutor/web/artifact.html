@@ -300,7 +300,7 @@ const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 // ── profile ───────────────────────────────────────────────────────────────
 const KEY = "jarvi.relativity.progress";
 const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},
-  queued:[],theme:"auto",endpoint:"",live:"auto"};
+  queued:[],theme:"auto",endpoint:"https://relativity-tutor-api.vercel.app/api/ask",live:"auto"};
 let prof;
 try { prof = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
 catch { prof = structuredClone(defaults); }
@@ -495,10 +495,16 @@ const THINKING = '<div class="thinking" id="thinking"><strong>Asking the tutor�
 
 function liveError(e, q){
   const exhausted = e.kind === "no_free_provider";
+  // A wrong address and an exhausted rotation feel identical from the sofa, so the address is
+  // named when the request never landed. It is the one failure the reader can actually fix.
+  const unreachable = !e.kind;
   return '<div class="miss"><strong>'
     + (exhausted ? "The free models are all out for now."
                  : esc(e.message || "Could not reach the tutor."))
-    + '</strong><p style="margin:.6rem 0 0">Saved your question — try again later.</p>'
+    + '</strong>'
+    + (unreachable ? '<p style="margin:.6rem 0 0">Nothing answered at <span style="font-family:var(--mono);font-size:.8rem">'
+        + esc(endpoint()) + '</span>. If that address is wrong, change it in Settings.</p>' : '')
+    + '<p style="margin:.6rem 0 0">Saved your question — try again later.</p>'
     + (e.declined ? '<details class="more"><summary>What each provider said</summary><p class="dim" '
         + 'style="font-family:var(--mono);font-size:.72rem">'+esc(e.declined.join(" · "))+'</p></details>' : '')
     + '</div>';

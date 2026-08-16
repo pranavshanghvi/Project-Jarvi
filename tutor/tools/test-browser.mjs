@@ -294,6 +294,29 @@ console.log('\nthe live tutor');
   ok('why each provider declined is available but not shouted',
      await page.locator('#answers .miss details').count() === 1);
 
+  // A wrong address is the likeliest thing to go wrong on first use, and it is indistinguishable
+  // from an exhausted rotation unless the app says which one it is.
+  // Aborted at the network layer rather than pointed at a real bad host — an unroutable name
+  // would sit in DNS until the client's own 40s timeout, which is the behaviour under test but
+  // not something to wait for on every run.
+  await context.route('https://wrong.invalid/**', route => route.abort('addressunreachable'));
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('#endpoint').fill('https://wrong.invalid/api/ask');
+  await page.locator('#endpoint').blur();
+  // "always", so this exercises the unreachable path itself rather than depending on the
+  // question happening to be one the written pack cannot answer.
+  await page.locator('[data-setlive="always"]').click();
+  await page.locator('nav.tabs button[data-v="ask"]').click();
+  await page.locator('#qbox').fill('');
+  await page.locator('#qbox').fill('what is a Cartan connection');
+  await page.locator('#qbox').press('Enter');
+  await page.waitForSelector('#answers .miss');
+  ok('an unreachable address names itself so it can be fixed',
+     /wrong\.invalid/.test(await page.locator('#answers .miss').first().textContent()));
+  await page.locator('nav.tabs button[data-v="set"]').click();
+  await page.locator('#endpoint').fill(ENDPOINT);
+  await page.locator('#endpoint').blur();
+
   // Switching it off must actually stop it.
   mode = 'ok';
   await page.locator('nav.tabs button[data-v="set"]').click();
