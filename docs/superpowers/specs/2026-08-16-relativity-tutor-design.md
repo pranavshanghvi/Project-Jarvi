@@ -22,7 +22,7 @@ This gives four tiers, selected automatically:
 
 | Tier | Condition | How it answers | Quality |
 |---|---|---|---|
-| **A — Live** | Online | Claude Opus 5 via the existing Vercel proxy, with vision + retrieved context | Full tutor |
+| **A — Live** | Online | The **smart model router** (free providers only), with retrieved context | Conversational |
 | **B — Pack** | Offline, good retrieval match | Hybrid semantic + keyword search over the pre-built Knowledge Pack; returns the pre-written answer | Frontier-written, near-full |
 | **C — Grounded** | Offline, weak match | Apple on-device model synthesizes **only** from the top-k retrieved passages, badged "offline draft" | Degraded, honest |
 | **D — Queue** | Offline, no usable answer | Question queued; answered by Claude on reconnect, written into the local pack, embedded | Deferred |
@@ -119,8 +119,13 @@ Reuses the existing Project-Jarvi stack almost entirely:
 - Screenshots are never persisted server-side; the proxy is already stateless.
 - The user's own imported PDF never leaves the device.
 - API key stays in Vercel. Reuse the existing shared-secret gate.
-- **Runtime cost**: a screenshot question on Opus 5 is roughly 10k input (image 1.5–4.8k + retrieved context + system) and ~1k output ≈ **$0.075**, dropping to ~**$0.03** with the system-and-pack prefix prompt-cached (cache reads are ~0.1× input price). At 200 questions/month that's **$6–15/month**.
-- **Build cost**: ~$15 per full pack generation pass (see above).
+- **Runtime cost: zero, and structurally so.** Every online call goes through the smart model
+  router (`taxwise-backend/lib/modelRouter.js`) with `freeOnly: true`. That flag is the
+  guarantee — when every free provider is exhausted the router *throws* rather than falling
+  through to paid Anthropic, and the app degrades to the offline pack. There is no code path
+  from this tutor to a billable API.
+- **Build cost: zero.** The pack is generated on the same free rotation. Groq's ~14,400
+  requests/day is far more headroom than the whole book needs.
 
 ---
 

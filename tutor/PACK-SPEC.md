@@ -247,7 +247,61 @@ Additionally, for this build:
 
 ---
 
-## 9. Open items
+## 9. The online path — free providers only
+
+When there is a connection, the tutor gains conversation: it can read what was actually asked,
+compose across several sections, and follow up. It does **not** gain a Claude subscription.
+
+**Every online call goes through the smart model router** (`taxwise-backend/lib/modelRouter.js`),
+the same rotation used in production for Snaptly/TaxWise: Groq → Mistral → OpenRouter →
+Cloudflare, each skipped when unconfigured or cooling down after a 429.
+
+```js
+const { callModel } = require('./lib/modelRouter');
+const answer = await callModel(params, { freeOnly: true });   // ← the guarantee
+```
+
+`freeOnly: true` is not a preference, it is the cost ceiling. With it set, a request that
+exhausts every free provider **throws** carrying why each one declined, instead of falling
+through to paid Anthropic. The app catches that and serves the offline pack. **There is no code
+path from this tutor to a billable API**, and that must stay true — a reviewer should be able to
+grep for `callModel` and find `freeOnly: true` at every call site.
+
+### Where it runs
+
+The router is Node and it holds the keys, so it cannot run in the browser — keys shipped in a
+PWA are readable by anyone who opens the page. The online path is therefore:
+
+```
+PWA  →  serverless proxy (holds keys, runs modelRouter)  →  free provider
+```
+
+Copy `modelRouter.js` into the tutor's own serverless function rather than calling the TaxWise
+backend: that repo's `/api/*` routes sit behind auth middleware, and coupling a physics tutor to
+the tax app's session handling buys nothing. The file is self-contained and env-var driven.
+
+### Provider notes for this workload
+
+Measured in `taxwise-backend/logs/PROVIDER-REPORT.md`, 2026-08-14:
+
+- **Groq** (`llama-3.3-70b-versatile`) is the workhorse — 100% up, 2.4s median, ~14,400
+  requests/day. Text-only, which is fine: reading happens inside the app, so there are no
+  screenshots to interpret.
+- **Gemini is dead** — 0/5, quota exhausted. It leads the rotation, so everything currently
+  falls through it. Also worth checking the key format: it begins `AQ.`, not the `AIza…` shape
+  the router's `?key=` parameter expects.
+- Vision providers (Mistral, Cloudflare, OpenRouter) are unused by this build.
+
+### Honest consequence
+
+Online answers come from llama-3.3-70b, not Claude. What the connection buys is **responsiveness
+— understanding the question as asked, composing across sections, holding a thread** — not a
+smarter physicist. Pack entries and live answers sit at the same quality tier; only one of them
+can react to you.
+
+---
+
+## 10. Open items
 
 - **Frontmatter drift.** SKILL.md's `description` still opens "Socratic tutor…", which is what
   a model reads first and no longer matches the explain-first body. Worth a one-line fix.
