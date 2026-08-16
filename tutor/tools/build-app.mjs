@@ -13,6 +13,13 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const corpus = JSON.parse(readFileSync(join(root, 'data/corpus.json'), 'utf8'));
 const pack = JSON.parse(readFileSync(join(root, 'data/pack.seed.json'), 'utf8'));
+const sections = JSON.parse(readFileSync(join(root, 'data/pack.sections.json'), 'utf8'));
+
+// Concept entries first: when both match a query, the concept ("what is classical mechanics")
+// is a better answer than the section overview that merely mentions it.
+pack.entries = [...pack.entries, ...sections.entries];
+
+const ICON = readFileSync(join(root, 'web/icon.b64'), 'utf8').trim();
 
 // Strip the fields the client never reads. The book is 30k words and every byte ships to a
 // phone that may be caching it over hotel wifi.
@@ -43,7 +50,11 @@ const HTML = `<!doctype html>
 <meta name="apple-mobile-web-app-title" content="Relativity">
 <meta name="theme-color" content="#0A0E15">
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon.png">
+<!-- Embedded rather than linked: /icon.png does not resolve when this page is served from an
+     artifact URL or opened straight out of Files, and Safari then falls back to the host's
+     own favicon. A data URI works everywhere. iOS ignores SVG here, so it must be a PNG. -->
+<link rel="apple-touch-icon" href="data:image/png;base64,__ICON__">
+<link rel="icon" type="image/png" href="data:image/png;base64,__ICON__">
 <style>
 :root{
   --bg:#F6F8FB; --grid:rgba(31,95,217,.05); --surface:#fff; --surface2:#EEF2F8;
@@ -555,7 +566,7 @@ if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWo
 
 const out = join(root, 'web');
 mkdirSync(out, { recursive: true });
-writeFileSync(join(out, 'index.html'), HTML.replace('__DATA__', DATA));
+writeFileSync(join(out, 'index.html'), HTML.replace('__DATA__', DATA).replaceAll('__ICON__', ICON));
 
 writeFileSync(join(out, 'manifest.json'), JSON.stringify({
   name: 'Relativity — Einstein tutor',
@@ -564,7 +575,7 @@ writeFileSync(join(out, 'manifest.json'), JSON.stringify({
   display: 'standalone',
   background_color: '#0A0E15',
   theme_color: '#0A0E15',
-  icons: [{ src: '/icon.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
+  icons: [{ src: 'data:image/png;base64,' + ICON, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
 }, null, 2));
 
 // Cache-first on the shell: on a plane the network is not slow, it is absent, and waiting for
