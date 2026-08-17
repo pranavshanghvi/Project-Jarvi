@@ -238,6 +238,8 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
       </p>
       <div class="setrow" style="margin-top:.7rem"><span>Answers saved from the live tutor<br>
         <span class="dim" id="cachecount"></span></span><button class="ghost" id="clearcache">Clear</button></div>
+      <div class="setrow"><span>Is it reachable?<br><span class="dim" id="testsum">Not checked</span></span>
+        <button class="ghost" id="testgo">Test</button></div>
       <div class="setrow"><span>Ready for a flight<br><span class="dim" id="flightsum"></span></span>
         <button class="ghost" id="flightgo">Prepare</button></div>
       <div id="flightprog" style="display:none;margin-top:.6rem">
@@ -459,15 +461,57 @@ const liveMode = () => LIVE_VALUES.includes(prof.live) ? prof.live : "always";
 // A relative endpoint only means something when the page itself came off a web server. Opened
 // straight out of Files on a Mac, "/api/ask" resolves to file:///api/ask, and trying it produces
 // a failure card on a perfectly good offline session. In that case there is no endpoint.
-function usableEndpoint(){
+const isAbsolute = s => {
+  const p = String(s).slice(0, 8).toLowerCase();
+  return p.startsWith("http://") || p.startsWith("https://");
+};
+const onTheWeb = () => location.protocol === "http:" || location.protocol === "https:";
+
+// More than one address is tried, in order, because a hostname written into a build is exactly
+// the kind of thing that is wrong once and then wrong forever. The page's own origin goes last
+// and is the safety net: whatever served this HTML demonstrably exists, so if it also serves the
+// endpoint, that is the one address that cannot be a typo.
+function endpoints(){
+  const out = [];
   const ep = endpoint();
-  if(!ep) return "";
-  const abs = ep.slice(0,8).toLowerCase();
-  if(abs.startsWith("http://") || abs.startsWith("https://")) return ep;
-  const p = location.protocol;
-  return (p === "http:" || p === "https:") ? ep : "";
+  if(ep && isAbsolute(ep)) out.push(ep);
+  else if(ep && onTheWeb()) out.push(location.origin + (ep.charAt(0) === "/" ? ep : "/" + ep));
+  if(onTheWeb()) out.push(location.origin + "/api/ask");
+  return out.filter((v, i) => out.indexOf(v) === i);
 }
-function canLive(){ return !!usableEndpoint() && navigator.onLine && liveMode() !== "off"; }
+function usableEndpoint(){ return endpoints()[0] || ""; }
+function canLive(){ return endpoints().length > 0 && navigator.onLine && liveMode() !== "off"; }
+
+// One request to one address. Distinguishes the two failures that look identical to a reader
+// but are completely different to fix: the server answered and refused (a real reply, act on
+// it), versus nothing was there at all (wrong address, try the next one).
+async function askOne(url, body){
+  // 40s: a free tier under load is slow, and the alternative to waiting is no answer at all.
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), 40000);
+  try {
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "POST", headers: {"content-type":"application/json"},
+        body: JSON.stringify(body), signal: ctl.signal,
+      });
+    } catch(netErr) {
+      // fetch() rejects for DNS failure, a refused connection, a TLS problem, or a CORS block.
+      // The browser deliberately will not say which; all of them mean nothing usable is there.
+      const e = new Error(ctl.signal.aborted ? "Timed out" : "Could not reach it");
+      e.unreachable = true; throw e;
+    }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      const e = new Error(data.message || ("The tutor returned " + res.status));
+      e.declined = data.declined; e.kind = data.error || ("http_" + res.status);
+      e.status = res.status;
+      throw e;                       // it answered — this IS the outcome, not a reason to retry
+    }
+    return data;
+  } finally { clearTimeout(timer); }
+}
 
 async function askLive(q, ctx){
   const sec = ctx && ctx.section;
@@ -481,22 +525,23 @@ async function askLive(q, ctx){
       text: sec.blocks.filter(b=>b.t).map(b=>b.t).join("\n\n"),
     } : null,
   };
-  // 40s: a free tier under load is slow, and the alternative to waiting is no answer at all.
-  const ctl = new AbortController();
-  const timer = setTimeout(()=>ctl.abort(), 40000);
-  try {
-    const res = await fetch(usableEndpoint(), {
-      method: "POST", headers: {"content-type":"application/json"},
-      body: JSON.stringify(body), signal: ctl.signal,
-    });
-    const data = await res.json().catch(()=>({}));
-    if(!res.ok){
-      const e = new Error(data.message || ("The tutor returned " + res.status));
-      e.declined = data.declined; e.kind = data.error; throw e;
+  const list = endpoints();
+  const missed = [];
+  for(const url of list){
+    try {
+      const data = await askOne(url, body);
+      livePut(q, sec ? sec.id : null, data);
+      return data;
+    } catch(e) {
+      if(!e.unreachable) throw e;    // a real reply. Asking somewhere else would be wrong.
+      missed.push(url);
     }
-    livePut(q, sec ? sec.id : null, data);
-    return data;
-  } finally { clearTimeout(timer); }
+  }
+  const e = new Error(list.length > 1
+    ? "None of the tutor addresses answered."
+    : "Could not reach the tutor.");
+  e.unreachable = true; e.tried = missed;
+  throw e;
 }
 
 function renderLive(a, q){
@@ -526,13 +571,17 @@ function liveError(e, q){
   const exhausted = e.kind === "no_free_provider";
   // A wrong address and an exhausted rotation feel identical from the sofa, so the address is
   // named when the request never landed. It is the one failure the reader can actually fix.
-  const unreachable = !e.kind;
+  const unreachable = !!e.unreachable;
+  const tried = e.tried && e.tried.length ? e.tried : endpoints();
   return '<div class="miss"><strong>'
     + (exhausted ? "The free models are all out for now."
                  : esc(e.message || "Could not reach the tutor."))
     + '</strong>'
-    + (unreachable ? '<p style="margin:.6rem 0 0">Nothing answered at <span style="font-family:var(--mono);font-size:.8rem">'
-        + esc(usableEndpoint()) + '</span>. If that address is wrong, change it in Settings.</p>' : '')
+    + (unreachable ? '<p style="margin:.6rem 0 0">Nothing answered at:</p>'
+        + '<p style="margin:.35rem 0 0;font-family:var(--mono);font-size:.75rem;word-break:break-all">'
+        + tried.map(u=>"· "+esc(u)).join("<br>") + '</p>'
+        + '<p style="margin:.6rem 0 0">Either the address is wrong, or that server has no tutor '
+        + 'endpoint yet. Settings lets you change it.</p>' : '')
     + '<p style="margin:.6rem 0 0">Saved your question — try again later.</p>'
     + (e.declined ? '<details class="more"><summary>What each provider said</summary><p class="dim" '
         + 'style="font-family:var(--mono);font-size:.72rem">'+esc(e.declined.join(" · "))+'</p></details>' : '')
@@ -541,8 +590,14 @@ function liveError(e, q){
 
 // One place that runs a live question, so the thinking state, the caching, the queue and the
 // error card cannot drift apart between the three callers.
+// A free tier can take twenty seconds, which is long enough to ask something else in the
+// meantime. Without this counter the first answer lands last and silently replaces the second —
+// the reader sees a reply to a question they have moved on from, with no clue why.
+let askSeq = 0;
+
 async function runLive(q, ctx, box, above, below){
   above = above || ""; below = below || "";
+  const mine = ++askSeq;
   box.innerHTML = above + THINKING + below;
   let card;
   try {
@@ -551,6 +606,7 @@ async function runLive(q, ctx, box, above, below){
     queueQuestion(q);
     card = liveError(e, q);
   }
+  if(mine !== askSeq) return null;      // overtaken; the answer is cached either way
   box.innerHTML = above + card + below;
   window.scrollTo(0,0);
   return box.querySelector(".ans.live");
@@ -650,6 +706,32 @@ async function prepareForFlight(){
     note || (done ? done + " answers saved for offline" : "Nothing new to fetch");
 }
 
+// A one-tap answer to "why is it not working", because the three causes — wrong address, no
+// endpoint there, no provider key — produce the same silence from the reader's side and need
+// completely different fixes.
+async function testEndpoints(){
+  const out = document.getElementById("testsum");
+  const list = endpoints();
+  if(!list.length){ out.textContent = "No address to test"; return; }
+  out.textContent = "Checking " + list.length + " address" + (list.length > 1 ? "es" : "") + "…";
+  const lines = [];
+  for(const url of list){
+    const host = url.replace("https://","").replace("http://","").split("/")[0];
+    try {
+      await askOne(url, {question: "ping"});
+      lines.push("✓ " + host + " — answering");
+      break;                                   // first one that works is the one that gets used
+    } catch(e) {
+      lines.push(e.unreachable       ? "✗ " + host + " — nothing there"
+        : e.kind === "no_free_provider" ? "✓ " + host + " — reachable, but no provider key set"
+        : e.status === 404            ? "✗ " + host + " — reachable, but no tutor endpoint"
+        : "✓ " + host + " — reachable (" + (e.message || e.kind) + ")");
+      if(!e.unreachable) break;                // it answered; the rest will not be consulted
+    }
+  }
+  out.innerHTML = lines.map(esc).join("<br>");
+}
+
 function queueQuestion(q){
   if(prof.queued.some(x=>x.q === q)) return;
   prof.queued.push({q, at: new Date().toISOString().slice(0,10)});
@@ -716,6 +798,7 @@ function renderSectionAnswer(s){
 // a request per keystroke would empty a free tier in a sentence. Asking live is always the
 // result of a deliberate act: Enter, or the button on the card below.
 function answer(q, live){
+  askSeq++;                             // anything still in flight is now stale
   const box = document.getElementById("answers");
   const hits = search(q);
   const weak = tooWeak(hits, q);
@@ -1102,7 +1185,7 @@ function renderSettings(){
 
 // ── events ────────────────────────────────────────────────────────────────
 document.addEventListener("click", ev => {
-  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],#backidx,#resetprof,#clearcache,#runqueued,#flightgo");
+  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],#backidx,#resetprof,#clearcache,#runqueued,#flightgo,#testgo");
   if(!t) return;
 
   if(t.dataset.v){
@@ -1152,6 +1235,7 @@ document.addEventListener("click", ev => {
   if(t.dataset.setlive){ prof.live = t.dataset.setlive; save(); renderSettings(); return; }
   if(t.id==="clearcache"){ live = {}; liveSave(); renderSettings(); return; }
   if(t.id==="flightgo"){ prepareForFlight(); return; }
+  if(t.id==="testgo"){ testEndpoints(); return; }
 
   // "Ask the tutor" on the miss card, and the follow-up question a live answer ends with.
   if(t.dataset.live || t.dataset.ask){
@@ -1246,7 +1330,13 @@ document.getElementById("qmic").addEventListener("click", () => {
 let timer;
 document.getElementById("qbox").addEventListener("input", e => {
   clearTimeout(timer); const v = e.target.value;
-  if(v.trim().length < 3){ document.getElementById("answers").innerHTML=""; return; }
+  if(v.trim().length < 3){
+    // Emptying the box must also abandon anything still in flight. Otherwise a slow reply lands
+    // afterwards and repaints answers to a question that is no longer on screen.
+    askSeq++;
+    document.getElementById("answers").innerHTML = "";
+    return;
+  }
   timer = setTimeout(()=>answer(v, false), 220);   // typing never spends a free-tier call
 });
 // Enter is the deliberate act, so this is where the live tutor is allowed to run.
