@@ -361,6 +361,62 @@ console.log('\nthe live tutor');
   await page.locator('nav.tabs button[data-v="set"]').click();
   await page.locator('[data-setlive="always"]').click();
 
+  // ── preparing for a flight ────────────────────────────────────────────
+  // The answer to "47 entries is thin for this book": ask the predictable questions while there
+  // is still a signal, and every one of them is answerable in the air.
+  {
+    await page.locator('nav.tabs button[data-v="set"]').click();
+    const summary = await page.locator('#flightsum').textContent();
+    ok('settings says how much there is to fetch and how long', /\d+ answers to fetch, about \d+ min/.test(summary), summary);
+
+    // Pace the run down so the test is not a ten-minute wait; the real gap is the server's
+    // rate limit, which the stub does not have.
+    await page.evaluate(() => { window.__sleep = 5400; });
+    await page.evaluate(() => {
+      // Shrink the work list to a handful so this exercises the loop, not the clock.
+      window.__realFlightQuestions = flightQuestions;
+      window.flightQuestions = () => window.__realFlightQuestions().slice(0, 4);
+    });
+
+    const before = calls;
+    await page.locator('#flightgo').click();
+    ok('the button turns into a stop control while it runs',
+       (await page.locator('#flightgo').textContent()).trim() === 'Stop');
+    ok('progress is shown rather than a frozen screen',
+       await page.locator('#flightprog').isVisible());
+
+    await page.waitForFunction(() => document.getElementById('flightgo').textContent.trim() === 'Prepare',
+                               null, { timeout: 60000 });
+    ok('it fetched every question in the list', calls === before + 4, (calls - before) + ' calls');
+    ok('and says what it saved',
+       /answers saved for offline/.test(await page.locator('#flightsum').textContent()),
+       await page.locator('#flightsum').textContent());
+
+    // The whole point: those answers now work with no signal.
+    await context.setOffline(true);
+    await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+    const q = await page.evaluate(() => window.__realFlightQuestions === undefined ? null
+      : Object.keys(live).length);
+    ok('the answers are on the device', q >= 4, String(q));
+
+    const offlineCalls = calls;
+    await page.locator('nav.tabs button[data-v="read"]').click();
+    if (await page.locator('#backidx').isVisible()) await page.locator('#backidx').click();
+    await page.locator('#toc button').first().click();
+    await page.waitForSelector('#read-section .sent');
+    await page.locator('#read-section .sent').nth(1).click();
+    await page.locator('#askinput').fill('What is this section actually saying, and why does it matter?');
+    await page.locator('#askinput').press('Enter');
+    await page.waitForSelector('#answers .ans.live', { timeout: 8000 });
+    ok('a pre-fetched section answer comes back with no signal at all', calls === offlineCalls,
+       (calls - offlineCalls) + ' calls made while offline');
+
+    await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await page.evaluate(() => { window.flightQuestions = window.__realFlightQuestions; });
+    await page.locator('nav.tabs button[data-v="set"]').click();
+  }
+
   ok('saved answers are counted in settings',
      /kept on this device/.test(await page.locator('#cachecount').textContent()));
   await page.locator('#clearcache').click();
@@ -371,12 +427,20 @@ console.log('\nthe live tutor');
 
 console.log('\nlevels and theme');
 await page.locator('nav.tabs button[data-v="ask"]').click();
+// Clear first: a previous block may have left an answer rendered, and waiting for a selector
+// that is already on screen returns before the debounce has run.
+await page.locator('#qbox').fill('');
+await page.waitForFunction(() => document.querySelectorAll('#answers .ans').length === 0);
 await page.locator('#qbox').fill('what is classical mechanics');
 await page.waitForSelector('#answers .lvlbar button');
 const bodyBefore = await page.locator('#answers .lvlbody').first().textContent();
 await page.locator('#answers .lvlbar button').nth(2).click();
-ok('switching level rewrites the explanation',
-   (await page.locator('#answers .lvlbody').first().textContent()) !== bodyBefore);
+{
+  const after = await page.locator('#answers .lvlbody').first().textContent();
+  const titles = await page.locator('#answers .ans h3').allTextContents();
+  ok('switching level rewrites the explanation', after !== bodyBefore,
+     'cards: ' + JSON.stringify(titles) + '  body unchanged: ' + bodyBefore.slice(0, 70));
+}
 
 await page.locator('nav.tabs button[data-v="set"]').click();
 await page.locator('[data-settheme="light"]').click();
