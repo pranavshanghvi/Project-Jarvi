@@ -1251,8 +1251,13 @@ mkdirSync(out, { recursive: true });
 // The two copies need different addresses. Served from its own domain the endpoint is a
 // sibling, so a relative path is right and survives the project being renamed. Served from the
 // artifact host the page is a guest on someone else's origin, so it needs the absolute URL.
-const ENDPOINT = process.env.TUTOR_ENDPOINT || '/api/ask';
-const ARTIFACT_ENDPOINT = process.env.TUTOR_ARTIFACT_ENDPOINT || '';
+// Defaults to the Railway backend, because that is the deployment where the free-provider keys
+// already live — see taxwise-backend/lib/relativityTutor.js. The Vercel function in this repo
+// does the same job and needs its own copy of a key; point TUTOR_ENDPOINT at '/api/ask' to use
+// it same-origin instead. Either way this is an address, not a credential.
+const RAILWAY = 'https://taxwise-backend-production-e1e1.up.railway.app/api/tutor/ask';
+const ENDPOINT = process.env.TUTOR_ENDPOINT || RAILWAY;
+const ARTIFACT_ENDPOINT = process.env.TUTOR_ARTIFACT_ENDPOINT || ENDPOINT;
 const fill = ep => HTML.replace('__DATA__', DATA)
   .replace('__ENDPOINT__', JSON.stringify(ep))
   .replaceAll('__ICON__', ICON);

@@ -310,7 +310,7 @@ const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 // ── profile ───────────────────────────────────────────────────────────────
 const KEY = "jarvi.relativity.progress";
 const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},
-  queued:[],theme:"auto",endpoint:"https://relativity-tutor-api.vercel.app/api/ask",live:"always"};
+  queued:[],theme:"auto",endpoint:"https://taxwise-backend-production-e1e1.up.railway.app/api/tutor/ask",live:"always"};
 let prof;
 try { prof = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
 catch { prof = structuredClone(defaults); }
