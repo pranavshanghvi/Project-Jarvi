@@ -1,5 +1,12 @@
 // The online tutor. One endpoint, free providers only.
 //
+// There is a second implementation of this in pranavshanghvi/taxwise-backend
+// (lib/relativityTutor.js, POST /api/tutor/ask), which is the one the app points at by default
+// because that deployment already holds the free-provider keys. This one needs its own copy of a
+// key set on the Vercel project. Two copies is one too many: the intent is to retire this file
+// once the Railway route is proven, and until then _prompt.js and its counterpart there have to
+// be edited together.
+//
 // CLAUDE.md governs this file completely: `freeOnly: true` is not a default that can be
 // overridden by a query parameter, and when the rotation is exhausted this returns 503 with the
 // reason each provider declined. It never falls back to a paid model — see PROVENANCE.md for why

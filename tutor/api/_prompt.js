@@ -14,6 +14,9 @@
 //
 // The pedagogy is from .claude/skills/relativity-tutor/SKILL.md, compressed to what a small
 // model will actually follow: plain English, an analogy with its limits stated, never end flat.
+//
+// This prompt is mirrored verbatim in taxwise-backend/lib/relativityTutor.js, which is the
+// endpoint the app calls by default. Edit both together until one of them is retired.
 
 const LEVELS = {
   plain:     'Explain as you would to a bright person who left physics at sixteen. No equations, no jargon that is not immediately unpacked.',
