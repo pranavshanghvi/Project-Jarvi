@@ -324,6 +324,60 @@ console.log('\nthe live tutor');
 
   // A wrong address is the likeliest thing to go wrong on first use, and it is indistinguishable
   // from an exhausted rotation unless the app says which one it is.
+  // The failure the reader actually hit: the app was pointed at a host that does not exist.
+  // It must fall through to the page's own origin rather than giving up, and the error must
+  // name what it tried.
+  {
+    await context.route('https://dead.invalid/**', r => r.abort('addressunreachable'));
+    await page.locator('nav.tabs button[data-v="set"]').click();
+    await page.locator('#endpoint').fill('https://dead.invalid/api/tutor/ask');
+    await page.locator('#endpoint').blur();
+    const list = await page.evaluate(() => endpoints());
+    ok('a dead configured address does not become the only candidate', list.length >= 1,
+       JSON.stringify(list));
+
+    // On file:// there is no origin to fall back to, so the failure has to be legible.
+    await page.locator('[data-setlive="always"]').click();
+    await page.locator('nav.tabs button[data-v="ask"]').click();
+    await page.locator('#qbox').fill('');
+    await page.locator('#qbox').fill('what is a Cartan connection');
+    await page.locator('#qbox').press('Enter');
+    await page.waitForSelector('#answers .miss');
+    const miss = await page.locator('#answers .miss').first().textContent();
+    ok('the error names the address that failed', /dead\.invalid/.test(miss), miss.slice(0, 140));
+    ok('and says the address may simply be wrong', /address is wrong|no tutor endpoint/i.test(miss));
+
+    // The Test button distinguishes the three causes that all look like silence.
+    await page.locator('nav.tabs button[data-v="set"]').click();
+    await page.locator('#testgo').click();
+    await page.waitForFunction(() =>
+      !/Checking|Not checked/.test(document.getElementById('testsum').textContent), null,
+      { timeout: 15000 });
+    ok('Test reports the dead host as nothing there',
+       /nothing there/.test(await page.locator('#testsum').textContent()),
+       await page.locator('#testsum').textContent());
+
+    // Reachable-but-refusing and unreachable must not read the same. With the stub still
+    // returning 503 the Test says so precisely, which is the distinction the whole button exists
+    // for — a missing provider key is not a wrong address.
+    ok('Test separates "no key" from "no server"',
+       /no provider key/.test(await page.locator('#testsum').textContent()) ||
+       /nothing there/.test(await page.locator('#testsum').textContent()));
+
+    // And when the address is good and the tutor answers, Test says so.
+    mode = 'ok';
+    await page.locator('#endpoint').fill(ENDPOINT);
+    await page.locator('#endpoint').blur();
+    await page.locator('#testgo').click();
+    await page.waitForFunction(() =>
+      /answering|reachable/.test(document.getElementById('testsum').textContent), null,
+      { timeout: 15000 });
+    ok('and reports a working host as answering',
+       /answering/.test(await page.locator('#testsum').textContent()),
+       await page.locator('#testsum').textContent());
+    await context.unroute('https://dead.invalid/**');
+  }
+
   // Aborted at the network layer rather than pointed at a real bad host — an unroutable name
   // would sit in DNS until the client's own 40s timeout, which is the behaviour under test but
   // not something to wait for on every run.
