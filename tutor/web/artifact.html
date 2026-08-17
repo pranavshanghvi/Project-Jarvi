@@ -141,6 +141,8 @@ details.more[open] summary::before{content:"▾ ";}
 .miss{background:var(--surface2);border:1px dashed var(--line);border-radius:3px;padding:1rem;margin:1.2rem 0;color:var(--soft);font-size:.93rem}
 /* Waiting is not the same state as having nothing, and they must not look alike — a slow free
    tier would otherwise read as a failure for the twenty seconds before the answer lands. */
+.bar{height:4px;background:var(--surface2);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
 .thinking{background:var(--surface2);border:1px solid var(--accent);border-radius:3px;
   padding:1rem;margin:1.2rem 0;color:var(--soft);font-size:.93rem;animation:pulse 1.6s infinite}
 .lvlbar{display:flex;gap:.3rem;margin:.9rem 0 0}
@@ -236,6 +238,12 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
       </p>
       <div class="setrow" style="margin-top:.7rem"><span>Answers saved from the live tutor<br>
         <span class="dim" id="cachecount"></span></span><button class="ghost" id="clearcache">Clear</button></div>
+      <div class="setrow"><span>Ready for a flight<br><span class="dim" id="flightsum"></span></span>
+        <button class="ghost" id="flightgo">Prepare</button></div>
+      <div id="flightprog" style="display:none;margin-top:.6rem">
+        <div class="bar"><i id="flightbar"></i></div>
+        <p class="dim" id="flightmsg" style="margin:.45rem 0 0;font-size:.8rem"></p>
+      </div>
     </div>
     <p class="dim" style="margin-top:2rem;font-size:.78rem">
       Text: Project Gutenberg #30155, public domain in the US. Appendix V is still in copyright and is not included.
@@ -411,7 +419,9 @@ function tooWeak(hits, q){
 // Every answer is kept on the device, which is the part that matters on a plane: a question
 // asked in the airport lounge is still answerable at 35,000 feet.
 const LIVEKEY = "jarvi.relativity.live";
-const LIVE_MAX = 200;
+// Sized for a flight-prep run rather than a browsing session: 37 sections plus every
+// follow-up in the pack is ~123 answers, and there is no reason to start evicting mid-run.
+const LIVE_MAX = 600;
 let live = {};
 try { live = JSON.parse(localStorage.getItem(LIVEKEY) || "{}"); } catch { live = {}; }
 function liveSave(){
@@ -544,6 +554,100 @@ async function runLive(q, ctx, box, above, below){
   box.innerHTML = above + card + below;
   window.scrollTo(0,0);
   return box.querySelector(".ans.live");
+}
+
+// ── preparing for a flight ────────────────────────────────────────────────
+// The written pack is 47 entries against a thirty-thousand-word book, which is thin, and no
+// amount of hand-writing closes that gap. What does close it is that the live tutor can answer
+// anything and every answer it gives is kept on the device — so the fix is to ask it the
+// predictable questions while there is still a signal.
+//
+// Predictable means: what is each section actually saying (the reader goes through the book in
+// order, so all 37 will come up), every follow-up the pack already offers, and every
+// misconception. Around 123 questions, which at the server's rate limit is roughly ten minutes
+// of sitting in a departure lounge.
+//
+// It does not make the app omniscient offline. A question nobody anticipated still needs a
+// signal. It moves the offline floor from "47 entries" to "every section explained properly,
+// plus everything you asked before".
+function flightQuestions(){
+  const out = [];
+  for(const s of C.sections)
+    out.push({q: "What is this section actually saying, and why does it matter?", section: s});
+  for(const e of P.entries)
+    for(const n of ((e.edges && e.edges.next) || [])) out.push({q: n.q, section: null});
+  for(const id in P.misconceptions)
+    out.push({q: P.misconceptions[id].claim + " — is that right?", section: null});
+
+  const seen = new Set(), list = [];
+  for(const item of out){
+    const k = liveKey(item.q, item.section ? item.section.id : null);
+    if(seen.has(k) || live[k]) continue;   // never pay twice for the same answer
+    seen.add(k); list.push(item);
+  }
+  return list;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let flightRun = null;
+
+function renderFlight(){
+  const box = document.getElementById("flightprog");
+  const btn = document.getElementById("flightgo");
+  if(!flightRun){
+    box.style.display = "none"; btn.textContent = "Prepare";
+    renderSettings(); return;
+  }
+  box.style.display = "block"; btn.textContent = "Stop";
+  const pct = flightRun.total ? Math.round(100 * flightRun.done / flightRun.total) : 0;
+  document.getElementById("flightbar").style.width = pct + "%";
+  const left = Math.max(0, flightRun.total - flightRun.done);
+  document.getElementById("flightmsg").textContent = flightRun.note
+    || (flightRun.done + " of " + flightRun.total + " saved · about "
+        + Math.ceil(left * 5.4 / 60) + " min left · you can leave this open and put the phone down");
+}
+
+async function prepareForFlight(){
+  if(flightRun){ flightRun.stop = true; return; }          // second tap stops it
+  if(!canLive()){
+    document.getElementById("flightsum").textContent =
+      navigator.onLine ? "Needs the live tutor switched on" : "Needs a signal — do this before you fly";
+    return;
+  }
+  const list = flightQuestions();
+  if(!list.length){
+    document.getElementById("flightsum").textContent = "Already done — nothing left to fetch";
+    return;
+  }
+  flightRun = {stop:false, done:0, total:list.length, failed:0, note:""};
+  renderFlight();
+
+  for(const item of list){
+    if(flightRun.stop) break;
+    try {
+      await askLive(item.q, {section: item.section});
+      flightRun.done++;
+    } catch(e) {
+      if(e.kind === "no_free_provider"){
+        // Stop rather than hammer an exhausted tier. What was fetched is already saved.
+        flightRun.note = "Free models ran out after " + flightRun.done + ". Saved those; try again later.";
+        break;
+      }
+      if(e.kind === "rate_limited"){ await sleep(15000); continue; }   // retry this one
+      flightRun.failed++;
+      if(flightRun.failed > 8){ flightRun.note = "Too many failures — stopped at " + flightRun.done + "."; break; }
+    }
+    renderFlight();
+    // The server allows twelve a minute. Staying just under it is the difference between this
+    // finishing and this spending ten minutes being told to slow down.
+    if(!flightRun.stop) await sleep(5400);
+  }
+
+  const done = flightRun.done, note = flightRun.note;
+  flightRun = null;
+  renderFlight();
+  document.getElementById("flightsum").textContent =
+    note || (done ? done + " answers saved for offline" : "Nothing new to fetch");
 }
 
 function queueQuestion(q){
@@ -980,6 +1084,14 @@ function renderSettings(){
     : "Only when nothing is written on it";
   const n = Object.keys(live).length;
   document.getElementById("cachecount").textContent = n ? n + " kept on this device" : "None yet";
+  if(!flightRun){
+    const left = canLive() ? flightQuestions().length : null;
+    document.getElementById("flightsum").textContent =
+      left === null   ? (navigator.onLine ? "Needs the live tutor switched on" : "Do this before you lose signal")
+      : left === 0    ? "Done — every section is answered offline"
+      : left + " answers to fetch, about " + Math.ceil(left * 5.4 / 60) + " min";
+  }
+  document.getElementById("flightgo").disabled = !canLive() && !flightRun;
   document.getElementById("lvlset").innerHTML = LEVELS.map(l =>
     '<button data-setlvl="'+l+'"'+(l===prof.learner.defaultLevel?' class="on"':'')+'>'+LEVEL_LABEL[l]+'</button>').join("");
   const ns = prof.learner.needsSupport;
@@ -990,7 +1102,7 @@ function renderSettings(){
 
 // ── events ────────────────────────────────────────────────────────────────
 document.addEventListener("click", ev => {
-  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],#backidx,#resetprof,#clearcache,#runqueued");
+  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],#backidx,#resetprof,#clearcache,#runqueued,#flightgo");
   if(!t) return;
 
   if(t.dataset.v){
@@ -1039,6 +1151,7 @@ document.addEventListener("click", ev => {
   if(t.id==="resetprof"){ prof.learner.needsSupport=[]; prof.queued=[]; save(); renderSettings(); return; }
   if(t.dataset.setlive){ prof.live = t.dataset.setlive; save(); renderSettings(); return; }
   if(t.id==="clearcache"){ live = {}; liveSave(); renderSettings(); return; }
+  if(t.id==="flightgo"){ prepareForFlight(); return; }
 
   // "Ask the tutor" on the miss card, and the follow-up question a live answer ends with.
   if(t.dataset.live || t.dataset.ask){
