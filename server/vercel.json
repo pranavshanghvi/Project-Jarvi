@@ -1,6 +1,13 @@
 {
   "version": 2,
   "functions": {
-    "api/analyze.ts": { "memory": 512, "maxDuration": 30 }
+    "api/analyze.ts": {
+      "memory": 512,
+      "maxDuration": 30
+    },
+    "api/tutor.ts": {
+      "memory": 512,
+      "maxDuration": 60
+    }
   }
 }
