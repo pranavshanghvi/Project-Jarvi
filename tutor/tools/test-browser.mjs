@@ -415,6 +415,66 @@ console.log('\nthe live tutor');
   await page.locator('nav.tabs button[data-v="set"]').click();
   await page.locator('[data-setlive="always"]').click();
 
+  // ── back and forth ────────────────────────────────────────────────────
+  // The complaint this answers: an answer arrived and there was no way to say "I still do not
+  // follow" or "I think you are wrong". A tutor that cannot be argued with is a lookup table.
+  {
+    await page.locator('nav.tabs button[data-v="ask"]').click();
+    await page.locator('#qbox').fill('');
+    await page.waitForFunction(() => document.querySelectorAll('#answers .ans').length === 0);
+    await page.locator('#qbox').fill('what is the ether');
+    await page.locator('#qbox').press('Enter');
+    await page.waitForSelector('#answers .ans.live');
+
+    ok('an answer offers a way to push back',
+       await page.locator('#answers [data-reply]').count() === 3);
+    ok('and a box for something more specific',
+       await page.locator('#answers #replybox').count() === 1);
+
+    const beforeReply = calls;
+    await page.locator('#answers [data-reply]').first().click();
+    await page.waitForFunction(() => document.querySelectorAll('#answers .ans.live').length === 2,
+                               null, { timeout: 15000 });
+    ok('a one-tap reply asks again', calls === beforeReply + 1);
+    ok('both turns stay on screen', await page.locator('#answers .ans.live').count() === 2);
+    ok('and so do the reader\'s own questions',
+       await page.locator('#answers .asked').count() === 2);
+
+    // The point of the whole feature: the model is told what was already said.
+    ok('the previous turns are sent with the follow-up',
+       Array.isArray(lastBody.history) && lastBody.history.length >= 2,
+       JSON.stringify((lastBody.history || []).map(m => m.role)));
+    ok('the conversation starts with the reader and alternates',
+       lastBody.history[0].role === 'user' && lastBody.history[1].role === 'assistant');
+    ok('the tutor\'s own words are quoted back to it',
+       /ANSWER:/.test(lastBody.history[1].content), (lastBody.history[1].content || '').slice(0, 60));
+    // A 7000-character passage on every turn would spend the free tier's context on nothing.
+    ok('the passage is not repeated on a follow-up', !lastBody.section || !lastBody.section.text,
+       'section resent');
+
+    // Typing an actual objection, which is the case the buttons cannot cover.
+    await page.locator('#answers #replybox').fill('I disagree — surely something has to wave?');
+    await page.locator('#answers #replybox').press('Enter');
+    await page.waitForFunction(() => document.querySelectorAll('#answers .ans.live').length === 3,
+                               null, { timeout: 15000 });
+    ok('a typed objection continues the same thread',
+       await page.locator('#answers .asked').count() === 3);
+    ok('and carries the whole conversation', lastBody.history.length >= 4,
+       String((lastBody.history || []).length));
+    ok('the objection itself is what was asked',
+       /surely something has to wave/.test(lastBody.question || ''), lastBody.question);
+
+    // Asking something unrelated must not drag the old argument along.
+    await page.locator('#qbox').fill('');
+    await page.waitForFunction(() => document.querySelectorAll('#answers .ans').length === 0);
+    await page.locator('#qbox').fill('what is a geodesic');
+    await page.locator('#qbox').press('Enter');
+    await page.waitForSelector('#answers .ans.live');
+    ok('a new question starts a fresh conversation',
+       !lastBody.history || lastBody.history.length === 0,
+       JSON.stringify((lastBody.history || []).length));
+  }
+
   // ── preparing for a flight ────────────────────────────────────────────
   // The answer to "47 entries is thin for this book": ask the predictable questions while there
   // is still a signal, and every one of them is answerable in the air.

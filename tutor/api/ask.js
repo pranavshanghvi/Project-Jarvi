@@ -17,7 +17,7 @@
 // burn a free tier that is already struggling.
 
 const { callModel } = require('./_modelRouter');
-const { buildPrompt, parseAnswer } = require('./_prompt');
+const { buildPrompt, parseAnswer, sanitizeHistory } = require('./_prompt');
 
 const MAX_TOKENS = 900;          // three paragraphs and a question; free tiers charge context
 const MAX_BODY = 64 * 1024;      // a section of the book plus a question, with room to spare
@@ -115,6 +115,13 @@ async function handler(req, res) {
     needsSupport: body.needsSupport,
   });
 
+  // A follow-up arrives with the turns before it, so "I still do not follow" means something.
+  // The passage rides on the first turn only — it is already in the conversation after that.
+  const history = sanitizeHistory(body.history);
+  const messages = history.length
+    ? [...history, { role: 'user', content: question }]
+    : [{ role: 'user', content: user }];
+
   let response;
   try {
     // The one call. `freeOnly` is hardcoded — it is the cost ceiling, not a parameter.
@@ -123,7 +130,7 @@ async function handler(req, res) {
       max_tokens: MAX_TOKENS,
       temperature: 0.4,
       system,
-      messages: [{ role: 'user', content: user }],
+      messages,
     }, { freeOnly: true });
   } catch (e) {
     // Every free provider declined. This is the expected end state of a free tier, not a bug,
