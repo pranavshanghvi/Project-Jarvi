@@ -126,6 +126,11 @@ input.q:focus{outline:none;border-color:var(--accent)}
 /* A live answer is marked, because it came from a small free model rather than something
    written and checked for this reader — that difference is worth being able to see. */
 .ans.live{border-left:3px solid var(--accent)}
+/* The reader's own turns, set apart from the tutor's so a long thread stays readable as a
+   conversation rather than a wall of cards. */
+.asked{margin:1.4rem 0 .2rem;padding-left:.9rem;border-left:2px solid var(--line)}
+.asked p{margin:0;color:var(--soft);font-size:.95rem}
+.reply{margin:1.2rem 0 2rem}
 .live-tag{color:var(--accent)}
 .chip.go{background:var(--accent);border-color:var(--accent);color:var(--accentInk)}
 .sent:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -516,6 +521,37 @@ function canLive(){ return endpoints().length > 0 && navigator.onLine && liveMod
 // One request to one address. Distinguishes the two failures that look identical to a reader
 // but are completely different to fix: the server answered and refused (a real reply, act on
 // it), versus nothing was there at all (wrong address, try the next one).
+// ── the conversation ──────────────────────────────────────────────────────
+// A tutor that answers once and stops is a vending machine. What a reader actually does is push
+// back — "I still do not follow", "that is not what I asked", "I think you are wrong and here is
+// why" — and none of that means anything unless the previous turns go with the question.
+//
+// One thread at a time. Asking something new from the reader or the Ask box starts a fresh one,
+// because carrying an unrelated conversation into a new question makes the answers worse.
+let thread = null;   // {ctx:{line,section}, turns:[{q, a}]}
+
+function threadHistory(){
+  if(!thread) return [];
+  const h = [];
+  for(const t of thread.turns){
+    h.push({role:"user", content: t.q});
+    if(t.a) h.push({role:"assistant", content: answerAsText(t.a)});
+  }
+  return h;
+}
+
+// The model's own words back to it, in the shape it produced them. Reconstructed rather than
+// stored raw so a cached answer and a live one behave identically on the next turn.
+function answerAsText(a){
+  const bits = [];
+  if(a.answer)  bits.push("ANSWER: " + a.answer);
+  if(a.analogy) bits.push("ANALOGY: " + a.analogy);
+  if(a.breaks)  bits.push("BREAKS: " + a.breaks);
+  if(a.means)   bits.push("MEANS: " + a.means);
+  if(a.next)    bits.push("NEXT: " + a.next);
+  return bits.join("\n");
+}
+
 async function askOne(url, body){
   const keys = keysFor(url);
   if(keys) body = Object.assign({}, body, {providerKeys: keys});
@@ -558,6 +594,8 @@ async function askLive(q, ctx){
       text: sec.blocks.filter(b=>b.t).map(b=>b.t).join("\n\n"),
     } : null,
   };
+  const hist = (ctx && ctx.history) || [];
+  if(hist.length) body.history = hist;
   const list = endpoints();
   const missed = [];
   for(const url of list){
@@ -579,7 +617,8 @@ async function askLive(q, ctx){
 
 function renderLive(a, q){
   let h = '<div class="ans live"><div class="lbl live-tag">Live tutor</div>'
-        + '<h3>'+esc(q)+'</h3><div class="lvlbody">'+para(a.answer||"")+'</div>';
+        + (q ? '<h3>'+esc(q)+'</h3>' : '')
+        + '<div class="lvlbody">'+para(a.answer||"")+'</div>';
   if(TTS) h += '<button class="speak">▶ Listen</button>';
   if(a.analogy){
     h += '<div class="lbl">Analogy</div>'+para(a.analogy);
@@ -592,6 +631,44 @@ function renderLive(a, q){
      + (a.askedAt ? ", "+esc(a.askedAt.slice(0,10)) : "")
      + ". Saved on this device, so it works offline now.</div></div>";
   return h + '</div>';
+}
+
+// The reply affordance. Typing a full sentence of frustration on a phone is work, so the three
+// things a stuck reader most often means are one tap; anything more specific goes in the box.
+const REPLIES = [
+  ["I still don't follow",  "I still do not follow. Explain it a completely different way — a different analogy, or a concrete case with numbers."],
+  ["Simpler",               "Simpler, please. Assume I know no physics at all."],
+  ["Why is that true?",     "Why is that true? What is the reasoning behind it?"],
+];
+
+function renderThread(){
+  if(!thread) return "";
+  let h = "";
+  if(thread.ctx && thread.ctx.line){
+    const s = thread.ctx.section;
+    h += '<div class="ans"><h3>'+(s && s.numeral ? "§"+esc(s.numeral)+" · " : "")+esc(s ? s.title : "This line")+'</h3>'
+       + '<p class="quote" style="font-family:var(--serif);color:var(--soft);border-left:2px solid var(--accent);padding-left:.6rem;margin:.4rem 0 0">'
+       + esc(thread.ctx.line)+'</p></div>';
+  }
+  for(const t of thread.turns){
+    h += '<div class="asked"><div class="lbl">You asked</div><p>'+esc(t.q)+'</p></div>';
+    h += t.a ? renderLive(t.a, null) : (t.err || THINKING);
+  }
+  if(thread.turns.length && thread.turns[thread.turns.length-1].a) h += replyBox();
+  return h + (thread.below || "");
+}
+
+// Only offered when a reply can actually be sent. An input that silently does nothing offline is
+// worse than no input.
+function replyBox(){
+  if(!canLive()) return '<p class="dim" style="margin:.4rem 0 1.4rem">'
+    + (navigator.onLine ? "Switch the live tutor on in Settings to carry on this conversation."
+                        : "Back on a signal you can carry on this conversation.") + '</p>';
+  return '<div class="reply"><div class="lbl">Not convinced? Say so</div>'
+    + '<div class="chips">' + REPLIES.map(r =>
+        '<button class="chip" data-reply="'+esc(r[1])+'">'+esc(r[0])+'</button>').join("")
+    + '</div><div class="askrow"><input id="replybox" placeholder="or tell it exactly what is wrong…" enterkeyhint="send">'
+    + '<button class="iconbtn go" id="replysend">Send</button></div></div>';
 }
 
 // Shown while waiting, because a free tier can take twenty seconds and a blank screen reads as
@@ -643,6 +720,67 @@ async function runLive(q, ctx, box, above, below){
   box.innerHTML = above + card + below;
   window.scrollTo(0,0);
   return box.querySelector(".ans.live");
+}
+
+// Start a new conversation about a line or a question.
+// The 'below' argument is the written material that goes under the conversation. It is part of the thread
+// rather than passed per-turn, because it should stay put as the conversation grows.
+function startThread(q, ctx, below){
+  thread = {ctx: ctx || {}, turns: [], below: below || ""};
+  return continueThread(q);
+}
+
+// Add a turn to the conversation that is already open. Everything said so far goes with it,
+// which is the whole difference between a tutor and a search box.
+async function continueThread(q){
+  if(!thread) return;
+  const mine = ++askSeq;
+  const turn = {q, a: null, err: null};
+  thread.turns.push(turn);
+  const box = document.getElementById("answers");
+  showView("ask");
+  box.innerHTML = renderThread();
+  const last = box.querySelector("#thinking");
+  if(last) last.scrollIntoView({block:"center", behavior:"smooth"});
+
+  const history = threadHistory().slice(0, -1);   // everything before this question
+  try {
+    turn.a = await askLive(q, {line: thread.ctx.line, section: thread.ctx.section, history});
+  } catch(e) {
+    queueQuestion(q);
+    turn.err = liveError(e, q);
+  }
+  if(mine !== askSeq) return;
+  box.innerHTML = renderThread();
+  const reply = document.getElementById("replybox");
+  if(reply) reply.scrollIntoView({block:"center", behavior:"smooth"});
+  return box.querySelector(".ans.live");
+}
+
+// A one-tap answer to "why is it not working", because the three causes — wrong address, no
+// endpoint there, no provider key — produce the same silence from the reader's side and need
+// completely different fixes.
+async function testEndpoints(){
+  const out = document.getElementById("testsum");
+  const list = endpoints();
+  if(!list.length){ out.textContent = "No address to test"; return; }
+  out.textContent = "Checking " + list.length + " address" + (list.length > 1 ? "es" : "") + "…";
+  const lines = [];
+  for(const url of list){
+    const host = url.replace("https://","").replace("http://","").split("/")[0];
+    try {
+      await askOne(url, {question: "ping"});
+      lines.push("✓ " + host + " — answering");
+      break;                                   // first one that works is the one that gets used
+    } catch(e) {
+      lines.push(e.unreachable       ? "✗ " + host + " — nothing there"
+        : e.kind === "no_free_provider" ? "✓ " + host + " — reachable, but no provider key set"
+        : e.status === 404            ? "✗ " + host + " — reachable, but no tutor endpoint"
+        : "✓ " + host + " — reachable (" + (e.message || e.kind) + ")");
+      if(!e.unreachable) break;                // it answered; the rest will not be consulted
+    }
+  }
+  out.innerHTML = lines.map(esc).join("<br>");
 }
 
 // ── preparing for a flight ────────────────────────────────────────────────
@@ -739,32 +877,6 @@ async function prepareForFlight(){
     note || (done ? done + " answers saved for offline" : "Nothing new to fetch");
 }
 
-// A one-tap answer to "why is it not working", because the three causes — wrong address, no
-// endpoint there, no provider key — produce the same silence from the reader's side and need
-// completely different fixes.
-async function testEndpoints(){
-  const out = document.getElementById("testsum");
-  const list = endpoints();
-  if(!list.length){ out.textContent = "No address to test"; return; }
-  out.textContent = "Checking " + list.length + " address" + (list.length > 1 ? "es" : "") + "…";
-  const lines = [];
-  for(const url of list){
-    const host = url.replace("https://","").replace("http://","").split("/")[0];
-    try {
-      await askOne(url, {question: "ping"});
-      lines.push("✓ " + host + " — answering");
-      break;                                   // first one that works is the one that gets used
-    } catch(e) {
-      lines.push(e.unreachable       ? "✗ " + host + " — nothing there"
-        : e.kind === "no_free_provider" ? "✓ " + host + " — reachable, but no provider key set"
-        : e.status === 404            ? "✗ " + host + " — reachable, but no tutor endpoint"
-        : "✓ " + host + " — reachable (" + (e.message || e.kind) + ")");
-      if(!e.unreachable) break;                // it answered; the rest will not be consulted
-    }
-  }
-  out.innerHTML = lines.map(esc).join("<br>");
-}
-
 function queueQuestion(q){
   if(prof.queued.some(x=>x.q === q)) return;
   prof.queued.push({q, at: new Date().toISOString().slice(0,10)});
@@ -850,7 +962,7 @@ function answer(q, live){
     // The closest section goes along as context even when the question came from the Ask tab
     // rather than the reader. "Why is the chapter named after him" needs the chapter.
     const near = hits.find(h => h.kind === "section");
-    runLive(q, {section: near ? near.item : null}, box, "", alsoWritten(written));
+    startThread(q, {section: near ? near.item : null}, alsoWritten(written));
     return;
   }
   if(!weak){
@@ -1099,9 +1211,9 @@ function answerLine(question){
   window.scrollTo(0,0);
 
   if(!cached && q && weak && canLive()){
-    // The quoted line stays above while it thinks — it is the context for the answer.
+    // The quoted line stays at the top of the thread — it is the context for every turn.
     const spoke = lastWasVoice; lastWasVoice = false;
-    runLive(q, {line: line, section: s}, box, header, h.slice(header.length))
+    startThread(q, {line: line, section: s}, alsoWritten(h.slice(header.length)))
       .then(el => { if(spoke && el) speakAnswer(el); });
     return;
   }
@@ -1223,7 +1335,7 @@ function renderSettings(){
 
 // ── events ────────────────────────────────────────────────────────────────
 document.addEventListener("click", ev => {
-  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],#backidx,#resetprof,#clearcache,#runqueued,#flightgo,#testgo");
+  const t = ev.target.closest("[data-v],[data-read],[data-go],[data-lvl],[data-setlvl],[data-settheme],[data-setlive],[data-live],[data-ask],[data-reply],#backidx,#resetprof,#clearcache,#runqueued,#flightgo,#testgo,#replysend");
   if(!t) return;
 
   if(t.dataset.v){
@@ -1274,13 +1386,20 @@ document.addEventListener("click", ev => {
   if(t.id==="clearcache"){ live = {}; liveSave(); renderSettings(); return; }
   if(t.id==="flightgo"){ prepareForFlight(); return; }
   if(t.id==="testgo"){ testEndpoints(); return; }
+  if(t.dataset.reply){ continueThread(t.dataset.reply); return; }
+  if(t.id==="replysend"){
+    const box = document.getElementById("replybox");
+    const v = box && box.value.trim();
+    if(v) continueThread(v);
+    return;
+  }
 
   // "Ask the tutor" on the miss card, and the follow-up question a live answer ends with.
   if(t.dataset.live || t.dataset.ask){
     const q = t.dataset.live || t.dataset.ask;
     showView("ask");
     document.getElementById("qbox").value = q;
-    if(canLive()) runLive(q, {}, document.getElementById("answers"), "", "");
+    if(canLive()) startThread(q, {});
     else answer(q, false);
     return;
   }
@@ -1391,6 +1510,12 @@ document.getElementById("endpoint").addEventListener("input", e => {
   prof.endpoint = e.target.value.trim(); save();
 });
 document.getElementById("endpoint").addEventListener("change", () => renderSettings());
+// Delegated, because the reply box is created and destroyed with every render of the thread.
+document.addEventListener("keydown", e => {
+  if(e.key !== "Enter" || !e.target || e.target.id !== "replybox") return;
+  const v = e.target.value.trim();
+  if(v) continueThread(v);
+});
 document.getElementById("provkey").addEventListener("input", e => setProvKey(e.target.value));
 document.getElementById("provkey").addEventListener("change", () => renderSettings());
 

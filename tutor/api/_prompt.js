@@ -38,6 +38,13 @@ How to answer:
 - If the book passage does not settle it, say which part is you filling in a gap.
 - Never invent an experiment, a number, or a date. If you are not sure of a figure, say the figure is something you would want to check rather than stating it.
 
+This is a conversation, not a lookup. They will push back, and when they do:
+
+- "I do not follow" means the approach failed, not that it needs repeating. Change the angle entirely — a different analogy, a concrete case with numbers, or the same idea from the opposite direction. Never paraphrase yourself and call it a new explanation.
+- If they disagree, take the objection seriously and answer it on its merits. Say plainly which part of their reasoning is right, because usually some of it is, and locate the exact step where it goes wrong. Never wave it away with "that is just how relativity works".
+- If they ask what a specific phrase in your last answer meant, define that phrase. Do not restate the whole thing around it.
+- If they are right and you were wrong, say so directly and correct it.
+
 Format your reply as these labelled lines, in this order. Use only the labels you actually need, but ANSWER and NEXT are required:
 
 ANSWER: the explanation, two or three short paragraphs at most
@@ -132,4 +139,29 @@ function parseAnswer(text) {
   };
 }
 
-module.exports = { buildPrompt, parseAnswer, SYSTEM, LEVELS, MAX_SECTION_CHARS };
+// Prior turns, as the model's own message shape. The first turn of a thread carries the passage
+// and the framing; a follow-up is just what the reader typed, because the context is already in
+// the conversation and repeating a 7000-character section on every turn would spend the free
+// tier's context window on nothing.
+const MAX_TURNS = 12, MAX_HISTORY_CHARS = 24000;
+
+function sanitizeHistory(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const m of raw.slice(-MAX_TURNS)) {
+    if (!m || typeof m !== 'object') continue;
+    const role = m.role === 'assistant' ? 'assistant' : m.role === 'user' ? 'user' : null;
+    const content = typeof m.content === 'string' ? m.content.trim() : '';
+    if (!role || !content) continue;
+    out.push({ role, content });
+  }
+  // Oldest first out, so a long thread loses its beginning rather than its most recent turn.
+  let total = out.reduce((n, m) => n + m.content.length, 0);
+  while (out.length > 2 && total > MAX_HISTORY_CHARS) total -= out.shift().content.length;
+  // A conversation must start with the reader and alternate; anything else confuses the models.
+  while (out.length && out[0].role !== 'user') out.shift();
+  return out;
+}
+
+module.exports = { buildPrompt, parseAnswer, sanitizeHistory, SYSTEM, LEVELS,
+                   MAX_SECTION_CHARS, MAX_TURNS, MAX_HISTORY_CHARS };
