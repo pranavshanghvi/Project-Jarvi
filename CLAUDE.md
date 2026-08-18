@@ -33,6 +33,13 @@ so call sites do not change when providers do.
   paid fallback that `freeOnly` disables; nothing else in this repo may import it.
 - No API key of any kind is ever shipped to the client. Keys live in the server environment.
   A key in a PWA bundle is readable by anyone who opens the page.
+- One narrow exception, added deliberately: a key the **user types into their own device** may be
+  stored in that device's `localStorage` and sent to their own endpoint, which hands it to the
+  router exactly as it would an environment key. Nothing is shipped to anyone — the key
+  originates from the user, never enters the bundle, and never enters git. The server takes it
+  only when it has no key of its own, only for free providers, and never logs the value.
+  An environment variable remains the correct configuration; this exists for a deployment whose
+  environment cannot be reached.
 - Build-time generation obeys this too. The knowledge pack is written on the free rotation, not
   by a paid model.
 

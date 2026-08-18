@@ -267,6 +267,54 @@ group('a free provider answers');
   delete require.cache[require.resolve(path)];
 }
 
+// ── a key supplied by the reader ──────────────────────────────────────────
+// The deployment has no way to set an environment key, so the reader can paste one into the
+// app. That is a deliberate narrowing of "no key on the client": nothing is shipped to anyone,
+// the key originates from the reader and lives in their own browser. What must hold is that a
+// properly configured environment key always wins, and that the supplied one never leaks.
+group('a key supplied by the reader');
+{
+  const path = join(ROOT, 'api/ask.js');
+  delete require.cache[require.resolve(path)];
+  const ask = require(path);
+  const { installProviderKeys, ACCEPTED_KEYS } = ask._internals;
+
+  for (const k of ACCEPTED_KEYS) delete process.env[k];
+
+  installProviderKeys({ GROQ_API_KEY: '  gsk_from_the_reader  ' });
+  ok('a supplied key is installed when the environment has none',
+     process.env.GROQ_API_KEY === 'gsk_from_the_reader');
+  ok('and is trimmed', !/\s/.test(process.env.GROQ_API_KEY || ''));
+
+  // The environment is the proper configuration. A request must never be able to redirect the
+  // deployment's traffic onto someone else's account.
+  process.env.MISTRAL_API_KEY = 'configured-properly';
+  installProviderKeys({ MISTRAL_API_KEY: 'from-a-request' });
+  ok('an environment key is never overridden by a request',
+     process.env.MISTRAL_API_KEY === 'configured-properly');
+
+  installProviderKeys({ ANTHROPIC_API_KEY: 'sk-ant-nope' });
+  ok('a paid key cannot be smuggled in this way', !process.env.ANTHROPIC_API_KEY);
+  installProviderKeys({ DATABASE_URL: 'postgres://x', PATH: '/evil' });
+  ok('and neither can anything else', process.env.PATH !== '/evil');
+
+  ok('junk does not throw',
+     [null, undefined, 'string', 42, [], { GROQ_API_KEY: 42 }, { GROQ_API_KEY: '  ' }]
+       .every(v => { try { installProviderKeys(v); return true; } catch { return false; } }));
+
+  // Whatever else happens, the key must not come back out.
+  for (const k of ACCEPTED_KEYS) delete process.env[k];
+  delete process.env.ANTHROPIC_API_KEY;
+  const r = mockRes();
+  await ask(post({ question: 'hi', providerKeys: { GROQ_API_KEY: 'gsk_secret_value' } },
+                 { 'x-forwarded-for': '10.0.0.55' }), r);
+  ok('the key is never echoed in the response', !String(r.body).includes('gsk_secret_value'),
+     String(r.body).slice(0, 200));
+
+  for (const k of ACCEPTED_KEYS) delete process.env[k];
+  delete require.cache[require.resolve(path)];
+}
+
 // ── the rate limit ────────────────────────────────────────────────────────
 group('rate limit');
 {
