@@ -152,7 +152,21 @@ function anthropicToGemini(params) {
   if (sys) body.systemInstruction = { parts: [{ text: sys }] };
   // Gemini's generationConfig.maxOutputTokens plays the role of Anthropic's max_tokens -- without
   // it Gemini defaults to a lower cap than the agents expect.
-  if (params.max_tokens) body.generationConfig = { maxOutputTokens: params.max_tokens };
+  //
+  // thinkingBudget: 0 is NOT an optimisation, it is a correctness fix (2026-08-18). The floating
+  // `gemini-flash-latest` alias now resolves to a THINKING model, and Gemini charges its reasoning
+  // against maxOutputTokens. On this app's budgets that means the model spends the whole allowance
+  // deliberating and returns `finishReason: MAX_TOKENS` with `parts: [{text: ""}]` -- which the
+  // parser below correctly reports as "Gemini returned an empty response", and which the router
+  // then treats as a provider failure and pays another provider to redo.
+  //
+  // Worse than empty: one reproduction returned the fragment " adds it" -- a piece of the model's
+  // own reasoning leaking out as the answer. A user would have read that as Snaptly's reply.
+  //
+  // Measured on a 64-token budget: 1/3 usable without this, 3/3 with it (finishReason STOP, not
+  // MAX_TOKENS). This is the same trap Nemotron Super set in August, and it arrived here WITHOUT a
+  // deploy -- which is the cost of the floating alias, knowingly accepted on line 284 above.
+  if (params.max_tokens) body.generationConfig = { maxOutputTokens: params.max_tokens, thinkingConfig: { thinkingBudget: 0 } };
   if (params.tools && params.tools.length) {
     body.tools = [{
       functionDeclarations: params.tools.map(t => ({ name: t.name, description: t.description, parameters: t.input_schema })),
@@ -294,7 +308,24 @@ function groqToAnthropic(data) {
 const GEMINI_MODEL_NAME = 'gemini-flash-latest';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent`;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+// `llama-3.3-70b-versatile` until 2026-08-18, when it was found RETIRED -- Groq's /v1/models no
+// longer lists it at all and every call had been returning HTTP 404. This is the third time a
+// pinned free model has been sunset under this file, and it failed exactly the way the others did:
+// invisibly. The 500-scenario user-testing run is what surfaced it, and only indirectly -- Groq
+// served 0 of 500 calls while the router quietly spent the other providers' much smaller quotas.
+//
+// Groq is the HIGHEST-headroom free provider (~14,400 requests/day against Gemini's few hundred and
+// OpenRouter's 50), so losing it silently is the most expensive single failure available here: it
+// is what decides whether a bulk sync finishes free.
+//
+// gpt-oss-120b chosen 2026-08-18 after testing every tool-capable model Groq lists: it is the
+// largest, answered a forced tool call correctly in 559ms, and is the only one besides its own 20b
+// sibling that can call tools at all -- `qwen/qwen3.6-27b` returns 400 on a forced call and
+// `groq/compound` rejects tool calling outright. That is the same trap Nemotron Super set in
+// August: a free model that cannot call tools is useless on this path however good its prose is.
+// Verify with `node scripts/check-providers.js`, never with the unit tests -- they mock fetch and
+// cannot see a retired model.
+const GROQ_MODEL = 'openai/gpt-oss-120b';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 // The `:free` suffix requests the free tier. Two predecessors have already been retired out from
 // under this file (`meta-llama/llama-3.3-70b-instruct:free`, then a spell on

@@ -329,11 +329,24 @@ const LEVEL_LABEL = {plain:"Plain",intuition:"Intuition",careful:"Careful"};
 // ── profile ───────────────────────────────────────────────────────────────
 const KEY = "jarvi.relativity.progress";
 const defaults = {learner:{defaultLevel:"plain",needsSupport:[]},readingPosition:1,concepts:{},
-  queued:[],theme:"auto",endpoint:"https://taxwise-backend-production-e1e1.up.railway.app/api/tutor/ask",live:"always"};
+  queued:[],theme:"auto",endpoint:"https://relativity-tutor-api.vercel.app/api/ask",live:"always"};
 let prof;
 try { prof = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
 catch { prof = structuredClone(defaults); }
 prof.learner = Object.assign({}, defaults.learner, prof.learner || {});
+// The tutor was served from the Snaptly backend until 2026-08-18 and now runs on its own Vercel
+// project. A stored profile still holds the old address, so rewrite it once.
+//
+// The address is ABSOLUTE, not "/api/ask": the API is a separate Vercel project from the one
+// serving this page (relativity-tutor-api vs relativity-tutor), so this page's own origin 404s on
+// /api/ask and the own-origin safety net in endpoints() cannot cover it. Checked against both
+// deployments on 2026-08-18 rather than assumed.
+//
+// Only this exact retired host is rewritten: a hand-set endpoint belongs to the reader.
+if (/taxwise-backend-production-e1e1\.up\.railway\.app/.test(prof.endpoint || "")) {
+  prof.endpoint = defaults.endpoint;
+  save();
+}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prof)); } catch {} };
 
 // Explicit signals only. Nothing is inferred from dwell time or scrolling — a wrong guess
