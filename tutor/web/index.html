@@ -245,6 +245,10 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--soft);padd
         exhausted it says so and saves the question rather than falling back to anything paid.
         Answers are kept on this device, so once asked they work offline too.
       </p>
+      <input class="q" id="provkey" type="password" style="margin-top:.55rem;font-family:var(--mono);font-size:.8rem"
+             placeholder="Groq key (only if the server has none)" spellcheck="false" autocapitalize="off"
+             autocomplete="off">
+      <p class="dim" style="margin-top:.4rem;font-size:.75rem" id="provsum"></p>
       <div class="setrow" style="margin-top:.7rem"><span>Answers saved from the live tutor<br>
         <span class="dim" id="cachecount"></span></span><button class="ghost" id="clearcache">Clear</button></div>
       <div class="setrow"><span>Is it reachable?<br><span class="dim" id="testsum">Not checked</span></span>
@@ -456,6 +460,24 @@ function livePut(q, sec, a){
   live[liveKey(q, sec)] = a; liveSave();
 }
 
+// Kept out of the profile object so it is never caught up in anything that gets exported,
+// logged or synced. Its own key, read and written in one place, and it only ever leaves this
+// device inside a request to the reader's own endpoint over https.
+const KEYKEY = "jarvi.relativity.providerkey";
+const provKey = () => { try { return (localStorage.getItem(KEYKEY) || "").trim(); } catch { return ""; } };
+function setProvKey(v){
+  try { v ? localStorage.setItem(KEYKEY, v.trim()) : localStorage.removeItem(KEYKEY); } catch {}
+}
+// Sent only over https, or to localhost while developing. A mistyped http address should not be
+// handed a credential.
+function keysFor(url){
+  const k = provKey();
+  if(!k) return undefined;
+  const https = url.slice(0,6).toLowerCase() === "https:";
+  const local = url.indexOf("//localhost") > 0 || url.indexOf("//127.0.0.1") > 0;
+  return (https || local) ? {GROQ_API_KEY: k} : undefined;
+}
+
 const endpoint = () => (prof.endpoint || "").trim();
 // "always" is the default, and the reason is a question like "who was Lorentz". The pack has an
 // entry near it and the book has a chapter named after him, so a gate that fires only when
@@ -495,6 +517,8 @@ function canLive(){ return endpoints().length > 0 && navigator.onLine && liveMod
 // but are completely different to fix: the server answered and refused (a real reply, act on
 // it), versus nothing was there at all (wrong address, try the next one).
 async function askOne(url, body){
+  const keys = keysFor(url);
+  if(keys) body = Object.assign({}, body, {providerKeys: keys});
   // 40s: a free tier under load is slow, and the alternative to waiting is no answer at all.
   const ctl = new AbortController();
   const timer = setTimeout(()=>ctl.abort(), 40000);
@@ -1167,6 +1191,11 @@ function renderSettings(){
     '<button class="pill'+(liveMode()===v?' on':'')+'" data-setlive="'+v+'">'+label+'</button>').join("");
   const ep = document.getElementById("endpoint");
   if(document.activeElement !== ep) ep.value = prof.endpoint || "";
+  const pk = document.getElementById("provkey");
+  if(document.activeElement !== pk) pk.value = provKey();
+  document.getElementById("provsum").textContent = provKey()
+    ? "Key stored on this device only — never in the app, never in the repo."
+    : "Leave blank if the server has its own key. Anything here stays on this device.";
   document.getElementById("livesum").textContent =
     !endpoint()             ? "No address set — offline answers only"
     : !usableEndpoint()     ? "Needs a full https:// address when opened from a file"
@@ -1362,6 +1391,8 @@ document.getElementById("endpoint").addEventListener("input", e => {
   prof.endpoint = e.target.value.trim(); save();
 });
 document.getElementById("endpoint").addEventListener("change", () => renderSettings());
+document.getElementById("provkey").addEventListener("input", e => setProvKey(e.target.value));
+document.getElementById("provkey").addEventListener("change", () => renderSettings());
 
 function net(){
   const p = document.getElementById("netpill");

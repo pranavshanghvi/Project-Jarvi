@@ -48,6 +48,21 @@ function rateLimited(ip) {
   return hits.length > PER_WINDOW;
 }
 
+// Only the free providers, and only when the deployment has no key of its own. An environment
+// key is the proper configuration and must not be overridable by a request.
+const ACCEPTED_KEYS = ['GROQ_API_KEY', 'MISTRAL_API_KEY', 'OPENROUTER_API_KEY',
+                       'CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN', 'GEMINI_API_KEY'];
+function installProviderKeys(supplied) {
+  if (!supplied || typeof supplied !== 'object') return;
+  for (const name of ACCEPTED_KEYS) {
+    const v = supplied[name];
+    if (typeof v !== 'string' || !v.trim()) continue;
+    if (process.env[name]) continue;                 // configured properly; leave it alone
+    process.env[name] = v.trim();
+    console.log('[ask] using a provider key supplied by the client for ' + name);  // never the value
+  }
+}
+
 function send(res, status, body, origin) {
   res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
   res.setHeader('Vary', 'Origin');
@@ -80,6 +95,17 @@ async function handler(req, res) {
 
   const question = String(body.question || '').trim();
   if (!question) return send(res, 400, { error: 'No question' }, origin);
+
+  // Bring-your-own-key. The reader can paste a free-provider key into the app's Settings when
+  // there is no way to set one in the deployment's environment — which is the situation this
+  // was written for. It is stored in their own browser, never in this bundle and never in git,
+  // and it is used exactly the same way an environment key would be: handed to the router,
+  // which still runs freeOnly. It is never logged and never returned.
+  //
+  // Installed onto process.env rather than threaded through, because the router reads env by
+  // design and forking it would be worse. Written once per warm process and not cleared: two
+  // requests carrying the same key race harmlessly, and an environment key always wins.
+  installProviderKeys(body.providerKeys);
 
   const { system, user } = buildPrompt({
     question,
@@ -128,4 +154,4 @@ async function handler(req, res) {
 module.exports = handler;
 module.exports.default = handler;
 // Exported for the tests, which drive these directly rather than standing up a server.
-module.exports._internals = { originAllowed, rateLimited, MAX_TOKENS };
+module.exports._internals = { originAllowed, rateLimited, installProviderKeys, ACCEPTED_KEYS, MAX_TOKENS };
