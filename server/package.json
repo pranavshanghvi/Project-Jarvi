@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Food photo analysis. Free inference only \u2014 see ../CLAUDE.md.",
   "main": "index.js",
   "directories": {
     "lib": "lib"
@@ -14,7 +14,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.111.0"
+    "@anthropic-ai/sdk": "file:./stubs/anthropic-sdk"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

@@ -1,0 +1,7 @@
+{
+  "name": "@anthropic-ai/sdk",
+  "version": "0.0.0-paid-path-disabled",
+  "description": "Deliberate stub. See ../../api/PROVENANCE.md — the paid fallback must not exist in this deployment.",
+  "main": "index.js",
+  "license": "MIT"
+}

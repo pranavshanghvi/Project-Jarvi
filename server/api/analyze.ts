@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { analyzeImageWithClaude } from '../lib/claudeClient';
+import { analyzeFoodImage } from '../lib/foodVision';
 import { parseClaudeResponse } from '../lib/parseResponse';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -24,10 +24,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const rawText = await analyzeImageWithClaude(imageBase64, mimeType ?? 'image/jpeg');
+    const rawText = await analyzeFoodImage(imageBase64, mimeType ?? 'image/jpeg');
     const parsed = parseClaudeResponse(rawText);
     res.status(200).json(parsed);
   } catch (error: any) {
+    // Every free provider declined (out of quota, not configured, or unusable answers). Degrade,
+    // never spend: tell the app plainly so it queues the photo and retries later.
+    if (error?.allDeclined) {
+      res.status(503).json({ error: 'Photo reading is unavailable right now. Your photo is saved and will be retried.', declined: error.declined });
+      return;
+    }
     res.status(502).json({ error: error.message ?? 'Analysis failed' });
   }
 }

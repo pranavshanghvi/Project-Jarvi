@@ -3,8 +3,8 @@
  * of the task brief). This session cannot run a long-lived local server and
  * curl it from a second terminal in parallel, and has no real food photo to
  * test with. Instead, this test imports the actual handler from
- * `api/analyze.ts` (which itself imports analyzeImageWithClaude and
- * parseClaudeResponse) with a mocked Anthropic client and a tiny fake
+ * `api/analyze.ts` (which itself imports analyzeFoodImage and
+ * parseClaudeResponse) with a mocked model router and a tiny fake
  * base64 string, and drives it with plain mock req/res objects to confirm:
  *   - a well-formed mocked Claude response yields HTTP 200 with {"items": [...]}
  *   - a missing imageBase64 field yields an appropriate error status
@@ -12,40 +12,32 @@
  * A human should still run `vercel dev` with a real photo before shipping.
  */
 
-jest.mock('@anthropic-ai/sdk', () => {
-  return jest.fn().mockImplementation(() => ({
-    messages: {
-      create: jest.fn().mockResolvedValue({
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              items: [
-                {
-                  name: 'Grilled chicken',
-                  confidence: 'normal',
-                  portionDescription: '1 breast, ~150g',
-                  nutrients: {
-                    calories: 250,
-                    proteinG: 40,
-                    carbsG: 0,
-                    fatG: 8,
-                    saturatedFatG: 2,
-                    fiberG: 0,
-                    sugarG: 0,
-                    sodiumMg: 90,
-                    cholesterolMg: 100,
-                  },
-                },
-              ],
-            }),
-          },
-        ],
-      }),
+const GOOD_ANSWER = JSON.stringify({
+  items: [
+    {
+      name: 'Grilled chicken',
+      confidence: 'normal',
+      portionDescription: '1 breast, ~150g',
+      nutrients: {
+        calories: 250,
+        proteinG: 40,
+        carbsG: 0,
+        fatG: 8,
+        saturatedFatG: 2,
+        fiberG: 0,
+        sugarG: 0,
+        sodiumMg: 90,
+        cholesterolMg: 100,
+      },
     },
-  }));
+  ],
 });
 
+jest.mock('./modelRouter', () => ({
+  callModel: jest.fn(),
+}));
+
+import { callModel } from './modelRouter';
 import handler from '../api/analyze';
 
 /** Minimal mock of VercelRequest/VercelResponse sufficient for this handler. */
@@ -65,6 +57,13 @@ function createMockReqRes(method: string, body: unknown, headers: Record<string,
   };
   return { req, res };
 }
+
+const mockedCallModel = callModel as unknown as jest.Mock;
+
+beforeEach(() => {
+  mockedCallModel.mockReset();
+  mockedCallModel.mockResolvedValue({ content: [{ type: 'text', text: GOOD_ANSWER }] });
+});
 
 describe('analyze handler (vercel dev substitute)', () => {
   it('returns HTTP 200 with a well-formed {"items": [...]} for a mocked success case', async () => {
@@ -106,22 +105,29 @@ describe('analyze handler (vercel dev substitute)', () => {
     expect(res.statusCode).toBe(405);
   });
 
-  it('returns 502 when Claude API fails', async () => {
-    // Get the mocked Anthropic constructor and make it return a failing client for this test
-    const Anthropic = require('@anthropic-ai/sdk');
-    Anthropic.mockImplementationOnce(() => ({
-      messages: {
-        create: jest.fn().mockRejectedValue(new Error('Claude API error')),
-      },
-    }));
-
+  it('returns 502 when the model call fails for an ordinary reason', async () => {
+    mockedCallModel.mockRejectedValue(new Error('upstream error'));
     const fakeBase64 = 'ZmFrZS1pbWFnZS1kYXRh';
     const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' });
 
     await handler(req, res);
 
     expect(res.statusCode).toBe(502);
-    expect(res.jsonBody.error).toBe('Claude API error');
+    expect(res.jsonBody.error).toBe('upstream error');
+  });
+
+  it('returns 503 (degrade, never spend) when every free provider declines', async () => {
+    const exhausted: any = new Error('No free provider could answer');
+    exhausted.allDeclined = true;
+    exhausted.declined = ['cloudflare: 429', 'mistral: not configured'];
+    mockedCallModel.mockRejectedValue(exhausted);
+    const fakeBase64 = 'ZmFrZS1pbWFnZS1kYXRh';
+    const { req, res } = createMockReqRes('POST', { imageBase64: fakeBase64, mimeType: 'image/jpeg' });
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(503);
+    expect(res.jsonBody.declined).toEqual(['cloudflare: 429', 'mistral: not configured']);
   });
 });
 
