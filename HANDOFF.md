@@ -28,12 +28,21 @@ Both pushed to `main`.
 ## What is in progress
 
 **Giving the photo reader a free AI key.** Pranav wants Jarvi completely separate from Snaptly,
-so he is opening a new Mistral account (free "Experiment" plan) under a separate Gmail he
-already owns, not the one Snaptly uses. (The address is deliberately not written in this file.)
-He stores the key himself with:
+so the keys come from new accounts under a separate Gmail he already owns, not the one Snaptly
+uses. (The address is deliberately not written in this file.)
+
+Mistral was tried first and is a dead end: on 2026-11-11 a new Mistral account was offered no
+free API plan at all (only a chat-only Free plan, paid plans, and pay-as-you-go). Do not send
+him back there. The service to use is **Cloudflare Workers AI**: free daily allowance, and it
+returns an error rather than a charge when the allowance runs out. It needs two values, stored
+one at a time:
 
 ```bash
-cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add MISTRAL_API_KEY production --sensitive --scope pranavshanghvi-1128s-projects
+cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add CLOUDFLARE_ACCOUNT_ID production --sensitive --scope pranavshanghvi-1128s-projects
+```
+
+```bash
+cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add CLOUDFLARE_API_TOKEN production --sensitive --scope pranavshanghvi-1128s-projects
 ```
 
 Never ask him to paste a key into chat. Once he says it is stored:
@@ -45,8 +54,7 @@ cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --
 then send a real food photo to `https://jarvi-server.vercel.app/api/analyze` and confirm it comes
 back with food items. Until a key exists that address answers "unavailable" (HTTP 503) on purpose.
 
-Optional backup keys, same command with a different name: `OPENROUTER_API_KEY`,
-`GEMINI_API_KEY`, and Cloudflare (two values: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`).
+Optional backup keys, same command with a different name: `OPENROUTER_API_KEY`, `GEMINI_API_KEY`.
 
 ## What is next
 
