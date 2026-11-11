@@ -59,6 +59,12 @@ The clickable design (9 phone screens, sample data) is here:
 https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi (private to him). Source files for it are in
 the session scratchpad, not in this repository; read the artifact to get them back.
 
+**Look and feel, decided by him:** "use a glassy look like we did for snaptly". The design now
+uses Snaptly's glass recipe (see `.glass`, `.glass-panel`, `.money-glass` in the Snaptly
+project's `src/index.css`): see-through frosted cards with a bright top edge, soft teal and orange
+colour washes behind the page, a floating glass tab bar, and teal glass for the main buttons.
+In the real app this needs a blur component (`expo-blur`), which is not installed yet.
+
 What he asked for, in his words, condensed:
 
 | # | Ask | Screen in the design |
@@ -67,7 +73,7 @@ What he asked for, in his words, condensed:
 | 2 | Food by photo from phone or glasses | Log a meal |
 | 3 | Separate food page with the time eaten | Food log, One meal |
 | 4 | Everything tappable to see detail | Every row and number |
-| 5 | Cool, modern, like Oura | Dark, rings, two colours |
+| 5 | Cool, modern, like Oura; glassy like Snaptly | Dark glass, rings, two colours |
 | 6 | History kept for years | History (week to all-time) |
 | 7 | Profile questions up front (height, weight, DOB) | About you |
 | 8 | Goals, and tracking against them | Your goal, ring on Today |
