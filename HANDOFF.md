@@ -15,7 +15,7 @@ is an unrelated project in the same repository.
 
 | # | Piece | State |
 |---|---|---|
-| 1 | Photo logging, daily log, dashboard | Built in July, live on the web |
+| 1 | Photo logging, daily log, dashboard | Rebuilt in the Nov redesign |
 | 2 | Calories burned from Apple Health | Verified with sample data |
 | 3 | Net calories, day / week / month | Built; screen verified |
 | 4 | Photos from Ray-Ban Meta glasses | Built; picker verified |
@@ -51,44 +51,51 @@ cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add OPENROUTER_API
 cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --scope pranavshanghvi-1128s-projects
 ```
 
-## Redesign: design shown, waiting for Pranav's go-ahead (2026-11-11)
+## Redesign: built and installed on his iPhone (2026-11-11)
 
-Pranav said the app looks too basic and asked for an Oura-style redesign, then said
-"show me the design first before you build anything". **No redesign code has been written.**
-The clickable design (10 phone screens, sample data) is here:
-https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi (private to him). Source files for it are in
-the session scratchpad, not in this repository; read the artifact to get them back.
+Pranav approved a ten-screen design ("build it") after asking for an Oura-style app with
+Snaptly's glass look. It is built (commit `8be59f6`), checked screen by screen in the simulator,
+and installed on his iPhone 16 Plus. The design it was built from:
+https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi (private to him).
 
-**Look and feel, decided by him:** "use a glassy look like we did for snaptly". The design now
-uses Snaptly's glass recipe (see `.glass`, `.glass-panel`, `.money-glass` in the Snaptly
-project's `src/index.css`): see-through frosted cards with a bright top edge, soft teal and orange
-colour washes behind the page, a floating glass tab bar, and teal glass for the main buttons.
-In the real app this needs a blur component (`expo-blur`), which is not installed yet.
-
-What he asked for, in his words, condensed:
-
-| # | Ask | Screen in the design |
+| # | He asked for | Where it lives |
 |---|---|---|
-| 1 | Burn pulled in automatically from Watch/phone | Today, Calories burned |
-| 2 | Food by photo from phone or glasses | Log a meal |
-| 3 | Separate food page with the time eaten | Food log, One meal |
-| 4 | Everything tappable to see detail | Every row and number |
-| 5 | Cool, modern, like Oura; glassy like Snaptly | Dark glass, rings, two colours |
-| 6 | History kept for years | History (week to all-time) |
-| 7 | Profile questions up front (height, weight, DOB) | About you |
-| 8 | Goals, and tracking against them | Your goal, ring on Today |
+| 1 | Burn pulled in automatically from Watch | Today, Burned |
+| 2 | Food by photo, from phone or glasses | The round + button |
+| 3 | Food page with the time eaten | Food tab, One meal |
+| 4 | Everything tappable for detail | Every row and number |
+| 5 | Glassy look like Snaptly | `app/src/ui/kit.tsx`, `theme.ts` |
+| 6 | History for years | History tab (week to all-time) |
+| 7 | Profile questions up front | About you (first launch) |
+| 8 | Goals and tracking against them | Your goal, ring on Today |
 | 9 | Daily weight with a graph | Weight |
-| 10 | Choice of chart style: line, bar, pie, Sankey | Chart style |
+| 10 | Choice of chart style | Bars / Line / Pie / Flow per card |
 
-Things the build will need that the app does not have yet: bottom tab navigation, a meal detail
-and edit screen (edit time, delete), Apple Health permission for workouts and body weight, a
-profile and goals store, a weight log, long-range history queries, a look-and-feel file so
-colours and type live in one place, and a chart-style switcher per tracking card (remembered per
-card; only the styles that suit that card's data: see the Chart style screen). Food history lives only on the phone (and in its iPhone
-backup); a cloud copy would need a sign-in and is his decision to make.
+How the code is laid out, for whoever picks this up:
+- `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
+- `app/src/screens/`: one file per screen. `AddMealSheet` is the + sheet.
+- `app/src/navigation/RootNavigator.tsx`: the four tabs live in one screen; meal, goal, weight
+  and profile are pushed on top.
+- `app/src/goals`, `weight`, `profile`, `settings`: small stores kept on the phone, with tests.
+- `app/src/health/healthKit.ts`: everything read from Apple Health (never written).
 
-Also still unverified on his real phone: the fix that shrinks and converts iPhone photos before
-sending (commit `9ee4d9c`). It is installed; he has not yet confirmed a photo was read.
+Not yet confirmed on his real phone, so ask him or look before assuming:
+- The About-you screen appearing on first launch (the simulator run skipped it).
+- A real food photo going from the + button to the meal screen. Only a built-in sample meal
+  was used in the simulator, which has no food photos. In a development build, pressing and
+  holding the "Log a meal" title opens that sample; it is not in the real app.
+- Workouts and resting energy from his actual Watch.
+- The glasses album being found by name.
+
+Known rough edges, deliberately left:
+- Food history lives only on the phone and in its iPhone backup. A cloud copy needs a sign-in;
+  that is his decision.
+- The "eat about" figure stays blank until there is a full day of Watch data or a profile.
+- The web version (`jarvi-web`) still shows the July build and has not been tried with the new
+  screens.
+- To put a new build on his phone: the Release build command and `xcrun devicectl device install
+  app` (see git history of this file's session, or rebuild as below with `-configuration Release`).
+  The free Apple account means the app stops opening after 7 days until reinstalled.
 
 ## What is next
 
@@ -147,7 +154,7 @@ Known traps, already handled:
 - Expo packages must all be on matching versions (`npx expo install --fix`), or the app crashes
   at launch.
 
-Tests: `cd app && npx jest` (38 pass) and `cd server && npx jest` (19 pass).
+Tests: `cd app && npx jest` (104 pass) and `cd server && npx jest` (19 pass).
 
 ## Git state
 
