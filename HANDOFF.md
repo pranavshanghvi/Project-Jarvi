@@ -55,7 +55,7 @@ cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --
 
 Pranav said the app looks too basic and asked for an Oura-style redesign, then said
 "show me the design first before you build anything". **No redesign code has been written.**
-The clickable design (9 phone screens, sample data) is here:
+The clickable design (10 phone screens, sample data) is here:
 https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi (private to him). Source files for it are in
 the session scratchpad, not in this repository; read the artifact to get them back.
 
@@ -78,11 +78,13 @@ What he asked for, in his words, condensed:
 | 7 | Profile questions up front (height, weight, DOB) | About you |
 | 8 | Goals, and tracking against them | Your goal, ring on Today |
 | 9 | Daily weight with a graph | Weight |
+| 10 | Choice of chart style: line, bar, pie, Sankey | Chart style |
 
 Things the build will need that the app does not have yet: bottom tab navigation, a meal detail
 and edit screen (edit time, delete), Apple Health permission for workouts and body weight, a
-profile and goals store, a weight log, long-range history queries, and a look-and-feel file so
-colours and type live in one place. Food history lives only on the phone (and in its iPhone
+profile and goals store, a weight log, long-range history queries, a look-and-feel file so
+colours and type live in one place, and a chart-style switcher per tracking card (remembered per
+card; only the styles that suit that card's data: see the Chart style screen). Food history lives only on the phone (and in its iPhone
 backup); a cloud copy would need a sign-in and is his decision to make.
 
 Also still unverified on his real phone: the fix that shrinks and converts iPhone photos before
