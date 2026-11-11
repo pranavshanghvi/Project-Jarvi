@@ -11,7 +11,8 @@
       "bundleIdentifier": "com.pranavshanghvi.jarvi",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "9ZZYSBC8SD"
     },
     "android": {
       "adaptiveIcon": {
