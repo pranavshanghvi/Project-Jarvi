@@ -51,6 +51,37 @@ cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add OPENROUTER_API
 cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --scope pranavshanghvi-1128s-projects
 ```
 
+## Redesign: design shown, waiting for Pranav's go-ahead (2026-11-11)
+
+Pranav said the app looks too basic and asked for an Oura-style redesign, then said
+"show me the design first before you build anything". **No redesign code has been written.**
+The clickable design (9 phone screens, sample data) is here:
+https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi (private to him). Source files for it are in
+the session scratchpad, not in this repository; read the artifact to get them back.
+
+What he asked for, in his words, condensed:
+
+| # | Ask | Screen in the design |
+|---|---|---|
+| 1 | Burn pulled in automatically from Watch/phone | Today, Calories burned |
+| 2 | Food by photo from phone or glasses | Log a meal |
+| 3 | Separate food page with the time eaten | Food log, One meal |
+| 4 | Everything tappable to see detail | Every row and number |
+| 5 | Cool, modern, like Oura | Dark, rings, two colours |
+| 6 | History kept for years | History (week to all-time) |
+| 7 | Profile questions up front (height, weight, DOB) | About you |
+| 8 | Goals, and tracking against them | Your goal, ring on Today |
+| 9 | Daily weight with a graph | Weight |
+
+Things the build will need that the app does not have yet: bottom tab navigation, a meal detail
+and edit screen (edit time, delete), Apple Health permission for workouts and body weight, a
+profile and goals store, a weight log, long-range history queries, and a look-and-feel file so
+colours and type live in one place. Food history lives only on the phone (and in its iPhone
+backup); a cloud copy would need a sign-in and is his decision to make.
+
+Also still unverified on his real phone: the fix that shrinks and converts iPhone photos before
+sending (commit `9ee4d9c`). It is installed; he has not yet confirmed a photo was read.
+
 ## What is next
 
 | # | Task | Needs Pranav? |
@@ -58,8 +89,6 @@ cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --
 | 1 | Steadier calorie estimates (see below) | No |
 | 3 | Install on his actual iPhone | Yes, his Apple ID in Xcode |
 | 4 | Republish the web version with new screens | No |
-| 5 | Coloured rings on the dashboard | No (he asked for these in July) |
-| 6 | General styling pass | His taste; offer a playground |
 | 7 | Direct glasses capture (Meta developer kit) | Later, optional |
 
 **Estimates swing between runs.** The same pizza photo came back as 1,780 calories once and 581
