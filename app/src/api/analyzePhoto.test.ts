@@ -1,6 +1,13 @@
-jest.mock('expo-file-system/legacy', () => ({
-  readAsStringAsync: jest.fn().mockResolvedValue('fakeBase64Data'),
-  EncodingType: { Base64: 'base64' },
+const mockSaveAsync = jest.fn().mockResolvedValue({ base64: 'fakeJpegBase64' });
+const mockResize = jest.fn();
+jest.mock('expo-image-manipulator', () => ({
+  SaveFormat: { JPEG: 'jpeg' },
+  ImageManipulator: {
+    manipulate: jest.fn(() => ({
+      resize: mockResize,
+      renderAsync: jest.fn().mockResolvedValue({ saveAsync: mockSaveAsync }),
+    })),
+  },
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -25,6 +32,15 @@ describe('analyzePhoto', () => {
       expect.stringContaining('/api/analyze'),
       expect.objectContaining({ method: 'POST' })
     );
+  });
+
+  it('sends a shrunken JPEG copy, never the original file (iPhone photos are HEIC and too big)', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ items: [] }) });
+    await analyzePhoto('file:///fake.heic');
+    expect(mockResize).toHaveBeenCalledWith({ width: 1024 });
+    expect(mockSaveAsync).toHaveBeenCalledWith(expect.objectContaining({ format: 'jpeg', base64: true }));
+    const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    expect(body).toEqual({ imageBase64: 'fakeJpegBase64', mimeType: 'image/jpeg' });
   });
 
   it('throws when the response is not ok', async () => {

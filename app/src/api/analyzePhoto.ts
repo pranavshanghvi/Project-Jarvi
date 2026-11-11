@@ -1,5 +1,4 @@
-// SDK 57 moved readAsStringAsync to the legacy entry point; the default export throws on it.
-import * as FileSystem from 'expo-file-system/legacy';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { AnalyzePhotoResponse } from '../types/nutrition';
@@ -8,10 +7,25 @@ const QUEUE_KEY = 'jarvi.pendingAnalysis';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
 const PROXY_SECRET = process.env.EXPO_PUBLIC_PROXY_SECRET;
 
+// Longest-edge-ish cap for what gets uploaded. The AI reads a meal fine at this size.
+const UPLOAD_WIDTH = 1024;
+
+// A photo straight off an iPhone cannot be sent as it is, for two separate reasons found on a
+// real phone on 2026-11-11: it is usually HEIC, which the free vision model rejects outright
+// ("unrecognized image format"), and at several megabytes it is over the server's 4.5 MB request
+// limit, so it never arrives at all. Re-encoding to a 1024px-wide JPEG fixes both and keeps the
+// upload around 200 KB. The saved photo on the phone is untouched; only the copy sent is shrunk.
+export async function prepareForUpload(photoUri: string): Promise<string> {
+  const context = ImageManipulator.manipulate(photoUri);
+  context.resize({ width: UPLOAD_WIDTH });
+  const rendered = await context.renderAsync();
+  const result = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8, base64: true });
+  if (!result.base64) throw new Error('Could not prepare the photo for upload');
+  return result.base64;
+}
+
 export async function analyzePhoto(photoUri: string): Promise<AnalyzePhotoResponse> {
-  const imageBase64 = await FileSystem.readAsStringAsync(photoUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  const imageBase64 = await prepareForUpload(photoUri);
   const response = await fetch(`${API_BASE_URL}/api/analyze`, {
     method: 'POST',
     headers: {

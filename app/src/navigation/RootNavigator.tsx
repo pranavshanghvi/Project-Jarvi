@@ -66,8 +66,9 @@ function CaptureScreenWrapper({ navigation }: any) {
       const { items } = await analyzePhoto(photoUri);
       navigation.navigate('Confirm', { photoUri, items });
     } catch {
+      // Say so. This used to drop back to Home with no message, which looked like nothing happened.
       await queuePhotoForRetry(photoUri);
-      navigation.navigate('Home');
+      Alert.alert('Photo saved for later', 'The food reader could not read this photo right now. Jarvi will try it again when it is back.');
     }
   }
   return (
