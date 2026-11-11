@@ -9,7 +9,7 @@ import { colors } from '../ui/theme';
 import { cmToFtIn, fromDisplayWeight, ftInToCm, toDisplayWeight, WeightUnit } from '../units';
 import { latestWeight, logWeight } from '../weight/weightStore';
 
-const input = { height: 52, borderRadius: 16, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 18, paddingHorizontal: 16 } as const;
+const input = { minWidth: 0, height: 52, borderRadius: 16, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 18, paddingHorizontal: 16 } as const;
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

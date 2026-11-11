@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, TextInput, View } from 'react-native';
+import { Image, Pressable, TextInput, View } from 'react-native';
+import { confirmAction, notify } from '../ui/notify';
 import Slider from '@react-native-community/slider';
 import { MEAL_LABELS, resolvePhotoUri } from '../data/dayData';
 import { createEntry, deleteEntry, getEntry, updateEntry } from '../db/entriesRepository';
@@ -65,7 +66,7 @@ function NumberField({ label, unit, value, max, onChange }: { label: string; uni
           const parsed = Number(next.replace(',', '.'));
           onChange(next !== '' && Number.isFinite(parsed) && parsed >= 0 ? Math.min(parsed, max) : 0);
         }}
-        style={{ height: 40, borderRadius: 10, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 16, paddingHorizontal: 10, marginTop: 4 }}
+        style={{ minWidth: 0, height: 40, borderRadius: 10, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 16, paddingHorizontal: 10, marginTop: 4 }}
       />
     </View>
   );
@@ -170,16 +171,13 @@ export default function MealDetailScreen({ route, navigation }: any) {
       navigation.popTo('Tabs');
     } catch {
       setSaving(false);
-      Alert.alert('Could not save', 'This meal was not saved. Try again.');
+      notify('Could not save', 'This meal was not saved. Try again.');
     }
   }
 
   function confirmDelete() {
     if (isNew) return navigation.popTo('Tabs');
-    Alert.alert('Delete this meal?', 'It will be removed from your log and your totals.', [
-      { text: 'Keep it', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteEntry(entryId).then(() => navigation.popTo('Tabs')) },
-    ]);
+    confirmAction('Delete this meal?', 'It will be removed from your log and your totals.', 'Delete', () => deleteEntry(entryId).then(() => navigation.popTo('Tabs')));
   }
 
   const names = lines.map((l) => l.name.trim() || 'Food');

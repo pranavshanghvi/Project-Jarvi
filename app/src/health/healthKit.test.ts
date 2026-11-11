@@ -1,3 +1,4 @@
+jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 jest.mock('@kingstinct/react-native-healthkit', () => ({
   isHealthDataAvailable: jest.fn().mockResolvedValue(true),
   requestAuthorization: jest.fn().mockResolvedValue(true),

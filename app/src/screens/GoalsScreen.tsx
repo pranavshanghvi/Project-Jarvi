@@ -216,4 +216,4 @@ export default function GoalsScreen({ navigation }: any) {
   );
 }
 
-const inputStyle = { height: 52, borderRadius: 16, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 20, paddingHorizontal: 16 } as const;
+const inputStyle = { minWidth: 0, height: 52, borderRadius: 16, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 20, paddingHorizontal: 16 } as const;

@@ -1,22 +1,23 @@
 import { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleProp, StyleSheet, Text, TextStyle, useWindowDimensions, View, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { colors, numberFont, screenWidth } from './theme';
+import { colors, numberFont } from './theme';
 
 // ── Page ─────────────────────────────────────────────────────────────────────────────────────
 
 // The soft teal and orange glow behind every screen. Glass needs colour behind it to blur,
 // otherwise a see-through card on a black page is just a black card.
 function Glow() {
-  const w = screenWidth;
-  const h = 900;
+  const { width, height } = useWindowDimensions();
+  const w = Math.max(320, width);
+  const h = Math.max(600, height);
   const spots = [
     { id: 'a', cx: w * 0.08, cy: -20, r: 340, color: colors.burned, opacity: 0.36 },
     { id: 'b', cx: w * 1.08, cy: 110, r: 320, color: colors.eaten, opacity: 0.28 },
-    { id: 'c', cx: -w * 0.1, cy: 520, r: 300, color: colors.eaten, opacity: 0.16 },
-    { id: 'd', cx: w * 1.05, cy: 700, r: 340, color: colors.burned, opacity: 0.22 },
+    { id: 'c', cx: -w * 0.1, cy: h * 0.6, r: 300, color: colors.eaten, opacity: 0.16 },
+    { id: 'd', cx: w * 1.05, cy: h * 0.8, r: 340, color: colors.burned, opacity: 0.22 },
   ];
   return (
     <Svg width={w} height={h} style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -286,7 +287,7 @@ export function TabBar({ current, onChange, onAdd }: { current: TabName; onChang
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.page },
+  page: { flex: 1, backgroundColor: colors.page, overflow: 'hidden' },
   content: { paddingHorizontal: 20, gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' },
   glass: { overflow: 'hidden', borderWidth: 1, borderColor: colors.glassBorder, borderTopColor: colors.glassEdge },
   title: { fontSize: 30, fontWeight: '600', letterSpacing: -0.5, color: colors.text },

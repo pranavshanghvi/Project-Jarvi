@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { notify } from '../ui/notify';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -7,6 +8,10 @@ import { analyzePhoto, clearQueuedPhoto, getQueuedPhotos, queuePhotoForRetry, su
 import { persistPhoto, startOfDay } from '../data/dayData';
 import { getPhotoFileUri, GlassesPhoto } from '../glasses/glassesPhotos';
 import { requestHealthPermissions } from '../health/healthKit';
+import { parseBurnLink, saveImportedBurn } from '../health/importedBurn';
+import { toDateKey } from '../nutrition/aggregation';
+import { Glass, Muted } from '../ui/kit';
+import { formatCalories } from '../ui/theme';
 import { getProfile } from '../profile/profileStore';
 import AddMealSheet from '../screens/AddMealSheet';
 import BurnedScreen from '../screens/BurnedScreen';
@@ -32,7 +37,24 @@ function TabsScreen({ navigation }: any) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [adding, setAdding] = useState(false);
 
+  const [notice, setNotice] = useState('');
   const healthAsked = useRef(false);
+
+  // Web version only: an Apple Shortcut on the person's iPhone opens BiteLog with the day's
+  // calories burned after a "#" in the address. Save them, then tidy the address so reloading or
+  // bookmarking the page does not carry old numbers around.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const days = parseBurnLink(window.location.hash, new Date());
+    if (Object.keys(days).length === 0) return;
+    saveImportedBurn(days).then(() => {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      const today = days[toDateKey(new Date())];
+      setNotice(today ? `Updated from your iPhone: ${formatCalories(today.active + today.resting)} burned so far today` : 'Updated from your iPhone');
+      setRefreshKey((k) => k + 1);
+      setTimeout(() => setNotice(''), 5000);
+    });
+  }, []);
 
   // iOS shows its Health sheet the first time (and again when new kinds of data are added);
   // afterwards this returns at once. Refresh when it is answered so the burn appears.
@@ -106,6 +128,13 @@ function TabsScreen({ navigation }: any) {
       {tab === 'food' && <FoodLogScreen refreshKey={refreshKey} nav={nav} />}
       {tab === 'burned' && <BurnedScreen refreshKey={refreshKey} />}
       {tab === 'history' && <HistoryScreen refreshKey={refreshKey} nav={nav} />}
+      {notice ? (
+        <View style={{ position: 'absolute', top: 12, left: 16, right: 16 }} pointerEvents="none">
+          <Glass strong radius={16} padding={12}>
+            <Muted style={{ color: colors.text, textAlign: 'center' }}>{notice}</Muted>
+          </Glass>
+        </View>
+      ) : null}
       <TabBar current={tab} onChange={setTab} onAdd={() => setAdding(true)} />
       <AddMealSheet
         visible={adding}
@@ -134,7 +163,7 @@ function GlassesImportWrapper({ navigation }: any) {
       photoUri = await persistPhoto(await getPhotoFileUri(photo.id));
     } catch {
       setBusyPhotoId(null);
-      Alert.alert('Could not open that photo', 'Try another one.');
+      notify('Could not open that photo', 'Try another one.');
       return;
     }
     try {
@@ -142,7 +171,7 @@ function GlassesImportWrapper({ navigation }: any) {
       navigation.replace('MealDetail', { draft: { photoUri, items, takenAt: photo.takenAt, glassesPhotoId: photo.id } });
     } catch {
       await queuePhotoForRetry(photoUri);
-      Alert.alert('Photo saved for later', 'The food reader could not read this photo right now. It will be tried again when the reader is back.');
+      notify('Photo saved for later', 'The food reader could not read this photo right now. It will be tried again when the reader is back.');
     } finally {
       setBusyPhotoId(null);
     }

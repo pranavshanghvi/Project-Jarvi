@@ -13,8 +13,17 @@ function readAll(): StoredEntry[] {
   return entries;
 }
 
+// A browser gives a site only a few megabytes. If saving fails for lack of room, keep every meal
+// and its numbers but let go of the pictures on the older half, then try once more. Losing an old
+// thumbnail is far better than refusing to save today's meal.
 function writeAll(entries: StoredEntry[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    const byAge = [...entries].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    for (const entry of byAge.slice(0, Math.ceil(byAge.length / 2))) entry.photoPath = '';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
 }
 
 function nextId(): number {

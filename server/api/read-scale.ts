@@ -1,9 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { applyCors } from '../lib/cors';
 import { readScaleImage } from '../lib/scaleVision';
 
 // Reads the number off a photo of a bathroom scale. Same rules as /api/analyze: free AI only,
 // and when every free provider is out, say so plainly rather than spend.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;

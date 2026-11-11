@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 import { ChartStyle, getChartStyle, saveChartStyle } from '../settings/settingsStore';
 import { Glass, Muted, Segmented } from './kit';
-import { chartWidth, colors, formatCalories, numberFont } from './theme';
+import { colors, formatCalories, numberFont, useChartWidth } from './theme';
 
 export interface Series {
   label: string;
@@ -52,7 +52,9 @@ export function Legend({ items }: { items: { label: string; color: string }[] })
   );
 }
 
-export function BarsChart({ series, labels, width = chartWidth }: { series: Series[]; labels: string[]; width?: number }) {
+export function BarsChart({ series, labels, width: fixedWidth }: { series: Series[]; labels: string[]; width?: number }) {
+  const autoWidth = useChartWidth();
+  const width = fixedWidth ?? autoWidth;
   const max = niceMax(series);
   const count = Math.max(1, labels.length);
   const slot = width / count;
@@ -77,13 +79,15 @@ export function BarsChart({ series, labels, width = chartWidth }: { series: Seri
 }
 
 // A value of null leaves a gap, so a day with no reading does not draw as zero.
-export function LineChart({ series, labels, width = chartWidth, goal, zeroBased = true }: {
+export function LineChart({ series, labels, width: fixedWidth, goal, zeroBased = true }: {
   series: { label: string; color: string; values: (number | null)[] }[];
   labels: string[];
   width?: number;
   goal?: { value: number; label: string };
   zeroBased?: boolean;
 }) {
+  const autoWidth = useChartWidth();
+  const width = fixedWidth ?? autoWidth;
   const all = series.flatMap((s) => s.values.filter((v): v is number => v !== null));
   if (goal) all.push(goal.value);
   const hi = all.length ? Math.max(...all) : 1;
@@ -173,12 +177,14 @@ export function PieChart({ slices, centerValue, centerLabel }: { slices: Slice[]
 
 // A Sankey-style picture: bands flow from the left column into one middle bar, then out to the
 // right column. Band thickness is the amount, so the eye can follow where energy goes.
-export function FlowChart({ left, middle, right, width = chartWidth }: {
+export function FlowChart({ left, middle, right, width: fixedWidth }: {
   left: Slice[];
   middle: { label: string; value: number };
   right: Slice[];
   width?: number;
 }) {
+  const autoWidth = useChartWidth();
+  const width = fixedWidth ?? autoWidth;
   // A source or destination of zero would draw a label with no band attached to it.
   left = left.filter((n) => n.value >= 0.5);
   right = right.filter((n) => n.value >= 0.5);

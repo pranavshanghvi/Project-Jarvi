@@ -6,6 +6,7 @@ import { toDateKey } from '../nutrition/aggregation';
 import { BarsChart, ChartCard, LineChart, PieChart } from '../ui/charts';
 import { Body, Glass, Header, Heading, Muted, Num, PrimaryButton, Row, Screen } from '../ui/kit';
 import { colors, formatCalories, formatTime } from '../ui/theme';
+import WebBurnCard from './WebBurnCard';
 
 function miles(meters?: number): string {
   return meters && meters > 0 ? ` · ${(meters / 1609.344).toFixed(1)} mi` : '';
@@ -40,7 +41,7 @@ export default function BurnedScreen({ refreshKey }: { refreshKey: number }) {
 
   return (
     <Screen tabBarSpace>
-      <Header eyebrow="From your Apple Watch, through Apple Health" title="Burned" />
+      <Header eyebrow={isHealthSupported() ? 'From your Apple Watch, through Apple Health' : 'Typed in, or sent from your iPhone'} title="Burned" />
 
       <Glass>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
@@ -62,11 +63,7 @@ export default function BurnedScreen({ refreshKey }: { refreshKey: number }) {
           <PrimaryButton title="Connect Apple Health" onPress={() => requestHealthPermissions().then(() => setReload(reload + 1))} />
         </Glass>
       )}
-      {!isHealthSupported() && (
-        <Glass>
-          <Muted>Calories burned come from Apple Health, which is only on iPhone.</Muted>
-        </Glass>
-      )}
+      {!isHealthSupported() && <WebBurnCard active={day?.active ?? 0} resting={day?.resting ?? 0} onSaved={() => setReload(reload + 1)} />}
 
       <Heading>Workouts today</Heading>
       <Glass padding={0} style={{ paddingHorizontal: 14 }}>

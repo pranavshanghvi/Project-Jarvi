@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, TextInput, View } from 'react-native';
+import { ActivityIndicator, Keyboard, TextInput, View } from 'react-native';
+import { notify } from '../ui/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { readScalePhoto } from '../api/readScale';
 import { Body, Muted, OutlineButton, PrimaryButton, Title } from '../ui/kit';
@@ -41,7 +42,7 @@ export default function LogWeightSheet({ visible, onClose, onSaved, unit, lastKg
   async function readFromPhoto(source: 'camera' | 'library') {
     const permission = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      return Alert.alert(source === 'camera' ? 'Camera access is off' : 'Photo access is off', 'Turn it on for this app in Settings, or type your weight in.');
+      return notify(source === 'camera' ? 'Camera access is off' : 'Photo access is off', 'Turn it on for this app in Settings, or type your weight in.');
     }
     const result = source === 'camera' ? await ImagePicker.launchCameraAsync({ quality: 0.7 }) : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
     if (result.canceled) return;
@@ -108,7 +109,7 @@ export default function LogWeightSheet({ visible, onClose, onSaved, unit, lastKg
               placeholder={lastKg ? toDisplayWeight(lastKg, unit).toFixed(1) : unit === 'lb' ? '180.0' : '82.0'}
               placeholderTextColor={colors.placeholder}
               accessibilityLabel={`Weight in ${unit}`}
-              style={{ flex: 1, height: 60, borderRadius: 18, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 28, fontWeight: '600', paddingHorizontal: 18 }}
+              style={{ flex: 1, minWidth: 0, height: 60, borderRadius: 18, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 28, fontWeight: '600', paddingHorizontal: 18 }}
             />
             <Muted style={{ fontSize: 18, width: 28 }}>{unit}</Muted>
           </View>

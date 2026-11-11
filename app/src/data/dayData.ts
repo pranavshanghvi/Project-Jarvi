@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 // Expo SDK 57 keeps copyAsync/documentDirectory on the legacy entry point only.
 import * as FileSystem from 'expo-file-system/legacy';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { getEntriesForDate, StoredEntry } from '../db/entriesRepository';
 import { getEnergySplitByDay, getHealthWeights, getWorkouts, Workout } from '../health/healthKit';
 import { toDateKey } from '../nutrition/aggregation';
@@ -95,7 +96,19 @@ export function resolvePhotoUri(stored: string): string {
 // Copies a photo out of the temporary or library location into the app's own folder, so a saved
 // meal keeps its picture. On the web the browser already hands back a stable address.
 export async function persistPhoto(sourceUri: string): Promise<string> {
-  if (Platform.OS === 'web') return sourceUri;
+  if (Platform.OS === 'web') {
+    // A browser only lends a temporary address for a chosen photo, gone after a reload, and has
+    // just a few megabytes of storage. So the web version keeps a small thumbnail of each meal
+    // (about 5 KB) rather than the full picture.
+    try {
+      const context = ImageManipulator.manipulate(sourceUri);
+      context.resize({ width: 180 });
+      const result = await (await context.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.5, base64: true });
+      return result.base64 ? `data:image/jpeg;base64,${result.base64}` : sourceUri;
+    } catch {
+      return sourceUri;
+    }
+  }
   const destination = `${FileSystem.documentDirectory}${Date.now()}.jpg`;
   await FileSystem.copyAsync({ from: sourceUri, to: destination });
   return destination;

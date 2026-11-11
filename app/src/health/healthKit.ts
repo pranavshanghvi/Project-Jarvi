@@ -9,6 +9,7 @@ import {
   requestAuthorization,
 } from '@kingstinct/react-native-healthkit';
 import { toDateKey } from '../nutrition/aggregation';
+import { getImportedBurn } from './importedBurn';
 import type { Sex } from '../profile/profileStore';
 import type { WeightEntry } from '../weight/weightStore';
 
@@ -78,7 +79,9 @@ export async function getEnergySplitByDay(
   start: Date,
   end: Date
 ): Promise<Record<string, { active: number; resting: number }>> {
-  if (!isHealthSupported()) return {};
+  // Off iPhone (the web version) there is no Apple Health to read. Use the figures an Apple
+  // Shortcut sent over, or that were typed in.
+  if (!isHealthSupported()) return getImportedBurn(start, end);
   const { from, to } = wholeDays(start, end);
   const active: Record<string, number> = {};
   const resting: Record<string, number> = {};

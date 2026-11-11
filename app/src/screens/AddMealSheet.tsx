@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Text, View } from 'react-native';
+import { notify } from '../ui/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { analyzePhoto, queuePhotoForRetry } from '../api/analyzePhoto';
 import { persistPhoto } from '../data/dayData';
@@ -33,11 +34,12 @@ export default function AddMealSheet({ visible, onClose, onDraft, onGlasses }: P
     let photoUri = sourceUri;
     try {
       photoUri = await persistPhoto(sourceUri);
-      const { items } = await analyzePhoto(photoUri);
+      // Read the original, not the saved copy: on the web the saved copy is only a thumbnail.
+      const { items } = await analyzePhoto(sourceUri);
       onDraft({ photoUri, items, takenAt });
     } catch {
       await queuePhotoForRetry(photoUri);
-      Alert.alert('Photo saved for later', 'The food reader could not read this photo right now. It will be tried again when the reader is back.');
+      notify('Photo saved for later', 'The food reader could not read this photo right now. It will be tried again when the reader is back.');
       onClose();
     } finally {
       setReading(false);
@@ -46,14 +48,14 @@ export default function AddMealSheet({ visible, onClose, onDraft, onGlasses }: P
 
   async function takePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return Alert.alert('Camera access is off', 'Turn on camera access for this app in Settings to photograph a meal.');
+    if (!permission.granted) return notify('Camera access is off', 'Turn on camera access for this app in Settings to photograph a meal.');
     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!result.canceled) read(result.assets[0].uri);
   }
 
   async function pickPhoto() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return Alert.alert('Photo access is off', 'Turn on photo access for this app in Settings to choose a meal photo.');
+    if (!permission.granted) return notify('Photo access is off', 'Turn on photo access for this app in Settings to choose a meal photo.');
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7, exif: true });
     if (!result.canceled) read(result.assets[0].uri, parsePhotoTime(result.assets[0].exif));
   }

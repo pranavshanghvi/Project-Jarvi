@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import Svg, { Circle, Line, Rect } from 'react-native-svg';
 import { addDays, DayData, isSameDay, loadAllWeights, loadDay, MEAL_LABELS, mealTitle, entryCalories } from '../data/dayData';
 import { dailyNetTarget, dayOnTarget, Goal, goalProgress } from '../goals/goals';
@@ -7,7 +7,7 @@ import { getGoal } from '../goals/goalStore';
 import { getWeightUnit } from '../settings/settingsStore';
 import { BalanceRing } from '../ui/charts';
 import { Body, Glass, Header, IconButton, Muted, Num, Row, Screen } from '../ui/kit';
-import { colors, formatCalories, formatLongDate, formatSigned, formatTime, screenWidth } from '../ui/theme';
+import { colors, formatCalories, formatLongDate, formatSigned, formatTime, useChartWidth } from '../ui/theme';
 import { formatWeight, WeightUnit } from '../units';
 import { latestWeight, WeightEntry } from '../weight/weightStore';
 import { AppNav } from '../navigation/types';
@@ -21,7 +21,7 @@ interface Props {
 
 // The strip that shows when in the day you ate (dots) and exercised (bars).
 function DayRibbon({ day }: { day: DayData }) {
-  const width = Math.min(screenWidth, 480) - 40 - 30;
+  const width = useChartWidth();
   const x = (iso: string) => {
     const d = new Date(iso);
     return ((d.getHours() * 60 + d.getMinutes()) / 1440) * width;
@@ -134,7 +134,7 @@ export default function TodayScreen({ date, onDateChange, refreshKey, nav }: Pro
             <Muted>Burned</Muted>
             <Num style={{ fontSize: 26, color: colors.burned }}>{formatCalories(burned)}</Num>
             <Muted style={{ fontSize: 12 }}>
-              {burned > 0 ? `${day!.workouts.length} ${day!.workouts.length === 1 ? 'workout' : 'workouts'}` : 'Waiting for Apple Health'}
+              {burned > 0 ? `${day!.workouts.length} ${day!.workouts.length === 1 ? 'workout' : 'workouts'}` : Platform.OS === 'ios' ? 'Waiting for Apple Health' : 'Tap to add'}
             </Muted>
           </Glass>
         </View>

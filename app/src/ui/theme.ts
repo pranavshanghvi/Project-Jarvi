@@ -1,4 +1,4 @@
-import { Dimensions, Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 
 // One place for the app's look. The glass recipe (see-through card, blur, bright top edge, soft
 // colour glow behind the page) is the same one Snaptly uses; only the two glow colours differ,
@@ -27,9 +27,13 @@ export const colors = {
 // Apple's rounded numerals for the big numbers; ordinary system text everywhere else.
 export const numberFont = Platform.select({ ios: 'ui-rounded', default: undefined });
 
-export const screenWidth = Dimensions.get('window').width;
-// Width available to a chart sitting inside a card on a normal screen.
-export const chartWidth = Math.min(screenWidth, 480) - 40 - 30;
+// Width available to a chart sitting inside a card on a normal screen. Read from the live window
+// (a browser can be resized and starts out reporting 0), and never allowed to go below a size a
+// chart can actually be drawn in.
+export function useChartWidth(): number {
+  const { width } = useWindowDimensions();
+  return Math.max(220, Math.min(width, 480) - 40 - 30);
+}
 
 export function formatCalories(value: number): string {
   return Math.round(value).toLocaleString('en-US');
