@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Button, ScrollView, StyleSheet } from 'react-native';
+import { Alert, Button, ScrollView, StyleSheet, Text } from 'react-native';
 import FoodItemCard from '../components/FoodItemCard';
 import { DetectedFoodItem, NutrientProfile } from '../types/nutrition';
 import { createEntry } from '../db/entriesRepository';
@@ -48,6 +48,9 @@ export default function ConfirmScreen({ items, photoUri, takenAt, onSaved }: Pro
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {adjusted.length === 0 && (
+        <Text style={styles.empty}>No food found in this photo. Go back and try a clearer or closer shot.</Text>
+      )}
       {adjusted.map((entry, index) => (
         <FoodItemCard
           key={`${entry.item.name}-${index}`}
@@ -63,4 +66,5 @@ export default function ConfirmScreen({ items, photoUri, takenAt, onSaved }: Pro
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
+  empty: { fontSize: 15, color: '#666', textAlign: 'center', marginVertical: 24 },
 });
