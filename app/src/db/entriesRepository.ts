@@ -72,13 +72,14 @@ export function mapItemRow(row: any): StoredItem {
 export async function createEntry(
   photoPath: string,
   mealType: MealType,
-  itemsWithPortions: { item: DetectedFoodItem; portionMultiplier: number }[]
+  itemsWithPortions: { item: DetectedFoodItem; portionMultiplier: number }[],
+  eatenAt: Date = new Date()
 ): Promise<number> {
   if (Platform.OS === 'web') {
-    return createEntryWeb(photoPath, mealType, itemsWithPortions);
+    return createEntryWeb(photoPath, mealType, itemsWithPortions, eatenAt);
   }
   const db = await getDatabase();
-  const timestamp = new Date().toISOString();
+  const timestamp = eatenAt.toISOString();
   const entryResult = await db.runAsync(
     'INSERT INTO entries (timestamp, meal_type, photo_path) VALUES (?, ?, ?);',
     [timestamp, mealType, photoPath]

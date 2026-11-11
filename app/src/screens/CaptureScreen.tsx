@@ -9,9 +9,11 @@ import * as FileSystem from 'expo-file-system/legacy';
 
 interface Props {
   onPhotoCaptured: (uri: string) => void;
+  // Shown only where the phone's photo library can be read for glasses photos (iPhone).
+  onImportFromGlasses?: () => void;
 }
 
-async function persistPhoto(cacheUri: string): Promise<string> {
+export async function persistPhoto(cacheUri: string): Promise<string> {
   if (Platform.OS === 'web') {
     return cacheUri;
   }
@@ -21,7 +23,7 @@ async function persistPhoto(cacheUri: string): Promise<string> {
   return destUri;
 }
 
-export default function CaptureScreen({ onPhotoCaptured }: Props) {
+export default function CaptureScreen({ onPhotoCaptured, onImportFromGlasses }: Props) {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
 
   async function takePhoto() {
@@ -57,6 +59,7 @@ export default function CaptureScreen({ onPhotoCaptured }: Props) {
       {previewUri && <Image source={{ uri: previewUri }} style={styles.preview} />}
       <Button title="Take photo" onPress={takePhoto} />
       <Button title="Choose from library" onPress={pickFromLibrary} />
+      {onImportFromGlasses && <Button title="From smart glasses" onPress={onImportFromGlasses} />}
     </View>
   );
 }

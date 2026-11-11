@@ -22,11 +22,12 @@ function nextId(): number {
 export async function createEntryWeb(
   photoPath: string,
   mealType: MealType,
-  itemsWithPortions: { item: DetectedFoodItem; portionMultiplier: number }[]
+  itemsWithPortions: { item: DetectedFoodItem; portionMultiplier: number }[],
+  eatenAt: Date = new Date()
 ): Promise<number> {
   const entries = readAll();
   const entryId = nextId();
-  const timestamp = new Date().toISOString();
+  const timestamp = eatenAt.toISOString();
   entries.push({
     id: entryId,
     timestamp,

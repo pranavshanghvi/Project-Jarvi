@@ -1,13 +1,17 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Jarvi",
+    "slug": "jarvi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pranavshanghvi.jarvi",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,6 +24,34 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "scheme": "jarvi",
+    "plugins": [
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Jarvi reads the calories you burn (from Apple Watch) to compare them with what you eat.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Jarvi looks in your photos for food pictures taken with your smart glasses.",
+          "savePhotosPermission": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Jarvi uses the camera to photograph your food.",
+          "photosPermission": "Jarvi lets you pick a food photo from your library."
+        }
+      ],
+      "expo-sqlite",
+      "expo-status-bar",
+      "./plugins/withSpaceSafeBuild"
+    ]
   }
 }

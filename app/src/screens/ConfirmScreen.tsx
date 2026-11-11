@@ -8,10 +8,13 @@ import { inferMealType } from '../nutrition/mealTagging';
 interface Props {
   items: DetectedFoodItem[];
   photoUri: string;
+  // When the photo was taken, if known. A glasses photo is often logged hours after the meal,
+  // so the meal is filed under when it was eaten rather than when it was confirmed.
+  takenAt?: number;
   onSaved: (entryId: number) => void;
 }
 
-export default function ConfirmScreen({ items, photoUri, onSaved }: Props) {
+export default function ConfirmScreen({ items, photoUri, takenAt, onSaved }: Props) {
   const [adjusted, setAdjusted] = useState(
     items.map((item) => ({ item, portionMultiplier: 1, nutrients: item.nutrients }))
   );
@@ -30,12 +33,13 @@ export default function ConfirmScreen({ items, photoUri, onSaved }: Props) {
 
   async function handleConfirm() {
     try {
-      const mealType = inferMealType(new Date());
+      const eatenAt = takenAt ? new Date(takenAt) : new Date();
+      const mealType = inferMealType(eatenAt);
       const itemsWithPortions = adjusted.map(({ item, portionMultiplier, nutrients }) => ({
         item: { ...item, nutrients },
         portionMultiplier,
       }));
-      const entryId = await createEntry(photoUri, mealType, itemsWithPortions);
+      const entryId = await createEntry(photoUri, mealType, itemsWithPortions, eatenAt);
       onSaved(entryId);
     } catch {
       Alert.alert('Save failed', 'Could not save this entry. Please try again.');

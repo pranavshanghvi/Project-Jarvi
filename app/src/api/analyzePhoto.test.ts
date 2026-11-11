@@ -1,4 +1,4 @@
-jest.mock('expo-file-system', () => ({
+jest.mock('expo-file-system/legacy', () => ({
   readAsStringAsync: jest.fn().mockResolvedValue('fakeBase64Data'),
   EncodingType: { Base64: 'base64' },
 }));

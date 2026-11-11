@@ -1,4 +1,5 @@
-import * as FileSystem from 'expo-file-system';
+// SDK 57 moved readAsStringAsync to the legacy entry point; the default export throws on it.
+import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { AnalyzePhotoResponse } from '../types/nutrition';
@@ -20,6 +21,8 @@ export async function analyzePhoto(photoUri: string): Promise<AnalyzePhotoRespon
     body: JSON.stringify({ imageBase64, mimeType: 'image/jpeg' }),
   });
   if (!response.ok) {
+    // 503 means every free AI provider is out of quota right now: the caller keeps the photo
+    // queued and tries again later. It never falls back to a paid model.
     throw new Error(`Analyze request failed with status ${response.status}`);
   }
   return (await response.json()) as AnalyzePhotoResponse;
