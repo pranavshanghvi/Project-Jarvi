@@ -1,4 +1,4 @@
-# Jarvi food logger — handoff
+# BiteLog (formerly Jarvi) food logger — handoff
 
 Last updated 2026-11-11. Read this with `CLAUDE.md` (the "never reach a paid AI" rule) and
 Pranav's global preferences before doing anything.
@@ -71,6 +71,19 @@ https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi (private to him).
 | 9 | Daily weight with a graph | Weight |
 | 10 | Choice of chart style | Bars / Line / Pie / Flow per card |
 
+**Added the same evening (commit `37be323`), installed on his phone as BiteLog:**
+
+| # | He asked | What was built |
+|---|---|---|
+| 11 | Edit when the AI gets it wrong | Edit on every food: name and all ten numbers; add a missed food; type a meal in with no photo |
+| 12 | Break sugar into added sugar | New `addedSugarG` field end to end; existing phones get the column added in place |
+| 13 | Weight by photo | Photo of the scale fills the box for him to confirm; new `/api/read-scale` on the server |
+| 14 | Rename to BiteLog | Visible name only. Internal ID is still `com.pranavshanghvi.jarvi` on purpose, so data carries over. The iPhone project is now `app/ios/BiteLog.xcworkspace`, scheme `BiteLog` |
+
+The repository, folder, Vercel projects and storage keys still say "jarvi". That is deliberate:
+nothing a person sees uses them, and renaming them would orphan his data or break links. Whether
+"BiteLog" is free as an App Store name or trademark has NOT been checked.
+
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
 - `app/src/screens/`: one file per screen. `AddMealSheet` is the + sheet.
@@ -138,7 +151,7 @@ confirm screen are how a wrong portion gets corrected.
 The iPhone folder (`app/ios`) is generated, not saved in git. To rebuild from scratch:
 
 ```bash
-cd "$HOME/Claude Projects/Project-Jarvi/app" && npx expo prebuild --platform ios --clean && npx expo run:ios --device "iPhone 17 Pro" --no-bundler
+cd "$HOME/Claude Projects/Project-Jarvi/app" && npx expo prebuild --platform ios --clean && npx expo run:ios --device "iPhone 17 Pro" --no-bundler   # simulator, development build
 ```
 
 Then start the code server (keep it running):
@@ -154,7 +167,7 @@ Known traps, already handled:
 - Expo packages must all be on matching versions (`npx expo install --fix`), or the app crashes
   at launch.
 
-Tests: `cd app && npx jest` (104 pass) and `cd server && npx jest` (19 pass).
+Tests: `cd app && npx jest` (108 pass) and `cd server && npx jest` (31 pass).
 
 ## Git state
 
