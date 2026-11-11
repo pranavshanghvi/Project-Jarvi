@@ -5,7 +5,7 @@ const PROMPT = `You are a nutrition analysis assistant. Look at the food in this
 
 For each item, estimate: name, a portion description (e.g. "1 cup, ~150g"), a confidence level ("normal" or "low" if you're unsure what it is or how much is there), and a full nutrient profile with these exact fields: calories, proteinG, carbsG, fatG, saturatedFatG, fiberG, sugarG, sodiumMg, cholesterolMg (all numbers).
 
-Respond with ONLY valid JSON in this exact shape, no other text:
+Respond with ONLY valid JSON, minified on a single line with no spaces or line breaks between tokens, in this exact shape, no other text:
 {"items": [{"name": string, "confidence": "normal" | "low", "portionDescription": string, "nutrients": {"calories": number, "proteinG": number, "carbsG": number, "fatG": number, "saturatedFatG": number, "fiberG": number, "sugarG": number, "sodiumMg": number, "cholesterolMg": number}}]}
 
 If you cannot identify any food, respond with {"items": []}.`;
@@ -36,7 +36,11 @@ export async function analyzeFoodImage(imageBase64: string, mimeType: string): P
     },
     {
       freeOnly: true,
-      timeoutMs: 25000,
+      // Measured 2026-11-11 on Cloudflare's free vision model: a four-item meal took 22.6s and
+      // the next identical request ran past 25s. A timeout also benches the provider for a
+      // minute, so a limit that close to the typical time turns one slow answer into an outage.
+      // 50s leaves room under the function's 60s ceiling (vercel.json).
+      timeoutMs: 50000,
       validate: (parsed) => {
         parseClaudeResponse(textOf(parsed));
       },

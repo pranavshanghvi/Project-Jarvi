@@ -19,7 +19,7 @@ is an unrelated project in the same repository.
 | 2 | Calories burned from Apple Health | Verified with sample data |
 | 3 | Net calories, day / week / month | Built; screen verified |
 | 4 | Photos from Ray-Ban Meta glasses | Built; picker verified |
-| 5 | Photo reading on free AI only | Built and deployed; no keys yet |
+| 5 | Photo reading on free AI only | Live; tested with a real photo |
 | 6 | App runs in iPhone simulator | Verified (iPhone 17 Pro) |
 
 Commits: `4015d36` (server moved off paid Anthropic), `f3e600b` (health, net calories, glasses).
@@ -27,40 +27,35 @@ Both pushed to `main`.
 
 ## What is in progress
 
-**Giving the photo reader a free AI key.** Pranav wants Jarvi completely separate from Snaptly,
-so the keys come from new accounts under a separate Gmail he already owns, not the one Snaptly
-uses. (The address is deliberately not written in this file.)
+Nothing half-finished. The photo reader went live on 2026-11-11:
 
-Mistral was tried first and is a dead end: on 2026-11-11 a new Mistral account was offered no
-free API plan at all (only a chat-only Free plan, paid plans, and pay-as-you-go). Do not send
-him back there. The service to use is **Cloudflare Workers AI**: free daily allowance, and it
-returns an error rather than a charge when the allowance runs out. It needs two values, stored
-one at a time:
+- Keys come from a **Cloudflare Workers AI** account under a separate Gmail Pranav already owns,
+  not the one Snaptly uses. (The address is deliberately not written in this file.) Both values
+  (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`) are stored on the `jarvi-server` Vercel
+  project. Free daily allowance; it errors rather than charges when the allowance runs out.
+- Mistral was tried first and is a dead end: a new Mistral account is offered no free API plan
+  (only a chat-only Free plan, paid plans, and pay-as-you-go). Do not send him back there.
+- Tested live with a real pizza photo: four items identified, 15 to 23 seconds per photo.
+  The first time limit (25s) was too tight and caused a one-minute outage after a slow answer;
+  it is now 50s, with the server ceiling at 60s.
+- Only one free service is configured. If Cloudflare has a bad day, photos queue for later.
+  Optional backups, stored the same way: `OPENROUTER_API_KEY`, `GEMINI_API_KEY`.
+
+To store a value (he pastes it at the prompt, never in chat) and republish:
 
 ```bash
-cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add CLOUDFLARE_ACCOUNT_ID production --sensitive --scope pranavshanghvi-1128s-projects
+cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add OPENROUTER_API_KEY production --sensitive --scope pranavshanghvi-1128s-projects
 ```
-
-```bash
-cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel env add CLOUDFLARE_API_TOKEN production --sensitive --scope pranavshanghvi-1128s-projects
-```
-
-Never ask him to paste a key into chat. Once he says it is stored:
 
 ```bash
 cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --scope pranavshanghvi-1128s-projects
 ```
 
-then send a real food photo to `https://jarvi-server.vercel.app/api/analyze` and confirm it comes
-back with food items. Until a key exists that address answers "unavailable" (HTTP 503) on purpose.
-
-Optional backup keys, same command with a different name: `OPENROUTER_API_KEY`, `GEMINI_API_KEY`.
-
 ## What is next
 
 | # | Task | Needs Pranav? |
 |---|---|---|
-| 1 | Test a real food photo end to end | Key stored first |
+| 1 | Calorie estimates run high; tune the instructions | No |
 | 3 | Install on his actual iPhone | Yes, his Apple ID in Xcode |
 | 4 | Republish the web version with new screens | No |
 | 5 | Coloured rings on the dashboard | No (he asked for these in July) |
