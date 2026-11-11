@@ -1,4 +1,5 @@
-import { DetectedFoodItem, MealType } from '../types/nutrition';
+import { DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
+import { toDateKey } from '../nutrition/aggregation';
 import { StoredEntry } from './entriesRepository';
 
 const STORAGE_KEY = 'jarvi.entries.web';
@@ -78,4 +79,46 @@ export async function updateMealTypeWeb(entryId: number, mealType: MealType): Pr
     entry.mealType = mealType;
     writeAll(entries);
   }
+}
+
+export async function getEntryWeb(entryId: number): Promise<StoredEntry | null> {
+  return readAll().find((e) => e.id === entryId) ?? null;
+}
+
+export async function deleteEntryWeb(entryId: number): Promise<void> {
+  writeAll(readAll().filter((e) => e.id !== entryId));
+}
+
+export async function updateEntryWeb(
+  entryId: number,
+  changes: {
+    timestamp?: string;
+    mealType?: MealType;
+    items?: { id: number; portionMultiplier: number; nutrients: NutrientProfile }[];
+    removedItemIds?: number[];
+  }
+): Promise<void> {
+  const entries = readAll();
+  const entry = entries.find((e) => e.id === entryId);
+  if (!entry) return;
+  if (changes.timestamp !== undefined) entry.timestamp = changes.timestamp;
+  if (changes.mealType !== undefined) entry.mealType = changes.mealType;
+  for (const change of changes.items ?? []) {
+    const item = entry.items.find((i) => i.id === change.id);
+    if (item) {
+      item.portionMultiplier = change.portionMultiplier;
+      item.nutrients = change.nutrients;
+    }
+  }
+  if (changes.removedItemIds?.length) {
+    entry.items = entry.items.filter((i) => !changes.removedItemIds!.includes(i.id));
+  }
+  writeAll(entries);
+}
+
+export async function getFirstEntryDateWeb(): Promise<string | null> {
+  const all = readAll();
+  if (all.length === 0) return null;
+  const earliest = all.reduce((a, b) => (new Date(b.timestamp) < new Date(a.timestamp) ? b : a));
+  return toDateKey(new Date(earliest.timestamp));
 }

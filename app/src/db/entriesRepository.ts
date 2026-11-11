@@ -1,10 +1,15 @@
 import { Platform } from 'react-native';
 import { getDatabase } from './client';
 import { DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
+import { toDateKey } from '../nutrition/aggregation';
 import {
   createEntryWeb,
+  deleteEntryWeb,
   getEntriesForDateWeb,
   getEntriesInRangeWeb,
+  getEntryWeb,
+  getFirstEntryDateWeb,
+  updateEntryWeb,
   updateMealTypeWeb,
 } from './webStorage';
 
@@ -151,4 +156,91 @@ export async function updateMealType(entryId: number, mealType: MealType): Promi
   }
   const db = await getDatabase();
   await db.runAsync('UPDATE entries SET meal_type = ? WHERE id = ?;', [mealType, entryId]);
+}
+
+export async function getEntry(entryId: number): Promise<StoredEntry | null> {
+  if (Platform.OS === 'web') {
+    return getEntryWeb(entryId);
+  }
+  const db = await getDatabase();
+  const rows = await db.getAllAsync('SELECT * FROM entries WHERE id = ?;', [entryId]);
+  if (rows.length === 0) return null;
+  return (await fetchEntriesWithItems(rows))[0];
+}
+
+// Removes the meal and every food item that belongs to it.
+export async function deleteEntry(entryId: number): Promise<void> {
+  if (Platform.OS === 'web') {
+    return deleteEntryWeb(entryId);
+  }
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM items WHERE entry_id = ?;', [entryId]);
+  await db.runAsync('DELETE FROM entries WHERE id = ?;', [entryId]);
+}
+
+// The values for one item's UPDATE, in the same order as the SQL in updateEntry.
+export function buildItemUpdateParams(
+  entryId: number,
+  item: { id: number; portionMultiplier: number; nutrients: NutrientProfile }
+): (string | number)[] {
+  const n = item.nutrients;
+  return [
+    item.portionMultiplier,
+    n.calories,
+    n.proteinG,
+    n.carbsG,
+    n.fatG,
+    n.saturatedFatG,
+    n.fiberG,
+    n.sugarG,
+    n.sodiumMg,
+    n.cholesterolMg,
+    item.id,
+    entryId,
+  ];
+}
+
+// Edits a saved meal: time, meal type, new portion/nutrient numbers for some items, and removal
+// of others. Item ids are checked against the entry so one meal can never alter another's items.
+export async function updateEntry(
+  entryId: number,
+  changes: {
+    timestamp?: string;
+    mealType?: MealType;
+    items?: { id: number; portionMultiplier: number; nutrients: NutrientProfile }[];
+    removedItemIds?: number[];
+  }
+): Promise<void> {
+  if (Platform.OS === 'web') {
+    return updateEntryWeb(entryId, changes);
+  }
+  const db = await getDatabase();
+  if (changes.timestamp !== undefined) {
+    await db.runAsync('UPDATE entries SET timestamp = ? WHERE id = ?;', [changes.timestamp, entryId]);
+  }
+  if (changes.mealType !== undefined) {
+    await db.runAsync('UPDATE entries SET meal_type = ? WHERE id = ?;', [changes.mealType, entryId]);
+  }
+  for (const item of changes.items ?? []) {
+    await db.runAsync(
+      `UPDATE items SET portion_multiplier = ?, calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?,
+        saturated_fat_g = ?, fiber_g = ?, sugar_g = ?, sodium_mg = ?, cholesterol_mg = ?
+       WHERE id = ? AND entry_id = ?;`,
+      buildItemUpdateParams(entryId, item)
+    );
+  }
+  for (const itemId of changes.removedItemIds ?? []) {
+    await db.runAsync('DELETE FROM items WHERE id = ? AND entry_id = ?;', [itemId, entryId]);
+  }
+}
+
+// The local calendar day of the earliest saved meal, or null when nothing is logged yet.
+export async function getFirstEntryDate(): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    return getFirstEntryDateWeb();
+  }
+  const db = await getDatabase();
+  const rows = await db.getAllAsync('SELECT timestamp FROM entries ORDER BY timestamp ASC LIMIT 1;');
+  if (rows.length === 0) return null;
+  return toDateKey(new Date((rows[0] as any).timestamp));
 }
