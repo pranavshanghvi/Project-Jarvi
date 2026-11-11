@@ -3,6 +3,7 @@ import { ActivityIndicator, Keyboard, TextInput, View } from 'react-native';
 import { notify } from '../ui/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { readScalePhoto } from '../api/readScale';
+import { withTimeout } from '../photos/webImage';
 import { Body, Muted, OutlineButton, PrimaryButton, Title } from '../ui/kit';
 import { BottomSheet, SheetOption } from '../ui/sheet';
 import { colors } from '../ui/theme';
@@ -48,7 +49,7 @@ export default function LogWeightSheet({ visible, onClose, onSaved, unit, lastKg
     if (result.canceled) return;
     setStep('reading');
     try {
-      const kg = await readScalePhoto(result.assets[0].uri, unit);
+      const kg = await withTimeout(readScalePhoto(result.assets[0].uri, unit), 75000, 'Reading the scale');
       if (kg === null) {
         setTyped('');
         setNote('Could not read a weight in that photo. Type it in, or go back and try a closer, straight-on shot of the display.');

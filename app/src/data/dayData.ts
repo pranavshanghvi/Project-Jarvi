@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 // Expo SDK 57 keeps copyAsync/documentDirectory on the legacy entry point only.
 import * as FileSystem from 'expo-file-system/legacy';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { shrinkToJpegBase64 } from '../photos/webImage';
 import { getEntriesForDate, StoredEntry } from '../db/entriesRepository';
 import { getEnergySplitByDay, getHealthWeights, getWorkouts, Workout } from '../health/healthKit';
 import { toDateKey } from '../nutrition/aggregation';
@@ -101,10 +101,7 @@ export async function persistPhoto(sourceUri: string): Promise<string> {
     // just a few megabytes of storage. So the web version keeps a small thumbnail of each meal
     // (about 5 KB) rather than the full picture.
     try {
-      const context = ImageManipulator.manipulate(sourceUri);
-      context.resize({ width: 180 });
-      const result = await (await context.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.5, base64: true });
-      return result.base64 ? `data:image/jpeg;base64,${result.base64}` : sourceUri;
+      return `data:image/jpeg;base64,${await shrinkToJpegBase64(sourceUri, 180, 0.5)}`;
     } catch {
       return sourceUri;
     }

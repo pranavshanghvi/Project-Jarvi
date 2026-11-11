@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { analyzePhoto, queuePhotoForRetry } from '../api/analyzePhoto';
 import { persistPhoto } from '../data/dayData';
 import { parsePhotoTime } from '../photos/photoTime';
+import { withTimeout } from '../photos/webImage';
 import { MealDraft } from '../navigation/types';
 import { Body, Muted, OutlineButton, Title } from '../ui/kit';
 import { BottomSheet, SheetOption } from '../ui/sheet';
@@ -33,9 +34,9 @@ export default function AddMealSheet({ visible, onClose, onDraft, onGlasses }: P
     setReading(true);
     let photoUri = sourceUri;
     try {
-      photoUri = await persistPhoto(sourceUri);
+      photoUri = await withTimeout(persistPhoto(sourceUri), 20000, 'Saving the photo');
       // Read the original, not the saved copy: on the web the saved copy is only a thumbnail.
-      const { items } = await analyzePhoto(sourceUri);
+      const { items } = await withTimeout(analyzePhoto(sourceUri), 75000, 'Reading the photo');
       onDraft({ photoUri, items, takenAt });
     } catch {
       await queuePhotoForRetry(photoUri);

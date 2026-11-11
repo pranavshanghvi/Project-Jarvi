@@ -1,4 +1,6 @@
+import { Platform } from 'react-native';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { shrinkToJpegBase64 } from '../photos/webImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { AnalyzePhotoResponse, completeNutrients } from '../types/nutrition';
@@ -16,6 +18,7 @@ const UPLOAD_WIDTH = 1024;
 // limit, so it never arrives at all. Re-encoding to a 1024px-wide JPEG fixes both and keeps the
 // upload around 200 KB. The saved photo on the phone is untouched; only the copy sent is shrunk.
 export async function prepareForUpload(photoUri: string): Promise<string> {
+  if (Platform.OS === 'web') return shrinkToJpegBase64(photoUri, UPLOAD_WIDTH, 0.8);
   const context = ImageManipulator.manipulate(photoUri);
   context.resize({ width: UPLOAD_WIDTH });
   const rendered = await context.renderAsync();
