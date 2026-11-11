@@ -1,4 +1,4 @@
-import { buildDailyBalance, caloriesEatenByDate, describeNet, summarizeBalance } from './energyBalance';
+import { buildDailyBalance, caloriesEatenByDate, describeNet, headlineFigures, summarizeBalance } from './energyBalance';
 
 const ref = new Date(2026, 10, 10, 15, 0, 0); // local 10 Nov 2026, mid-afternoon
 
@@ -52,6 +52,25 @@ describe('describeNet', () => {
     expect(describeNet(-512.4)).toBe('512 cal deficit');
     expect(describeNet(300)).toBe('300 cal surplus');
     expect(describeNet(0.2)).toBe('Even');
+  });
+});
+
+describe('headlineFigures', () => {
+  it('shows today’s real burn before any food is logged, with no net yet', () => {
+    const rows = buildDailyBalance({}, { '2026-11-10': 450 }, 1, ref);
+    expect(headlineFigures(rows)).toEqual({ eaten: 0, burned: 450, net: '—' });
+  });
+
+  it('shows the net for a logged day', () => {
+    const rows = buildDailyBalance({ '2026-11-10': 1800 }, { '2026-11-10': 2300 }, 1, ref);
+    expect(headlineFigures(rows)).toEqual({ eaten: 1800, burned: 2300, net: '500 cal deficit' });
+  });
+
+  it('over several days counts only logged days, and has no net when none are logged', () => {
+    const none = buildDailyBalance({}, { '2026-11-10': 2300 }, 7, ref);
+    expect(headlineFigures(none)).toEqual({ eaten: 0, burned: 0, net: '—' });
+    const one = buildDailyBalance({ '2026-11-10': 2000 }, { '2026-11-09': 2400, '2026-11-10': 2300 }, 7, ref);
+    expect(headlineFigures(one)).toEqual({ eaten: 2000, burned: 2300, net: '300 cal deficit' });
   });
 });
 

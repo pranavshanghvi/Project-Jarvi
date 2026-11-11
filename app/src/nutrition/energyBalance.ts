@@ -62,6 +62,19 @@ export function describeNet(net: number): string {
   return net < 0 ? `${rounded} cal deficit` : `${rounded} cal surplus`;
 }
 
+// The three numbers at the top of the balance screen. Totals follow summarizeBalance (logged days
+// only), with two exceptions so the screen never states something untrue:
+//  - a single day always shows its real burn, even before any food is logged that day;
+//  - with no food logged at all there is no net to report, so it reads "—" rather than "Even".
+export function headlineFigures(rows: DayBalance[]): { eaten: number; burned: number; net: string } {
+  const summary = summarizeBalance(rows);
+  return {
+    eaten: summary.eaten,
+    burned: rows.length === 1 ? rows[0].burned : summary.burned,
+    net: summary.loggedDays === 0 ? '—' : describeNet(summary.net),
+  };
+}
+
 // Calories eaten per local calendar day, from saved food entries.
 export function caloriesEatenByDate(
   entries: { timestamp: string; items: { nutrients: { calories: number } }[] }[]

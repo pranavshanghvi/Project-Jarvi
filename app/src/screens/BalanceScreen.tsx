@@ -9,6 +9,7 @@ import {
   caloriesEatenByDate,
   DayBalance,
   describeNet,
+  headlineFigures,
   Period,
   PERIOD_DAYS,
   summarizeBalance,
@@ -49,6 +50,7 @@ export default function BalanceScreen() {
   }
 
   const summary = summarizeBalance(rows);
+  const headline = headlineFigures(rows);
   const noBurnData = rows.length > 0 && rows.every((r) => r.burned === 0);
 
   return (
@@ -62,15 +64,15 @@ export default function BalanceScreen() {
       <Text style={styles.heading}>{PERIOD_TITLES[period]}</Text>
       <View style={styles.statRow}>
         <View style={styles.stat}>
-          <Text style={[styles.statValue, { color: EATEN_COLOR }]}>{Math.round(summary.eaten)}</Text>
+          <Text style={[styles.statValue, { color: EATEN_COLOR }]}>{Math.round(headline.eaten)}</Text>
           <Text style={styles.statLabel}>cal eaten</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={[styles.statValue, { color: BURNED_COLOR }]}>{Math.round(summary.burned)}</Text>
+          <Text style={[styles.statValue, { color: BURNED_COLOR }]}>{Math.round(headline.burned)}</Text>
           <Text style={styles.statLabel}>cal burned</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{describeNet(summary.net)}</Text>
+          <Text style={styles.statValue}>{headline.net}</Text>
           <Text style={styles.statLabel}>net</Text>
         </View>
       </View>
