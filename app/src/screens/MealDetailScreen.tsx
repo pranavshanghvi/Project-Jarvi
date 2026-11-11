@@ -8,6 +8,7 @@ import { inferMealType } from '../nutrition/mealTagging';
 import { scaleNutrients } from '../nutrition/portionScaling';
 import { completeNutrients, ConfidenceLevel, MealType, NutrientProfile, NUTRIENT_KEYS } from '../types/nutrition';
 import { Body, Glass, Header, Icon, IconButton, Muted, Num, OutlineButton, PrimaryButton, Screen, Title } from '../ui/kit';
+import { Learn, LearnLabel } from '../ui/learn';
 import { colors, formatCalories, formatTime } from '../ui/theme';
 
 // One food on the plate. `base` is the nutrients at a 1× portion; the slider only changes `portion`.
@@ -205,10 +206,10 @@ export default function MealDetailScreen({ route, navigation }: any) {
             <OutlineButton title={MEAL_LABELS[mealType]} onPress={() => setMealType(MEAL_ORDER[(MEAL_ORDER.indexOf(mealType) + 1) % MEAL_ORDER.length])} style={{ minHeight: 36, paddingHorizontal: 14 }} />
           </View>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
+        <Learn topic="calories" amount={totals.calories} amountLabel="This meal" style={{ alignItems: 'flex-end' }}>
           <Num style={{ fontSize: 34, color: colors.eaten }}>{formatCalories(totals.calories)}</Num>
-          <Muted style={{ fontSize: 12 }}>calories</Muted>
-        </View>
+          <LearnLabel>calories</LearnLabel>
+        </Learn>
       </View>
 
       {editingTime && (
@@ -286,25 +287,27 @@ export default function MealDetailScreen({ route, navigation }: any) {
         </Glass>
       )}
       <OutlineButton title={lines.length === 0 ? 'Add a food' : 'Add a food the photo missed'} onPress={addLine} />
-      {lines.length > 0 && <Muted style={{ fontSize: 12 }}>Drag a slider to change a portion, or tap Edit to correct the name or any number.</Muted>}
+      {lines.length > 0 && <Muted style={{ fontSize: 12 }}>Drag a slider to change a portion, or tap Edit to correct the name or any number. Tap any nutrient below to learn what it is.</Muted>}
 
       <Glass>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12 }}>
-          {[
-            { label: 'Protein', value: `${Math.round(totals.proteinG)} g` },
-            { label: 'Carbs', value: `${Math.round(totals.carbsG)} g` },
-            { label: 'Fat', value: `${Math.round(totals.fatG)} g` },
-            { label: 'Fiber', value: `${Math.round(totals.fiberG)} g` },
-            { label: 'Sugar', value: `${Math.round(totals.sugarG)} g` },
-            { label: 'Added sugar', value: `${Math.round(totals.addedSugarG)} g` },
-            { label: 'Sodium', value: `${formatCalories(totals.sodiumMg)} mg` },
-            { label: 'Saturated fat', value: `${Math.round(totals.saturatedFatG)} g` },
-            { label: 'Cholesterol', value: `${Math.round(totals.cholesterolMg)} mg` },
-          ].map((n) => (
-            <View key={n.label} style={{ width: '33.33%' }}>
-              <Muted style={{ fontSize: 12 }}>{n.label}</Muted>
-              <Num style={{ fontSize: 17 }}>{n.value}</Num>
-            </View>
+          {(
+            [
+              { key: 'proteinG', label: 'Protein', unit: 'g' },
+              { key: 'carbsG', label: 'Carbs', unit: 'g' },
+              { key: 'fatG', label: 'Fat', unit: 'g' },
+              { key: 'fiberG', label: 'Fiber', unit: 'g' },
+              { key: 'sugarG', label: 'Sugar', unit: 'g' },
+              { key: 'addedSugarG', label: 'Added sugar', unit: 'g' },
+              { key: 'sodiumMg', label: 'Sodium', unit: 'mg' },
+              { key: 'saturatedFatG', label: 'Saturated fat', unit: 'g' },
+              { key: 'cholesterolMg', label: 'Cholesterol', unit: 'mg' },
+            ] as const
+          ).map((n) => (
+            <Learn key={n.key} topic={n.key} amount={totals[n.key]} amountLabel="This meal" style={{ width: '33.33%' }}>
+              <LearnLabel>{n.label}</LearnLabel>
+              <Num style={{ fontSize: 17 }}>{`${formatCalories(totals[n.key])} ${n.unit}`}</Num>
+            </Learn>
           ))}
         </View>
       </Glass>

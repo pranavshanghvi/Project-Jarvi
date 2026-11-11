@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, Pressable, TextInput, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { readScalePhoto } from '../api/readScale';
+import { Pressable, View } from 'react-native';
 import { addDays, dateFromKey, isSameDay, loadAllWeights, startOfDay } from '../data/dayData';
 import { Goal, goalProgress } from '../goals/goals';
 import { getGoal } from '../goals/goalStore';
 import { toDateKey } from '../nutrition/aggregation';
 import { getWeightUnit } from '../settings/settingsStore';
 import { BarsChart, ChartCard, LineChart } from '../ui/charts';
-import { Body, Glass, Header, Heading, Icon, Muted, Num, OutlineButton, PrimaryButton, Row, Screen, Segmented } from '../ui/kit';
+import { Body, Glass, Header, Heading, Icon, Muted, Num, PrimaryButton, Row, Screen, Segmented } from '../ui/kit';
+import LogWeightSheet from './LogWeightSheet';
 import { colors, formatTime } from '../ui/theme';
-import { formatWeight, fromDisplayWeight, toDisplayWeight, WeightUnit } from '../units';
-import { deleteWeight, latestWeight, logWeight, weightChange, WeightEntry } from '../weight/weightStore';
+import { formatWeight, toDisplayWeight, WeightUnit } from '../units';
+import { deleteWeight, latestWeight, weightChange, WeightEntry } from '../weight/weightStore';
 
 type Span = 'month' | 'quarter' | 'year' | 'all';
 const SPANS: { value: Span; label: string }[] = [
@@ -55,9 +54,7 @@ export default function WeightScreen({ navigation }: any) {
   const [goal, setGoal] = useState<Goal | null>(null);
   const [unit, setUnit] = useState<WeightUnit>('lb');
   const [span, setSpan] = useState<Span>('quarter');
-  const [typed, setTyped] = useState('');
-  const [reading, setReading] = useState(false);
-  const [photoNote, setPhotoNote] = useState('');
+  const [logging, setLogging] = useState(false);
 
   async function reload() {
     const [w, g, u] = await Promise.all([loadAllWeights(), getGoal(), getWeightUnit()]);
@@ -78,41 +75,6 @@ export default function WeightScreen({ navigation }: any) {
   const monthChange = weightChange(entries, 30, today);
   const { labels, values } = points(entries, span, unit);
   const progress = goal && latest ? goalProgress(goal, latest.kg) : null;
-  const typedNumber = Number(typed.replace(',', '.'));
-  const typedValid = typed !== '' && Number.isFinite(typedNumber) && typedNumber > 20 && typedNumber < 1000;
-
-  async function save() {
-    if (!typedValid) return;
-    Keyboard.dismiss();
-    await logWeight(fromDisplayWeight(typedNumber, unit));
-    setTyped('');
-    setPhotoNote('');
-    reload();
-  }
-
-  // The number read from a photo is put in the box for you to check, never saved by itself: a
-  // misread digit on a scale display would otherwise go straight into your history.
-  async function readFromPhoto(source: 'camera' | 'library') {
-    const permission = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return Alert.alert(source === 'camera' ? 'Camera access is off' : 'Photo access is off', 'Turn it on for this app in Settings, or type your weight in.');
-    const result = source === 'camera' ? await ImagePicker.launchCameraAsync({ quality: 0.7 }) : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
-    if (result.canceled) return;
-    setReading(true);
-    setPhotoNote('');
-    try {
-      const kg = await readScalePhoto(result.assets[0].uri, unit);
-      if (kg === null) {
-        setPhotoNote('Could not read a weight in that photo. Try a closer, straight-on shot of the display, or type it in.');
-      } else {
-        setTyped(toDisplayWeight(kg, unit).toFixed(1));
-        setPhotoNote(`Read ${formatWeight(kg, unit)} from your photo. Check it matches the scale, then tap Save.`);
-      }
-    } catch {
-      setPhotoNote('The photo reader is unavailable right now. Type your weight in instead.');
-    } finally {
-      setReading(false);
-    }
-  }
 
   const change = (kg: number | null, label: string) =>
     kg === null ? null : (
@@ -139,33 +101,8 @@ export default function WeightScreen({ navigation }: any) {
         </View>
       </View>
 
-      <Glass>
-        <Muted style={{ marginBottom: 8 }}>Log today's weight</Muted>
-        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-          <TextInput
-            value={typed}
-            onChangeText={setTyped}
-            keyboardType="decimal-pad"
-            placeholder={latest ? toDisplayWeight(latest.kg, unit).toFixed(1) : unit === 'lb' ? '180.0' : '82.0'}
-            placeholderTextColor={colors.placeholder}
-            accessibilityLabel={`Weight in ${unit}`}
-            style={{ flex: 1, height: 52, borderRadius: 16, borderWidth: 1, borderColor: colors.outline, color: colors.text, fontSize: 20, paddingHorizontal: 16 }}
-          />
-          <PrimaryButton title="Save" onPress={save} disabled={!typedValid} style={{ paddingHorizontal: 28 }} />
-        </View>
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-          <OutlineButton title="Photo of the scale" onPress={() => readFromPhoto('camera')} style={{ flex: 1, minHeight: 44, paddingHorizontal: 8 }} />
-          <OutlineButton title="Choose a photo" onPress={() => readFromPhoto('library')} style={{ flex: 1, minHeight: 44, paddingHorizontal: 8 }} />
-        </View>
-        {reading && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
-            <ActivityIndicator color={colors.text} />
-            <Muted>Reading the scale… a few seconds.</Muted>
-          </View>
-        )}
-        {photoNote ? <Body style={{ fontSize: 13, marginTop: 10 }}>{photoNote}</Body> : null}
-        <Muted style={{ fontSize: 12, marginTop: 8 }}>A scale that saves to Apple Health fills this in for you.</Muted>
-      </Glass>
+      <PrimaryButton title="Log today's weight" onPress={() => setLogging(true)} />
+      <Muted style={{ fontSize: 12, textAlign: 'center' }}>By photo of your scale, or typed in. A scale that saves to Apple Health fills it in for you.</Muted>
 
       <Segmented options={SPANS} value={span} onChange={setSpan} />
       <ChartCard
@@ -216,6 +153,7 @@ export default function WeightScreen({ navigation }: any) {
           ))}
         </Glass>
       )}
+      <LogWeightSheet visible={logging} onClose={() => setLogging(false)} onSaved={reload} unit={unit} lastKg={latest?.kg} />
     </Screen>
   );
 }

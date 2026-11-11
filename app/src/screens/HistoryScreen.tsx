@@ -9,6 +9,7 @@ import { Bucket, bucketize, HistoryRange, rangeDays, summarizeBuckets } from '..
 import { AppNav } from '../navigation/types';
 import { BarsChart, ChartCard, FlowChart, Legend, LineChart, PieChart } from '../ui/charts';
 import { Glass, Header, Heading, Muted, Num, OutlineButton, Row, Screen, Segmented } from '../ui/kit';
+import { Learn, LearnLabel } from '../ui/learn';
 import { colors, formatCalories, formatSigned } from '../ui/theme';
 
 const RANGES: { value: HistoryRange; label: string }[] = [
@@ -181,6 +182,17 @@ export default function HistoryScreen({ refreshKey, nav }: { refreshKey: number;
           )
         }
       />
+
+      {hasData && (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, rowGap: 10 }}>
+          <Learn topic="carbsG" amount={totals.carbsG / n} amountLabel="An average day"><LearnLabel>Carbs</LearnLabel></Learn>
+          <Learn topic="fatG" amount={totals.fatG / n} amountLabel="An average day"><LearnLabel>Fat</LearnLabel></Learn>
+          <Learn topic="proteinG" amount={totals.proteinG / n} amountLabel="An average day"><LearnLabel>Protein</LearnLabel></Learn>
+          <Learn topic="addedSugarG" amount={totals.addedSugarG / n} amountLabel="An average day"><LearnLabel>Added sugar</LearnLabel></Learn>
+          <Learn topic="sodiumMg" amount={totals.sodiumMg / n} amountLabel="An average day"><LearnLabel>Sodium</LearnLabel></Learn>
+          <Learn topic="calories" amount={summary.eaten} amountLabel="An average day"><LearnLabel>Calories</LearnLabel></Learn>
+        </View>
+      )}
 
       <Heading>{range === 'week' || range === 'month' ? 'Day by day' : range === 'sixMonths' ? 'Week by week' : 'Month by month'}</Heading>
       <Glass padding={0} style={{ paddingHorizontal: 14 }}>

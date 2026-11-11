@@ -5,6 +5,8 @@ import { getEntriesInRange, StoredEntry } from '../db/entriesRepository';
 import { toDateKey } from '../nutrition/aggregation';
 import { AppNav } from '../navigation/types';
 import { Body, Glass, Header, IconButton, Muted, Num, OutlineButton, Row, Screen } from '../ui/kit';
+import { NutrientProfile } from '../types/nutrition';
+import { Learn, LearnLabel } from '../ui/learn';
 import { colors, formatCalories, formatTime } from '../ui/theme';
 
 function dayLabel(date: Date): string {
@@ -14,15 +16,15 @@ function dayLabel(date: Date): string {
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-function NutrientBar({ label, grams, share }: { label: string; grams: number; share: number }) {
+function NutrientBar({ topic, label, grams, share }: { topic: keyof NutrientProfile; label: string; grams: number; share: number }) {
   return (
-    <View style={{ flex: 1 }}>
+    <Learn topic={topic} amount={grams} amountLabel="That day" style={{ flex: 1 }}>
       <Num style={{ fontSize: 16 }}>{Math.round(grams)} g</Num>
       <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.track, marginVertical: 6 }}>
         <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.eaten, width: `${Math.round(Math.min(1, share) * 100)}%` }} />
       </View>
-      <Muted style={{ fontSize: 12 }}>{label}</Muted>
-    </View>
+      <LearnLabel>{label}</LearnLabel>
+    </Learn>
   );
 }
 
@@ -84,14 +86,22 @@ export default function FoodLogScreen({ refreshKey, nav }: { refreshKey: number;
               <Glass>
                 <Muted style={{ marginBottom: 10 }}>Nutrients that day</Muted>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <NutrientBar label="Protein" grams={nutrients.proteinG} share={(nutrients.proteinG * 4) / fromMacros} />
-                  <NutrientBar label="Carbs" grams={nutrients.carbsG} share={(nutrients.carbsG * 4) / fromMacros} />
-                  <NutrientBar label="Fat" grams={nutrients.fatG} share={(nutrients.fatG * 9) / fromMacros} />
-                  <NutrientBar label="Fiber" grams={nutrients.fiberG} share={nutrients.fiberG / 30} />
+                  <NutrientBar topic="proteinG" label="Protein" grams={nutrients.proteinG} share={(nutrients.proteinG * 4) / fromMacros} />
+                  <NutrientBar topic="carbsG" label="Carbs" grams={nutrients.carbsG} share={(nutrients.carbsG * 4) / fromMacros} />
+                  <NutrientBar topic="fatG" label="Fat" grams={nutrients.fatG} share={(nutrients.fatG * 9) / fromMacros} />
+                  <NutrientBar topic="fiberG" label="Fiber" grams={nutrients.fiberG} share={nutrients.fiberG / 30} />
                 </View>
-                <Muted style={{ marginTop: 10 }}>
-                  Sugar {Math.round(nutrients.sugarG)} g, of which added sugar <Num style={{ fontSize: 13 }}>{Math.round(nutrients.addedSugarG)} g</Num>
-                </Muted>
+                <View style={{ flexDirection: 'row', gap: 18, marginTop: 12 }}>
+                  <Learn topic="sugarG" amount={nutrients.sugarG} amountLabel="That day">
+                    <LearnLabel>{`Sugar ${Math.round(nutrients.sugarG)} g`}</LearnLabel>
+                  </Learn>
+                  <Learn topic="addedSugarG" amount={nutrients.addedSugarG} amountLabel="That day">
+                    <LearnLabel>{`of which added ${Math.round(nutrients.addedSugarG)} g`}</LearnLabel>
+                  </Learn>
+                  <Learn topic="sodiumMg" amount={nutrients.sodiumMg} amountLabel="That day">
+                    <LearnLabel>{`Sodium ${Math.round(nutrients.sodiumMg)} mg`}</LearnLabel>
+                  </Learn>
+                </View>
               </Glass>
             )}
           </View>
