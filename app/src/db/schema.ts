@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS items (
   sugar_g REAL NOT NULL,
   sodium_mg REAL NOT NULL,
   cholesterol_mg REAL NOT NULL,
+  added_sugar_g REAL NOT NULL DEFAULT 0,
   FOREIGN KEY (entry_id) REFERENCES entries(id)
 );
 `;

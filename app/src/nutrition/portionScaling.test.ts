@@ -9,6 +9,7 @@ const base: NutrientProfile = {
   saturatedFatG: 2,
   fiberG: 3,
   sugarG: 4,
+  addedSugarG: 2,
   sodiumMg: 300,
   cholesterolMg: 10,
 };

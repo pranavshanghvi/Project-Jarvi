@@ -21,7 +21,7 @@ const item: DetectedFoodItem = {
 describe('buildItemInsertParams', () => {
   it('maps a detected item and entry id into positional params', () => {
     const params = buildItemInsertParams(7, item, 1.2);
-    expect(params).toEqual([7, 'Grilled chicken', 'normal', 1.2, 250, 40, 0, 8, 2, 0, 0, 90, 100]);
+    expect(params).toEqual([7, 'Grilled chicken', 'normal', 1.2, 250, 40, 0, 8, 2, 0, 0, 90, 100, 0]);
   });
 });
 
@@ -47,5 +47,7 @@ describe('mapItemRow', () => {
     expect(mapped.name).toBe('Grilled chicken');
     expect(mapped.nutrients.proteinG).toBe(40);
     expect(mapped.portionMultiplier).toBe(1.2);
+    // A row saved before added sugar existed has no such column: it reads as 0, not as missing.
+    expect(mapped.nutrients.addedSugarG).toBe(0);
   });
 });

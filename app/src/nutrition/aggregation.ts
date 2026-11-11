@@ -14,6 +14,7 @@ function zeroProfile(): NutrientProfile {
     saturatedFatG: 0,
     fiberG: 0,
     sugarG: 0,
+    addedSugarG: 0,
     sodiumMg: 0,
     cholesterolMg: 0,
   };

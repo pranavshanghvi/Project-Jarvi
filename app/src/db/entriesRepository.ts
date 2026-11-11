@@ -50,6 +50,7 @@ export function buildItemInsertParams(
     n.sugarG,
     n.sodiumMg,
     n.cholesterolMg,
+    n.addedSugarG ?? 0,
   ];
 }
 
@@ -70,6 +71,7 @@ export function mapItemRow(row: any): StoredItem {
       sugarG: row.sugar_g,
       sodiumMg: row.sodium_mg,
       cholesterolMg: row.cholesterol_mg,
+      addedSugarG: row.added_sugar_g ?? 0,
     },
   };
 }
@@ -95,8 +97,8 @@ export async function createEntry(
     await db.runAsync(
       `INSERT INTO items (
         entry_id, name, confidence, portion_multiplier,
-        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, added_sugar_g
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       params
     );
   }
@@ -195,6 +197,7 @@ export function buildItemUpdateParams(
     n.sugarG,
     n.sodiumMg,
     n.cholesterolMg,
+    n.addedSugarG ?? 0,
     item.id,
     entryId,
   ];
@@ -207,8 +210,10 @@ export async function updateEntry(
   changes: {
     timestamp?: string;
     mealType?: MealType;
-    items?: { id: number; portionMultiplier: number; nutrients: NutrientProfile }[];
+    items?: { id: number; name?: string; portionMultiplier: number; nutrients: NutrientProfile }[];
     removedItemIds?: number[];
+    // Foods the reader missed, typed in by hand on an already-saved meal.
+    addedItems?: { item: DetectedFoodItem; portionMultiplier: number }[];
   }
 ): Promise<void> {
   if (Platform.OS === 'web') {
@@ -224,13 +229,27 @@ export async function updateEntry(
   for (const item of changes.items ?? []) {
     await db.runAsync(
       `UPDATE items SET portion_multiplier = ?, calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?,
-        saturated_fat_g = ?, fiber_g = ?, sugar_g = ?, sodium_mg = ?, cholesterol_mg = ?
+        saturated_fat_g = ?, fiber_g = ?, sugar_g = ?, sodium_mg = ?, cholesterol_mg = ?, added_sugar_g = ?
        WHERE id = ? AND entry_id = ?;`,
       buildItemUpdateParams(entryId, item)
     );
   }
+  for (const item of changes.items ?? []) {
+    if (item.name !== undefined) {
+      await db.runAsync('UPDATE items SET name = ? WHERE id = ? AND entry_id = ?;', [item.name, item.id, entryId]);
+    }
+  }
   for (const itemId of changes.removedItemIds ?? []) {
     await db.runAsync('DELETE FROM items WHERE id = ? AND entry_id = ?;', [itemId, entryId]);
+  }
+  for (const { item, portionMultiplier } of changes.addedItems ?? []) {
+    await db.runAsync(
+      `INSERT INTO items (
+        entry_id, name, confidence, portion_multiplier,
+        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, added_sugar_g
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      buildItemInsertParams(entryId, item, portionMultiplier)
+    );
   }
 }
 

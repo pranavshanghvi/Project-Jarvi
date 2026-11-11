@@ -16,7 +16,7 @@ interface Props {
   onGlasses: () => void;
 }
 
-const n = (calories: number, proteinG: number, carbsG: number, fatG: number) => ({ calories, proteinG, carbsG, fatG, saturatedFatG: fatG / 2, fiberG: 2, sugarG: 3, sodiumMg: 300, cholesterolMg: 20 });
+const n = (calories: number, proteinG: number, carbsG: number, fatG: number) => ({ calories, proteinG, carbsG, fatG, saturatedFatG: fatG / 2, fiberG: 2, sugarG: 3, addedSugarG: 1, sodiumMg: 300, cholesterolMg: 20 });
 const SAMPLE_MEAL: MealDraft['items'] = [
   { name: 'Pizza crust', confidence: 'normal', portionDescription: '1 crust, about 120 g', nutrients: n(250, 8, 48, 3) },
   { name: 'Mozzarella', confidence: 'normal', portionDescription: '8 slices, about 120 g', nutrients: n(280, 20, 3, 21) },
@@ -97,6 +97,7 @@ export default function AddMealSheet({ visible, onClose, onDraft, onGlasses }: P
         <Option icon="camera" accent title="Take a photo" detail="Opens the camera" onPress={takePhoto} />
         <Option icon="photos" title="Choose from your photos" detail="Uses the time the photo was taken" onPress={pickPhoto} />
         {Platform.OS === 'ios' && <Option icon="glasses" title="From your glasses" detail="Photos your Meta glasses saved to this phone" onPress={onGlasses} />}
+        <Option icon="plus" title="Type it in" detail="No photo: enter the food and calories yourself" onPress={() => onDraft({ photoUri: '', items: [] })} />
         <OutlineButton title="Cancel" onPress={onClose} style={{ borderWidth: 0 }} />
       </View>
     );

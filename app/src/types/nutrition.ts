@@ -9,6 +9,7 @@ export interface NutrientProfile {
   saturatedFatG: number;
   fiberG: number;
   sugarG: number;
+  addedSugarG: number; // the part of sugarG that was added, not naturally in the food
   sodiumMg: number;
   cholesterolMg: number;
 }
@@ -32,6 +33,18 @@ export const NUTRIENT_KEYS: (keyof NutrientProfile)[] = [
   'saturatedFatG',
   'fiberG',
   'sugarG',
+  'addedSugarG',
   'sodiumMg',
   'cholesterolMg',
 ];
+
+// Meals saved, or read by the server, before added sugar existed have no value for it. Treat
+// that as 0 rather than letting a missing number turn every total into "not a number".
+export function completeNutrients(nutrients: Partial<NutrientProfile>): NutrientProfile {
+  const complete = {} as NutrientProfile;
+  for (const key of NUTRIENT_KEYS) {
+    const value = nutrients[key];
+    complete[key] = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+  }
+  return complete;
+}

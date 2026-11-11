@@ -8,6 +8,7 @@ export interface NutrientProfile {
   saturatedFatG: number;
   fiberG: number;
   sugarG: number;
+  addedSugarG: number; // the part of sugarG that was added, not naturally in the food
   sodiumMg: number;
   cholesterolMg: number;
 }

@@ -1,7 +1,7 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { AnalyzePhotoResponse } from '../types/nutrition';
+import { AnalyzePhotoResponse, completeNutrients } from '../types/nutrition';
 
 const QUEUE_KEY = 'jarvi.pendingAnalysis';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
@@ -39,7 +39,8 @@ export async function analyzePhoto(photoUri: string): Promise<AnalyzePhotoRespon
     // queued and tries again later. It never falls back to a paid model.
     throw new Error(`Analyze request failed with status ${response.status}`);
   }
-  return (await response.json()) as AnalyzePhotoResponse;
+  const body = (await response.json()) as AnalyzePhotoResponse;
+  return { items: (body.items ?? []).map((item) => ({ ...item, nutrients: completeNutrients(item.nutrients) })) };
 }
 
 export async function queuePhotoForRetry(photoUri: string): Promise<void> {

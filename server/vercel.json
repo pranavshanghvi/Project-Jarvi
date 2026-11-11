@@ -1,6 +1,13 @@
 {
   "version": 2,
   "functions": {
-    "api/analyze.ts": { "memory": 512, "maxDuration": 60 }
+    "api/analyze.ts": {
+      "memory": 512,
+      "maxDuration": 60
+    },
+    "api/read-scale.ts": {
+      "memory": 512,
+      "maxDuration": 60
+    }
   }
 }

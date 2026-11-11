@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Jarvi",
+    "name": "BiteLog",
     "slug": "jarvi",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -31,7 +31,7 @@
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "Jarvi reads the calories you burn (from Apple Watch) to compare them with what you eat.",
+          "NSHealthShareUsageDescription": "BiteLog reads the calories you burn (from Apple Watch) to compare them with what you eat.",
           "NSHealthUpdateUsageDescription": false,
           "background": false
         }
@@ -39,15 +39,15 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Jarvi looks in your photos for food pictures taken with your smart glasses.",
+          "photosPermission": "BiteLog looks in your photos for food pictures taken with your smart glasses.",
           "savePhotosPermission": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Jarvi uses the camera to photograph your food.",
-          "photosPermission": "Jarvi lets you pick a food photo from your library."
+          "cameraPermission": "BiteLog uses the camera to photograph your food.",
+          "photosPermission": "BiteLog lets you pick a food photo from your library."
         }
       ],
       "expo-sqlite",

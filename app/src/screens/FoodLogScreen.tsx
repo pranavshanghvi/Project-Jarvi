@@ -89,6 +89,9 @@ export default function FoodLogScreen({ refreshKey, nav }: { refreshKey: number;
                   <NutrientBar label="Fat" grams={nutrients.fatG} share={(nutrients.fatG * 9) / fromMacros} />
                   <NutrientBar label="Fiber" grams={nutrients.fiberG} share={nutrients.fiberG / 30} />
                 </View>
+                <Muted style={{ marginTop: 10 }}>
+                  Sugar {Math.round(nutrients.sugarG)} g, of which added sugar <Num style={{ fontSize: 13 }}>{Math.round(nutrients.addedSugarG)} g</Num>
+                </Muted>
               </Glass>
             )}
           </View>

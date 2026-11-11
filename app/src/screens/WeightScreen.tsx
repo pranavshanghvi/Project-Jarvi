@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Keyboard, Pressable, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Keyboard, Pressable, TextInput, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { readScalePhoto } from '../api/readScale';
 import { addDays, dateFromKey, isSameDay, loadAllWeights, startOfDay } from '../data/dayData';
 import { Goal, goalProgress } from '../goals/goals';
 import { getGoal } from '../goals/goalStore';
 import { toDateKey } from '../nutrition/aggregation';
 import { getWeightUnit } from '../settings/settingsStore';
 import { BarsChart, ChartCard, LineChart } from '../ui/charts';
-import { Body, Glass, Header, Heading, Icon, Muted, Num, PrimaryButton, Row, Screen, Segmented } from '../ui/kit';
+import { Body, Glass, Header, Heading, Icon, Muted, Num, OutlineButton, PrimaryButton, Row, Screen, Segmented } from '../ui/kit';
 import { colors, formatTime } from '../ui/theme';
 import { formatWeight, fromDisplayWeight, toDisplayWeight, WeightUnit } from '../units';
 import { deleteWeight, latestWeight, logWeight, weightChange, WeightEntry } from '../weight/weightStore';
@@ -54,6 +56,8 @@ export default function WeightScreen({ navigation }: any) {
   const [unit, setUnit] = useState<WeightUnit>('lb');
   const [span, setSpan] = useState<Span>('quarter');
   const [typed, setTyped] = useState('');
+  const [reading, setReading] = useState(false);
+  const [photoNote, setPhotoNote] = useState('');
 
   async function reload() {
     const [w, g, u] = await Promise.all([loadAllWeights(), getGoal(), getWeightUnit()]);
@@ -82,7 +86,32 @@ export default function WeightScreen({ navigation }: any) {
     Keyboard.dismiss();
     await logWeight(fromDisplayWeight(typedNumber, unit));
     setTyped('');
+    setPhotoNote('');
     reload();
+  }
+
+  // The number read from a photo is put in the box for you to check, never saved by itself: a
+  // misread digit on a scale display would otherwise go straight into your history.
+  async function readFromPhoto(source: 'camera' | 'library') {
+    const permission = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return Alert.alert(source === 'camera' ? 'Camera access is off' : 'Photo access is off', 'Turn it on for this app in Settings, or type your weight in.');
+    const result = source === 'camera' ? await ImagePicker.launchCameraAsync({ quality: 0.7 }) : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
+    if (result.canceled) return;
+    setReading(true);
+    setPhotoNote('');
+    try {
+      const kg = await readScalePhoto(result.assets[0].uri, unit);
+      if (kg === null) {
+        setPhotoNote('Could not read a weight in that photo. Try a closer, straight-on shot of the display, or type it in.');
+      } else {
+        setTyped(toDisplayWeight(kg, unit).toFixed(1));
+        setPhotoNote(`Read ${formatWeight(kg, unit)} from your photo. Check it matches the scale, then tap Save.`);
+      }
+    } catch {
+      setPhotoNote('The photo reader is unavailable right now. Type your weight in instead.');
+    } finally {
+      setReading(false);
+    }
   }
 
   const change = (kg: number | null, label: string) =>
@@ -124,6 +153,17 @@ export default function WeightScreen({ navigation }: any) {
           />
           <PrimaryButton title="Save" onPress={save} disabled={!typedValid} style={{ paddingHorizontal: 28 }} />
         </View>
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+          <OutlineButton title="Photo of the scale" onPress={() => readFromPhoto('camera')} style={{ flex: 1, minHeight: 44, paddingHorizontal: 8 }} />
+          <OutlineButton title="Choose a photo" onPress={() => readFromPhoto('library')} style={{ flex: 1, minHeight: 44, paddingHorizontal: 8 }} />
+        </View>
+        {reading && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
+            <ActivityIndicator color={colors.text} />
+            <Muted>Reading the scale… a few seconds.</Muted>
+          </View>
+        )}
+        {photoNote ? <Body style={{ fontSize: 13, marginTop: 10 }}>{photoNote}</Body> : null}
         <Muted style={{ fontSize: 12, marginTop: 8 }}>A scale that saves to Apple Health fills this in for you.</Muted>
       </Glass>
 

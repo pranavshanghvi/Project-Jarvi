@@ -3,10 +3,12 @@ import { parseClaudeResponse } from './parseResponse';
 
 const PROMPT = `You are a nutrition analysis assistant. Look at the food in this photo and identify each distinct food item separately (do not combine them into one estimate).
 
-For each item, estimate: name, a portion description (e.g. "1 cup, ~150g"), a confidence level ("normal" or "low" if you're unsure what it is or how much is there), and a full nutrient profile with these exact fields: calories, proteinG, carbsG, fatG, saturatedFatG, fiberG, sugarG, sodiumMg, cholesterolMg (all numbers).
+For each item, estimate: name, a portion description (e.g. "1 cup, ~150g"), a confidence level ("normal" or "low" if you're unsure what it is or how much is there), and a full nutrient profile with these exact fields: calories, proteinG, carbsG, fatG, saturatedFatG, fiberG, sugarG, addedSugarG, sodiumMg, cholesterolMg (all numbers).
+
+sugarG is total sugar. addedSugarG is the part of that sugar which was added during cooking or manufacturing (soda, desserts, candy, sweetened drinks and yogurt, sauces, syrup, sweetened cereal, most baked goods). The natural sugar in whole fruit, plain milk, plain yogurt and vegetables is NOT added sugar, so for those addedSugarG is 0. addedSugarG is never more than sugarG.
 
 Respond with ONLY valid JSON, minified on a single line with no spaces or line breaks between tokens, in this exact shape, no other text:
-{"items": [{"name": string, "confidence": "normal" | "low", "portionDescription": string, "nutrients": {"calories": number, "proteinG": number, "carbsG": number, "fatG": number, "saturatedFatG": number, "fiberG": number, "sugarG": number, "sodiumMg": number, "cholesterolMg": number}}]}
+{"items": [{"name": string, "confidence": "normal" | "low", "portionDescription": string, "nutrients": {"calories": number, "proteinG": number, "carbsG": number, "fatG": number, "saturatedFatG": number, "fiberG": number, "sugarG": number, "addedSugarG": number, "sodiumMg": number, "cholesterolMg": number}}]}
 
 If you cannot identify any food, respond with {"items": []}.`;
 

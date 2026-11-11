@@ -83,6 +83,7 @@ describe('analyze handler (vercel dev substitute)', () => {
       saturatedFatG: 2,
       fiberG: 0,
       sugarG: 0,
+      addedSugarG: 0,
       sodiumMg: 90,
       cholesterolMg: 100,
     });

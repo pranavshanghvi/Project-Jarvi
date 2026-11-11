@@ -12,6 +12,14 @@ const REQUIRED_NUTRIENT_KEYS: (keyof NutrientProfile)[] = [
   'cholesterolMg',
 ];
 
+// Added sugar is asked for but not demanded. A model that leaves it out still gave a usable
+// answer for everything else, and with one free provider configured, rejecting that answer would
+// mean no reading at all. Missing becomes 0, and it can never exceed the total sugar.
+function cleanAddedSugar(nutrients: any): number {
+  const added = typeof nutrients?.addedSugarG === 'number' && nutrients.addedSugarG > 0 ? nutrients.addedSugarG : 0;
+  return Math.min(added, Math.max(0, nutrients.sugarG));
+}
+
 function extractJson(raw: string): string {
   const trimmed = raw.trim();
   const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
@@ -45,7 +53,7 @@ export function parseClaudeResponse(raw: string): AnalyzePhotoResponse {
       name: item.name,
       confidence: item.confidence === 'low' ? 'low' : 'normal',
       portionDescription: item.portionDescription ?? '',
-      nutrients: item.nutrients,
+      nutrients: { ...item.nutrients, addedSugarG: cleanAddedSugar(item.nutrients) },
     };
   });
 

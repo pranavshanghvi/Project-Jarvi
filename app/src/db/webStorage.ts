@@ -1,4 +1,4 @@
-import { DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
+import { completeNutrients, DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
 import { toDateKey } from '../nutrition/aggregation';
 import { StoredEntry } from './entriesRepository';
 
@@ -7,7 +7,10 @@ const NEXT_ID_KEY = 'jarvi.nextId.web';
 
 function readAll(): StoredEntry[] {
   const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? JSON.parse(raw) : [];
+  const entries: StoredEntry[] = raw ? JSON.parse(raw) : [];
+  // Meals saved before added sugar existed have no value for it.
+  for (const entry of entries) for (const item of entry.items) item.nutrients = completeNutrients(item.nutrients);
+  return entries;
 }
 
 function writeAll(entries: StoredEntry[]): void {
@@ -94,8 +97,9 @@ export async function updateEntryWeb(
   changes: {
     timestamp?: string;
     mealType?: MealType;
-    items?: { id: number; portionMultiplier: number; nutrients: NutrientProfile }[];
+    items?: { id: number; name?: string; portionMultiplier: number; nutrients: NutrientProfile }[];
     removedItemIds?: number[];
+    addedItems?: { item: DetectedFoodItem; portionMultiplier: number }[];
   }
 ): Promise<void> {
   const entries = readAll();
@@ -108,10 +112,14 @@ export async function updateEntryWeb(
     if (item) {
       item.portionMultiplier = change.portionMultiplier;
       item.nutrients = change.nutrients;
+      if (change.name !== undefined) item.name = change.name;
     }
   }
   if (changes.removedItemIds?.length) {
     entry.items = entry.items.filter((i) => !changes.removedItemIds!.includes(i.id));
+  }
+  for (const { item, portionMultiplier } of changes.addedItems ?? []) {
+    entry.items.push({ id: nextId(), entryId, name: item.name, confidence: item.confidence, portionMultiplier, nutrients: item.nutrients });
   }
   writeAll(entries);
 }

@@ -45,6 +45,19 @@ describe('web entry editing', () => {
     expect(await getEntryWeb(id)).toBeNull();
   });
 
+  it('renames a food and adds one the reader missed', async () => {
+    const id = await createEntryWeb('p.jpg', 'lunch', [{ item: food('Rice'), portionMultiplier: 1 }]);
+    const [rice] = (await getEntryWeb(id))!.items;
+    await updateEntryWeb(id, {
+      items: [{ id: rice.id, name: 'Brown rice', portionMultiplier: 1, nutrients: { ...nutrients, calories: 215 } }],
+      addedItems: [{ item: food('Olive oil'), portionMultiplier: 1 }],
+    });
+    const updated = (await getEntryWeb(id))!;
+    expect(updated.items.map((i) => i.name)).toEqual(['Brown rice', 'Olive oil']);
+    expect(updated.items[0].nutrients.calories).toBe(215);
+    expect(updated.items[1].id).not.toBe(rice.id);
+  });
+
   it('finds the first entry date, or null when empty', async () => {
     expect(await getFirstEntryDateWeb()).toBeNull();
     await createEntryWeb('a', 'lunch', [], new Date(2026, 10, 9, 12));
@@ -55,6 +68,6 @@ describe('web entry editing', () => {
 
 describe('buildItemUpdateParams', () => {
   it('orders values to match the UPDATE statement', () => {
-    expect(buildItemUpdateParams(7, { id: 3, portionMultiplier: 1.5, nutrients })).toEqual([1.5, 200, 10, 20, 5, 1, 2, 3, 100, 10, 3, 7]);
+    expect(buildItemUpdateParams(7, { id: 3, portionMultiplier: 1.5, nutrients })).toEqual([1.5, 200, 10, 20, 5, 1, 2, 3, 100, 10, 0, 3, 7]);
   });
 });
