@@ -55,12 +55,20 @@ cd "$HOME/Claude Projects/Project-Jarvi/server" && vercel deploy --prod --yes --
 
 | # | Task | Needs Pranav? |
 |---|---|---|
-| 1 | Calorie estimates run high; tune the instructions | No |
+| 1 | Steadier calorie estimates (see below) | No |
 | 3 | Install on his actual iPhone | Yes, his Apple ID in Xcode |
 | 4 | Republish the web version with new screens | No |
 | 5 | Coloured rings on the dashboard | No (he asked for these in July) |
 | 6 | General styling pass | His taste; offer a playground |
 | 7 | Direct glasses capture (Meta developer kit) | Later, optional |
+
+**Estimates swing between runs.** The same pizza photo came back as 1,780 calories once and 581
+another time: the items were identified the same, the portion sizes were guessed differently.
+The usual cure (asking the AI for its most likely answer every time, the "temperature" setting)
+is not available because the copied router does not pass that setting through and must not be
+edited here. Fixing it means changing the router in the Snaptly repository and re-copying it,
+or tightening the instructions with portion reference points. Until then the sliders on the
+confirm screen are how a wrong portion gets corrected.
 
 ## Decisions made
 
