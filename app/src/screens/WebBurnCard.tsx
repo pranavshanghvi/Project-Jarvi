@@ -66,12 +66,17 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
     setTimeout(() => setCopyState('idle'), 4000);
   }
 
-  const steps = [
-    'On your iPhone, open the Shortcuts app and tap + to start a new shortcut.',
-    'Add the action "Find Health Samples". Set the type to Active Energy and add the filter "Start Date is today".',
-    'Add the action "Calculate Statistics" and set it to Sum.',
-    'Add the action "Open URLs". Paste the address below into it, then tap "Statistics" in the row of suggestions above the keyboard so it lands on the end.',
-    'Name the shortcut BiteLog and add it to your Home Screen. Tap it whenever you open BiteLog.',
+  // Step 4 carries the address itself, with its Copy button, right where it is needed.
+  const steps: { text: string; address?: boolean; after?: string }[] = [
+    { text: 'On your iPhone, open the Shortcuts app and tap + to start a new shortcut.' },
+    { text: 'Add the action "Find Health Samples". Set the type to Active Energy and add the filter "Start Date is today".' },
+    { text: 'Add the action "Calculate Statistics" and set it to Sum.' },
+    {
+      text: 'Add the action "Open URLs" and paste this address into it:',
+      address: true,
+      after: 'Then tap "Statistics" in the row of suggestions above the keyboard, so your number lands on the end of the address.',
+    },
+    { text: 'Name the shortcut BiteLog and add it to your Home Screen. Tap it whenever you open BiteLog.' },
   ];
 
   return (
@@ -100,12 +105,19 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
               {steps.map((step, index) => (
                 <View key={index} style={{ flexDirection: 'row', gap: 10 }}>
                   <Muted style={{ width: 16, color: colors.text }}>{index + 1}</Muted>
-                  <Muted style={{ flex: 1, lineHeight: 19 }}>{step}</Muted>
+                  <View style={{ flex: 1, gap: 8 }}>
+                    <Muted style={{ lineHeight: 19 }}>{step.text}</Muted>
+                    {step.address && (
+                      <>
+                        <TextInput value={address} editable={false} selectTextOnFocus accessibilityLabel="Address for the Shortcut" style={[box, { flex: 0, fontSize: 13, paddingHorizontal: 10 }]} />
+                        <PrimaryButton title={copyState === 'copied' ? 'Copied' : 'Copy the address'} onPress={copyAddress} />
+                        {copyState === 'failed' && <Muted style={{ color: colors.text }}>This browser would not copy it. Press and hold the address in the box above, then choose Copy.</Muted>}
+                      </>
+                    )}
+                    {step.after ? <Muted style={{ lineHeight: 19 }}>{step.after}</Muted> : null}
+                  </View>
                 </View>
               ))}
-              <TextInput value={address} editable={false} selectTextOnFocus accessibilityLabel="Address for the Shortcut" style={[box, { flex: 0, fontSize: 14 }]} />
-              <PrimaryButton title={copyState === 'copied' ? 'Copied' : 'Copy the address'} onPress={copyAddress} />
-              {copyState === 'failed' && <Muted style={{ color: colors.text }}>This browser would not copy it. Press and hold the address in the box above, then choose Copy.</Muted>}
             </>
           )}
           <Muted style={{ fontSize: 12 }}>The Shortcut sends your active calories. BiteLog works out the resting part from your profile, so fill in About you first.</Muted>
