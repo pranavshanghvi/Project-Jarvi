@@ -89,12 +89,12 @@ const SLIDES: Slide[] = [
   {
     eyebrow: 'At each meal',
     title: 'Take a photo of what you eat',
-    body: `Tap the round + button and photograph the plate, or pick a photo you already took. In about 20 seconds BiteLog lists each food with its calories, protein, carbs, fat, sugar and more.${onPhone ? ' Photos from Meta smart glasses work too.' : ''}`,
+    body: `Tap the round + button and photograph the plate. One photo is enough: in about 20 seconds BiteLog lists each food with its calories, protein, carbs, fat, sugar and more. For a closer number you can also photograph the nutrition label, or just say how much you had.${onPhone ? ' Photos from Meta smart glasses work too.' : ''}`,
     picture: (
       <View style={{ gap: 10 }}>
-        <Tile icon="camera" accent title="Take a photo" detail="Opens the camera" />
-        <Tile icon="photos" title="Choose from your photos" detail="Uses the time the photo was taken" />
-        {onPhone ? <Tile icon="glasses" title="From your glasses" detail="Photos your Meta glasses saved" /> : <Tile icon="plus" title="Type it in" detail="No photo needed" />}
+        <Tile icon="camera" accent title="Take a photo" detail="One is enough" />
+        <Tile icon="photos" title="Add the nutrition label" detail="Optional: exact numbers off the packet" />
+        <Tile icon="mic" title="Say how much you ate" detail="Optional: “a third of the bag”" />
       </View>
     ),
   },
@@ -183,7 +183,7 @@ const SLIDES: Slide[] = [
   {
     eyebrow: 'Ready',
     title: 'Start with one photo',
-    body: `Your food log, weight and goal stay on this ${onPhone ? 'phone' : 'browser'}. There is no account, and nobody else can see them. A food photo is sent to an AI service to be read and is not kept by BiteLog. The numbers are estimates, not medical advice. You can come back to this tour from the bottom of the Today screen.`,
+    body: `Your food log, weight and goal stay on this ${onPhone ? 'phone' : 'browser'}. There is no account, and nobody else can see them. A food photo, and anything you say or type to the meal helper, is sent to an AI service to be read and is not kept by BiteLog. The numbers are estimates, not medical advice. You can come back to this tour from the bottom of the Today screen.`,
     picture: (
       <View style={{ alignItems: 'center', gap: 14 }}>
         <View style={{ width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CCFC2', borderWidth: 1, borderColor: 'rgba(190, 255, 245, 0.55)' }}>

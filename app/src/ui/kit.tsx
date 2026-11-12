@@ -237,6 +237,9 @@ const ICON_PATHS = {
   photos: 'M7 5h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3zM4 16l4-4 4 4 3-3 5 5',
   glasses: 'M7 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM17 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM10.5 13h3M3.5 12l1-5M20.5 12l-1-5',
   heart: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z',
+  mic: 'M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
+  send: 'M12 19V5M6 11l6-6 6 6',
+  stop: 'M8 8h8v8H8z',
 } as const;
 export type IconName = keyof typeof ICON_PATHS | 'today';
 

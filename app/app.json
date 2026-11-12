@@ -52,7 +52,14 @@
       ],
       "expo-sqlite",
       "expo-status-bar",
-      "./plugins/withSpaceSafeBuild"
+      "./plugins/withSpaceSafeBuild",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "BiteLog listens when you tap the microphone, so you can say how much you ate.",
+          "speechRecognitionPermission": "BiteLog turns what you say into text for the meal helper."
+        }
+      ]
     ]
   }
 }

@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Tabs: undefined;
   Welcome: { thenOnboard?: boolean } | undefined;
   Tutorial: { thenOnboard?: boolean } | undefined;
+  MealChat: undefined;
   MealDetail: { entryId?: number; draft?: MealDraft };
   GlassesImport: undefined;
   Profile: { onboarding?: boolean } | undefined;

@@ -13,12 +13,12 @@ import { toDateKey } from '../nutrition/aggregation';
 import { Glass, Muted } from '../ui/kit';
 import { formatCalories } from '../ui/theme';
 import { getProfile } from '../profile/profileStore';
-import AddMealSheet from '../screens/AddMealSheet';
 import BurnedScreen from '../screens/BurnedScreen';
 import FoodLogScreen from '../screens/FoodLogScreen';
 import GlassesImportScreen from '../screens/GlassesImportScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import MealChatScreen from '../screens/MealChatScreen';
 import MealDetailScreen from '../screens/MealDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TodayScreen from '../screens/TodayScreen';
@@ -40,7 +40,6 @@ function TabsScreen({ navigation }: any) {
   const [tab, setTab] = useState<TabName>('today');
   const [date, setDate] = useState<Date>(startOfDay(new Date()));
   const [refreshKey, setRefreshKey] = useState(0);
-  const [adding, setAdding] = useState(false);
 
   const [notice, setNotice] = useState('');
   const healthAsked = useRef(false);
@@ -158,19 +157,8 @@ function TabsScreen({ navigation }: any) {
           </Glass>
         </View>
       ) : null}
-      <TabBar current={tab} onChange={setTab} onAdd={() => setAdding(true)} />
-      <AddMealSheet
-        visible={adding}
-        onClose={() => setAdding(false)}
-        onDraft={(draft) => {
-          setAdding(false);
-          navigation.navigate('MealDetail', { draft });
-        }}
-        onGlasses={() => {
-          setAdding(false);
-          navigation.navigate('GlassesImport');
-        }}
-      />
+      {/* The + button opens the meal helper: photos, the label, and voice, all in one place. */}
+      <TabBar current={tab} onChange={setTab} onAdd={() => navigation.navigate('MealChat')} />
     </View>
   );
 }
@@ -212,6 +200,7 @@ export default function RootNavigator() {
         <Stack.Screen name="Tabs" component={TabsScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Tutorial" component={TutorialScreen} />
+        <Stack.Screen name="MealChat" component={MealChatScreen} />
         <Stack.Screen name="MealDetail" component={MealDetailScreen} />
         <Stack.Screen name="GlassesImport" component={GlassesImportWrapper} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
