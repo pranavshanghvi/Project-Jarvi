@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>BiteLog icon - concept C: In and Out Arcs</title>
+  <defs>
+  <radialGradient id="gT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="gO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="teal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="orange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="blur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#gT)"/>
+  <rect width="1024" height="1024" fill="url(#gO)"/>
+  <g filter="url(#blur)" opacity="0.12">
+    <g fill="none" stroke-linecap="round" stroke-width="86">
+      <path d="M520.08 226.80A288 288 0 1 1 318.95 750.76" stroke="url(#teal)"/>
+      <path d="M456.90 676.38A166 166 0 1 1 572.83 374.38" stroke="url(#orange)"/>
+    </g></g>
+  <g>
+    <g fill="none" stroke-linecap="round" stroke-width="86">
+      <path d="M520.08 226.80A288 288 0 1 1 318.95 750.76" stroke="url(#teal)"/>
+      <path d="M456.90 676.38A166 166 0 1 1 572.83 374.38" stroke="url(#orange)"/>
+    </g></g>
+</svg>

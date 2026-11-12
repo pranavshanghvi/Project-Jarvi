@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <title>BiteLog - Food in, energy out</title>
+  <defs>
+  <radialGradient id="oggT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="oggO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ogteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="ogorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="ogblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  <mask id="ogbite" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+    <rect width="1024" height="1024" fill="#fff"/>
+    <g fill="#000"><circle cx="789.19" cy="234.81" r="140"/><circle cx="632.99" cy="263.93" r="105"/><circle cx="760.07" cy="391.01" r="105"/></g>
+  </mask>
+  <radialGradient id="ogT" gradientUnits="userSpaceOnUse" cx="150" cy="60" r="640">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.30"/>
+    <stop offset="0.5" stop-color="#2FB8AC" stop-opacity="0.08"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ogO" gradientUnits="userSpaceOnUse" cx="1080" cy="600" r="620">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.24"/>
+    <stop offset="0.5" stop-color="#FFB067" stop-opacity="0.06"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#07080F"/>
+  <rect width="1200" height="630" fill="url(#ogT)"/>
+  <rect width="1200" height="630" fill="url(#ogO)"/>
+  <svg x="469.0" y="52" width="262" height="262" viewBox="162 162 700 700" overflow="visible">
+  <g filter="url(#ogblur)" opacity="0.14">
+    <g mask="url(#ogbite)" fill="none" stroke-width="84">
+      <circle cx="512" cy="512" r="292" stroke="url(#ogteal)"/>
+      <circle cx="512" cy="512" r="172" stroke="url(#ogorange)"/>
+    </g></g>
+  <g>
+    <g mask="url(#ogbite)" fill="none" stroke-width="84">
+      <circle cx="512" cy="512" r="292" stroke="url(#ogteal)"/>
+      <circle cx="512" cy="512" r="172" stroke="url(#ogorange)"/>
+    </g></g>
+  </svg>
+  <text x="600.0" y="466" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="140" font-weight="700" letter-spacing="-4" fill="#F2F4F7">BiteLog</text>
+  <text x="600.0" y="551" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="52" font-weight="500" letter-spacing="-0.5"><tspan fill="#FFB067">Food in,</tspan><tspan fill="#4CCFC2"> energy out</tspan></text>
+</svg>

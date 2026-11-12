@@ -1,4 +1,4 @@
-import { Platform, ScrollView, View } from 'react-native';
+import { Image, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BalanceRing, Legend } from '../ui/charts';
 import { Body, Glow, Icon, IconName, Muted, Num, OutlineButton, PrimaryButton, Title } from '../ui/kit';
@@ -43,6 +43,7 @@ export default function WelcomeScreen({ route, navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ alignItems: 'center', gap: 2 }}>
+          <Image source={require('../../assets/brand/icon-192.png')} accessibilityLabel="BiteLog logo" style={{ width: 76, height: 76, borderRadius: 18, marginBottom: 10 }} />
           <Title style={{ fontSize: 36, letterSpacing: -1 }}>BiteLog</Title>
           <Muted style={{ color: colors.burned, fontWeight: '600' }}>Food in, energy out</Muted>
         </View>

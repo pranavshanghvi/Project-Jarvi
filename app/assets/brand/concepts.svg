@@ -1,0 +1,261 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="760" viewBox="0 0 1800 760">
+  <title>BiteLog icon concepts</title>
+  <rect width="1800" height="760" fill="#17191E"/>
+  <clipPath id="clip-a"><rect x="90.0" y="44" width="420" height="420" rx="94"/></clipPath>
+  <g clip-path="url(#clip-a)">
+    <svg x="90.0" y="44" width="420" height="420" viewBox="0 0 1024 1024"><defs>
+  <radialGradient id="aLgT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="aLgO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="aLteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="aLorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="aLblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  <mask id="aLbite" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+    <rect width="1024" height="1024" fill="#fff"/>
+    <g fill="#000"><circle cx="789.19" cy="234.81" r="140"/><circle cx="632.99" cy="263.93" r="105"/><circle cx="760.07" cy="391.01" r="105"/></g>
+  </mask>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#aLgT)"/>
+  <rect width="1024" height="1024" fill="url(#aLgO)"/>
+  <g filter="url(#aLblur)" opacity="0.12">
+    <g mask="url(#aLbite)" fill="none" stroke-width="84">
+      <circle cx="512" cy="512" r="292" stroke="url(#aLteal)"/>
+      <circle cx="512" cy="512" r="172" stroke="url(#aLorange)"/>
+    </g></g>
+  <g>
+    <g mask="url(#aLbite)" fill="none" stroke-width="84">
+      <circle cx="512" cy="512" r="292" stroke="url(#aLteal)"/>
+      <circle cx="512" cy="512" r="172" stroke="url(#aLorange)"/>
+    </g></g></svg>
+  </g>
+  <rect x="90.5" y="44.5" width="419" height="419" rx="93.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.07"/>
+  <text x="300.0" y="530" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="46" font-weight="700" fill="#F2F4F7">A<tspan dx="16" dy="-9" font-size="20" font-weight="600" letter-spacing="2.5" fill="#4CCFC2">RECOMMENDED</tspan></text>
+  <text x="300.0" y="572" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="28" font-weight="500" fill="#8A94A3">Bitten Rings</text>
+  <clipPath id="clip-a-s"><rect x="270.0" y="618" width="60" height="60" rx="13.4"/></clipPath>
+  <g clip-path="url(#clip-a-s)">
+    <svg x="270.0" y="618" width="60" height="60" viewBox="0 0 1024 1024"><defs>
+  <radialGradient id="aSgT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="aSgO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="aSteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="aSorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="aSblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  <mask id="aSbite" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+    <rect width="1024" height="1024" fill="#fff"/>
+    <g fill="#000"><circle cx="789.19" cy="234.81" r="140"/><circle cx="632.99" cy="263.93" r="105"/><circle cx="760.07" cy="391.01" r="105"/></g>
+  </mask>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#aSgT)"/>
+  <rect width="1024" height="1024" fill="url(#aSgO)"/>
+  <g filter="url(#aSblur)" opacity="0.12">
+    <g mask="url(#aSbite)" fill="none" stroke-width="84">
+      <circle cx="512" cy="512" r="292" stroke="url(#aSteal)"/>
+      <circle cx="512" cy="512" r="172" stroke="url(#aSorange)"/>
+    </g></g>
+  <g>
+    <g mask="url(#aSbite)" fill="none" stroke-width="84">
+      <circle cx="512" cy="512" r="292" stroke="url(#aSteal)"/>
+      <circle cx="512" cy="512" r="172" stroke="url(#aSorange)"/>
+    </g></g></svg>
+  </g>
+  <text x="346.0" y="655" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#8A94A3">60 px</text>
+  <clipPath id="clip-b"><rect x="690.0" y="44" width="420" height="420" rx="94"/></clipPath>
+  <g clip-path="url(#clip-b)">
+    <svg x="690.0" y="44" width="420" height="420" viewBox="0 0 1024 1024"><defs>
+  <radialGradient id="bLgT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="bLgO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="bLteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="bLorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="bLblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#bLgT)"/>
+  <rect width="1024" height="1024" fill="url(#bLgO)"/>
+  <g filter="url(#bLblur)" opacity="0.12">
+    <g fill="none" stroke-linecap="round">
+      <path d="M314 238V590" stroke="url(#bLteal)" stroke-width="76"/>
+      <circle cx="524" cy="590" r="210" stroke="url(#bLteal)" stroke-width="76"/>
+      <path d="M524.00 480.00A110 110 0 1 1 414.00 590.00" stroke="url(#bLorange)" stroke-width="64"/>
+    </g></g>
+  <g>
+    <g fill="none" stroke-linecap="round">
+      <path d="M314 238V590" stroke="url(#bLteal)" stroke-width="76"/>
+      <circle cx="524" cy="590" r="210" stroke="url(#bLteal)" stroke-width="76"/>
+      <path d="M524.00 480.00A110 110 0 1 1 414.00 590.00" stroke="url(#bLorange)" stroke-width="64"/>
+    </g></g></svg>
+  </g>
+  <rect x="690.5" y="44.5" width="419" height="419" rx="93.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.07"/>
+  <text x="900.0" y="530" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="46" font-weight="700" fill="#F2F4F7">B</text>
+  <text x="900.0" y="572" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="28" font-weight="500" fill="#8A94A3">Ring Monogram</text>
+  <clipPath id="clip-b-s"><rect x="870.0" y="618" width="60" height="60" rx="13.4"/></clipPath>
+  <g clip-path="url(#clip-b-s)">
+    <svg x="870.0" y="618" width="60" height="60" viewBox="0 0 1024 1024"><defs>
+  <radialGradient id="bSgT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="bSgO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="bSteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="bSorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="bSblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#bSgT)"/>
+  <rect width="1024" height="1024" fill="url(#bSgO)"/>
+  <g filter="url(#bSblur)" opacity="0.12">
+    <g fill="none" stroke-linecap="round">
+      <path d="M314 238V590" stroke="url(#bSteal)" stroke-width="76"/>
+      <circle cx="524" cy="590" r="210" stroke="url(#bSteal)" stroke-width="76"/>
+      <path d="M524.00 480.00A110 110 0 1 1 414.00 590.00" stroke="url(#bSorange)" stroke-width="64"/>
+    </g></g>
+  <g>
+    <g fill="none" stroke-linecap="round">
+      <path d="M314 238V590" stroke="url(#bSteal)" stroke-width="76"/>
+      <circle cx="524" cy="590" r="210" stroke="url(#bSteal)" stroke-width="76"/>
+      <path d="M524.00 480.00A110 110 0 1 1 414.00 590.00" stroke="url(#bSorange)" stroke-width="64"/>
+    </g></g></svg>
+  </g>
+  <text x="946.0" y="655" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#8A94A3">60 px</text>
+  <clipPath id="clip-c"><rect x="1290.0" y="44" width="420" height="420" rx="94"/></clipPath>
+  <g clip-path="url(#clip-c)">
+    <svg x="1290.0" y="44" width="420" height="420" viewBox="0 0 1024 1024"><defs>
+  <radialGradient id="cLgT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="cLgO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="cLteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="cLorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="cLblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#cLgT)"/>
+  <rect width="1024" height="1024" fill="url(#cLgO)"/>
+  <g filter="url(#cLblur)" opacity="0.12">
+    <g fill="none" stroke-linecap="round" stroke-width="86">
+      <path d="M520.08 226.80A288 288 0 1 1 318.95 750.76" stroke="url(#cLteal)"/>
+      <path d="M456.90 676.38A166 166 0 1 1 572.83 374.38" stroke="url(#cLorange)"/>
+    </g></g>
+  <g>
+    <g fill="none" stroke-linecap="round" stroke-width="86">
+      <path d="M520.08 226.80A288 288 0 1 1 318.95 750.76" stroke="url(#cLteal)"/>
+      <path d="M456.90 676.38A166 166 0 1 1 572.83 374.38" stroke="url(#cLorange)"/>
+    </g></g></svg>
+  </g>
+  <rect x="1290.5" y="44.5" width="419" height="419" rx="93.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.07"/>
+  <text x="1500.0" y="530" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="46" font-weight="700" fill="#F2F4F7">C</text>
+  <text x="1500.0" y="572" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="28" font-weight="500" fill="#8A94A3">In &amp; Out Arcs</text>
+  <clipPath id="clip-c-s"><rect x="1470.0" y="618" width="60" height="60" rx="13.4"/></clipPath>
+  <g clip-path="url(#clip-c-s)">
+    <svg x="1470.0" y="618" width="60" height="60" viewBox="0 0 1024 1024"><defs>
+  <radialGradient id="cSgT" cx="0.18" cy="0.14" r="0.72">
+    <stop offset="0" stop-color="#2FB8AC" stop-opacity="0.20"/>
+    <stop offset="0.55" stop-color="#2FB8AC" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#2FB8AC" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="cSgO" cx="0.86" cy="0.90" r="0.66">
+    <stop offset="0" stop-color="#FFB067" stop-opacity="0.16"/>
+    <stop offset="0.55" stop-color="#FFB067" stop-opacity="0.04"/>
+    <stop offset="1" stop-color="#FFB067" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="cSteal" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="824" y2="844">
+    <stop offset="0" stop-color="#4CCFC2"/>
+    <stop offset="1" stop-color="#2FB8AC"/>
+  </linearGradient>
+  <linearGradient id="cSorange" gradientUnits="userSpaceOnUse" x1="300" y1="300" x2="724" y2="724">
+    <stop offset="0" stop-color="#FFB067"/>
+    <stop offset="1" stop-color="#F09A4E"/>
+  </linearGradient>
+  <filter id="cSblur" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="40"/>
+  </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="#07080F"/>
+  <rect width="1024" height="1024" fill="url(#cSgT)"/>
+  <rect width="1024" height="1024" fill="url(#cSgO)"/>
+  <g filter="url(#cSblur)" opacity="0.12">
+    <g fill="none" stroke-linecap="round" stroke-width="86">
+      <path d="M520.08 226.80A288 288 0 1 1 318.95 750.76" stroke="url(#cSteal)"/>
+      <path d="M456.90 676.38A166 166 0 1 1 572.83 374.38" stroke="url(#cSorange)"/>
+    </g></g>
+  <g>
+    <g fill="none" stroke-linecap="round" stroke-width="86">
+      <path d="M520.08 226.80A288 288 0 1 1 318.95 750.76" stroke="url(#cSteal)"/>
+      <path d="M456.90 676.38A166 166 0 1 1 572.83 374.38" stroke="url(#cSorange)"/>
+    </g></g></svg>
+  </g>
+  <text x="1546.0" y="655" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#8A94A3">60 px</text></svg>
