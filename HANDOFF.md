@@ -141,16 +141,32 @@ fine (it serves the picture and title to WhatsApp's reader, checked). Likely Wha
 change the site again for this. Next time a preview fails, run the known-good-link test first.
 `/hello/` on the site was a one-off test page and disappears at the next publish.
 
-**Meal helper: DESIGN PUBLISHED, AWAITING HIS GO-AHEAD (2026-11-11). Nothing is built.**
-He asked for more than one photo per meal (the food plus the nutrition label) and voice to say
-how much he ate, and chose the "Full chat helper" style over one-shot. The design is screen 11 on
-the design canvas (https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi): a chat where you add
-photos, talk, and correct by voice, with a running "Meal so far" card tagged From label /
-Estimate / You said, then Save meal into the existing editable meal screen. Proposed rules: at
-most 3 photos and about 6 helper replies per meal, because every reply is one read against the
-shared free allowance (about 200 a day for everyone). Voice is meant to use the phone's own free
-dictation, not an AI service. Checked: the router passes several pictures in one request; a real
-multi-photo read on Cloudflare has NOT been tested yet. Do not write app code until he approves.
+**Meal helper: BUILT AND LIVE (2026-11-11).** He asked for more than one photo per meal (the food
+plus the nutrition label) and voice to say how much he ate, picked the full chat style, then
+asked that the extra layers be optional: "someone may just upload one photo and that may be
+enough". So the + button now opens `MealChatScreen` (the old `AddMealSheet` is gone): one photo is
+read at once and can be saved; optional extras are a label photo and a spoken or typed note. A
+"Meal so far" card tags each line From label / Estimate / You said. Design: screen 11 on the
+canvas (https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi).
+
+- Server: `POST /api/meal-chat` (`server/lib/mealChat.ts`). One turn = the meal so far plus what
+  is new, back comes the updated list and a short reply. Nothing is remembered between turns.
+- **The AI does not do arithmetic.** On the first live test it turned "a third of the bag" of an
+  8-serving bag into a third of ONE serving (50 calories, not 400), and later counted "two eggs"
+  twice. Now it returns per-serving numbers plus how much was eaten (servings, or a share of the
+  container), and code multiplies. Do not move the multiplying back into the prompt.
+- Voice is `expo-speech-recognition` 57.1.1 (`app/src/voice/useDictation.ts`): the phone's or
+  browser's own speech-to-text, free, no AI allowance. It is a native add-on, so the iPhone app
+  needs a rebuild whenever it changes, and it asks for microphone and speech permission.
+- Limits per meal: 3 photos, 8 turns (`app/src/api/mealChat.ts`). Each turn is one read against
+  the shared free allowance. A turn takes 10 to 30 seconds; a slow one over 50 seconds fails and
+  the screen offers "Try again".
+- Verified live: typed meal, label photo, "half the box" (320 calories), save to Today, on the
+  web version; a four-step conversation against the server. NOT verified: voice on any real
+  device (the test browser blocks microphones), a real food photo through the helper, the
+  camera on a phone. Ask him how voice behaves on his iPhone and in Safari.
+- Known rough edge: the free model sometimes adds a label as a second line instead of replacing
+  the matching food. Each line has an x to remove it.
 
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
