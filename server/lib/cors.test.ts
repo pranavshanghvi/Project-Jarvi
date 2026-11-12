@@ -10,6 +10,7 @@ function mockRes() {
 
 describe('isAllowedOrigin', () => {
   it('allows the web version and a local test server', () => {
+    expect(isAllowedOrigin('https://mybitelog.vercel.app', '')).toBe(true);
     expect(isAllowedOrigin('https://jarvi-web.vercel.app', '')).toBe(true);
     expect(isAllowedOrigin('http://localhost:4173', '')).toBe(true);
     expect(isAllowedOrigin('http://127.0.0.1:8081', '')).toBe(true);
@@ -18,6 +19,8 @@ describe('isAllowedOrigin', () => {
   it('refuses any other website, including look-alikes', () => {
     expect(isAllowedOrigin('https://example.com', '')).toBe(false);
     expect(isAllowedOrigin('https://jarvi-web.vercel.app.evil.com', '')).toBe(false);
+    // Other people's sites that happen to have BiteLog in the name are not ours.
+    expect(isAllowedOrigin('https://bitelog.vercel.app', '')).toBe(false);
     expect(isAllowedOrigin('http://localhost.evil.com', '')).toBe(false);
     expect(isAllowedOrigin(undefined, '')).toBe(false);
   });

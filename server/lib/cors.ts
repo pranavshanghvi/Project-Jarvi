@@ -4,7 +4,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // app is not a browser and never needed this; the web version does. Only the web version's own
 // address (plus a local test server) is allowed, so other websites cannot spend the free AI
 // allowance from their visitors' browsers. ALLOWED_ORIGINS (comma separated) adds more.
-const DEFAULT_ORIGINS = ['https://jarvi-web.vercel.app'];
+// mybitelog is the address people are given; jarvi-web is the project's original address.
+const DEFAULT_ORIGINS = ['https://mybitelog.vercel.app', 'https://jarvi-web.vercel.app'];
 
 export function isAllowedOrigin(origin: string | undefined, extra: string | undefined = process.env.ALLOWED_ORIGINS): boolean {
   if (!origin) return false;

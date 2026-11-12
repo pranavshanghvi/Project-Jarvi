@@ -85,13 +85,15 @@ nothing a person sees uses them, and renaming them would orphan his data or brea
 "BiteLog" is free as an App Store name or trademark has NOT been checked.
 
 **Sharing with other people (decided 2026-11-11): free web link plus an Apple Shortcut.**
-He chose the web route over paying Apple $99 a year for TestFlight. Live at
-https://jarvi-web.vercel.app (title BiteLog). Everything works there except what needs Apple
+He chose the web route over paying Apple $99 a year for TestFlight. The address to give people
+is **https://mybitelog.vercel.app** (free; the same site also answers at jarvi-web.vercel.app).
+`bitelog.vercel.app`, `bitelog-app.vercel.app` and `getbitelog.vercel.app` were already taken,
+and `bitelog.vercel.app` is someone else's live app also called BiteLog: the name is NOT unique. Everything works there except what needs Apple
 Health: verified in a browser with a real food photo, a typed-in meal, weight, goal and the
 "?" explanations. Each person's data stays in their own browser.
 
 - Calories burned on the web: an Apple Shortcut on the person's iPhone reads Health and opens
-  `https://jarvi-web.vercel.app/#active=NUMBER&resting=NUMBER`. The app saves the figures and
+  `https://mybitelog.vercel.app/#active=NUMBER&resting=NUMBER`. The app saves the figures and
   strips them from the address. The receiving side is tested; the Shortcut itself is NOT built
   or tested (it can only be made on an iPhone). Steps are shown in the app on the Burned tab.
   When Pranav has built it and has an iCloud share link, put the link in `SHORTCUT_LINK` in
