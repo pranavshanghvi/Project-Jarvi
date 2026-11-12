@@ -141,6 +141,17 @@ fine (it serves the picture and title to WhatsApp's reader, checked). Likely Wha
 change the site again for this. Next time a preview fails, run the known-good-link test first.
 `/hello/` on the site was a one-off test page and disappears at the next publish.
 
+**Meal helper: DESIGN PUBLISHED, AWAITING HIS GO-AHEAD (2026-11-11). Nothing is built.**
+He asked for more than one photo per meal (the food plus the nutrition label) and voice to say
+how much he ate, and chose the "Full chat helper" style over one-shot. The design is screen 11 on
+the design canvas (https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi): a chat where you add
+photos, talk, and correct by voice, with a running "Meal so far" card tagged From label /
+Estimate / You said, then Save meal into the existing editable meal screen. Proposed rules: at
+most 3 photos and about 6 helper replies per meal, because every reply is one read against the
+shared free allowance (about 200 a day for everyone). Voice is meant to use the phone's own free
+dictation, not an AI service. Checked: the router passes several pictures in one request; a real
+multi-photo read on Cloudflare has NOT been tested yet. Do not write app code until he approves.
+
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
 - `app/src/screens/`: one file per screen. `AddMealSheet` is the + sheet.
