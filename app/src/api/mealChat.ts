@@ -9,8 +9,9 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3
 const PROXY_SECRET = process.env.EXPO_PUBLIC_PROXY_SECRET;
 
 // Limits per meal. Every turn is one read against a free AI allowance shared by everyone using
-// the app, so a single meal cannot run away with it.
-export const MAX_PHOTOS = 3;
+// the app, so a single meal cannot run away with it. The turn limit is the real ceiling (a photo
+// is one turn); six photos is enough for a meal of several dishes, with turns left to talk.
+export const MAX_PHOTOS = 6;
 export const MAX_TURNS = 8;
 
 export type ItemSource = 'label' | 'estimate' | 'said';

@@ -158,7 +158,7 @@ canvas (https://claude.ai/artifact/6V3pne2vESiSGEyr4N9NNi).
 - Voice is `expo-speech-recognition` 57.1.1 (`app/src/voice/useDictation.ts`): the phone's or
   browser's own speech-to-text, free, no AI allowance. It is a native add-on, so the iPhone app
   needs a rebuild whenever it changes, and it asks for microphone and speech permission.
-- Limits per meal: 3 photos, 8 turns (`app/src/api/mealChat.ts`). Each turn is one read against
+- Limits per meal: 6 photos (raised from 3 on 2026-11-12 so a meal of several dishes fits in one go), 8 turns (`app/src/api/mealChat.ts`). Each turn is one read against
   the shared free allowance. A turn takes 10 to 30 seconds; a slow one over 50 seconds fails and
   the screen offers "Try again".
 - Verified live: typed meal, label photo, "half the box" (320 calories), save to Today, on the
