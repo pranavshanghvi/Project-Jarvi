@@ -84,6 +84,32 @@ The repository, folder, Vercel projects and storage keys still say "jarvi". That
 nothing a person sees uses them, and renaming them would orphan his data or break links. Whether
 "BiteLog" is free as an App Store name or trademark has NOT been checked.
 
+**Sharing with other people (decided 2026-11-11): free web link plus an Apple Shortcut.**
+He chose the web route over paying Apple $99 a year for TestFlight. Live at
+https://jarvi-web.vercel.app (title BiteLog). Everything works there except what needs Apple
+Health: verified in a browser with a real food photo, a typed-in meal, weight, goal and the
+"?" explanations. Each person's data stays in their own browser.
+
+- Calories burned on the web: an Apple Shortcut on the person's iPhone reads Health and opens
+  `https://jarvi-web.vercel.app/#active=NUMBER&resting=NUMBER`. The app saves the figures and
+  strips them from the address. The receiving side is tested; the Shortcut itself is NOT built
+  or tested (it can only be made on an iPhone). Steps are shown in the app on the Burned tab.
+  When Pranav has built it and has an iCloud share link, put the link in `SHORTCUT_LINK` in
+  `app/src/screens/WebBurnCard.tsx` and everyone else gets a one-tap install.
+- There is also a type-it-in card for the burn on the Burned tab.
+- Web limits to be honest about: no workouts, no glasses import, burn only as fresh as the last
+  time the Shortcut ran, and a browser stores only a few megabytes (photos are kept as tiny
+  thumbnails; the oldest are dropped first if space runs out). Clearing browser data erases it.
+- A person's web data is tied to the site's address. Settle the final address BEFORE sharing.
+- To republish the web version: `npx expo export -p web --output-dir <new folder>` from `app/`,
+  copy only `_expo assets index.html favicon.ico metadata.json` to a clean folder, and
+  `vercel deploy --prod --yes` there with `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` set for the
+  `jarvi-web` project. Do not `vercel link` inside the build folder: it downloads a settings file.
+- The server only accepts browser calls from that address (`server/lib/cors.ts`). A new address
+  must be added there or in the `ALLOWED_ORIGINS` setting.
+- Everyone shares one free AI allowance (roughly 200 photos a day in total).
+- TestFlight remains the route if automatic Watch data for other people ever matters.
+
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
 - `app/src/screens/`: one file per screen. `AddMealSheet` is the + sheet.
@@ -104,8 +130,6 @@ Known rough edges, deliberately left:
 - Food history lives only on the phone and in its iPhone backup. A cloud copy needs a sign-in;
   that is his decision.
 - The "eat about" figure stays blank until there is a full day of Watch data or a profile.
-- The web version (`jarvi-web`) still shows the July build and has not been tried with the new
-  screens.
 - To put a new build on his phone: the Release build command and `xcrun devicectl device install
   app` (see git history of this file's session, or rebuild as below with `-configuration Release`).
   The free Apple account means the app stops opening after 7 days until reinstalled.
@@ -167,7 +191,7 @@ Known traps, already handled:
 - Expo packages must all be on matching versions (`npx expo install --fix`), or the app crashes
   at launch.
 
-Tests: `cd app && npx jest` (108 pass) and `cd server && npx jest` (31 pass).
+Tests: `cd app && npx jest` (125 pass) and `cd server && npx jest` (37 pass).
 
 ## Git state
 
