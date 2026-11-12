@@ -53,7 +53,7 @@ export default function BurnedScreen({ refreshKey }: { refreshKey: number }) {
           <View style={{ flex: 1, borderRadius: 5, backgroundColor: colors.burnedDeep }} />
         </View>
         <Row first title="Active" detail="Workouts and moving around" value={formatCalories(day?.active ?? 0)} left={<View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.burned }} />} />
-        <Row title="Resting" detail="What your body uses just staying alive" value={formatCalories(day?.resting ?? 0)} left={<View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.burnedDeep }} />} />
+        <Row title="Resting" detail={isHealthSupported() ? 'What your body uses just staying alive' : 'What your body uses just staying alive, estimated from your profile unless you type it'} value={formatCalories(day?.resting ?? 0)} left={<View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.burnedDeep }} />} />
       </Glass>
 
       {isHealthSupported() && burned === 0 && (

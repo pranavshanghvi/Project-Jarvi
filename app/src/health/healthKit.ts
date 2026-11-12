@@ -9,7 +9,10 @@ import {
   requestAuthorization,
 } from '@kingstinct/react-native-healthkit';
 import { toDateKey } from '../nutrition/aggregation';
-import { getImportedBurn } from './importedBurn';
+import { estimateRestingCalories } from '../goals/goals';
+import { getProfile } from '../profile/profileStore';
+import { getWeights, latestWeight } from '../weight/weightStore';
+import { fillRestingEstimate, getImportedBurn } from './importedBurn';
 import type { Sex } from '../profile/profileStore';
 import type { WeightEntry } from '../weight/weightStore';
 
@@ -81,7 +84,12 @@ export async function getEnergySplitByDay(
 ): Promise<Record<string, { active: number; resting: number }>> {
   // Off iPhone (the web version) there is no Apple Health to read. Use the figures an Apple
   // Shortcut sent over, or that were typed in.
-  if (!isHealthSupported()) return getImportedBurn(start, end);
+  if (!isHealthSupported()) {
+    const [imported, profile, weights] = await Promise.all([getImportedBurn(start, end), getProfile(), getWeights()]);
+    const weight = latestWeight(weights);
+    const now = new Date();
+    return fillRestingEstimate(imported, profile && weight ? estimateRestingCalories(profile, weight.kg, now) : null, now);
+  }
   const { from, to } = wholeDays(start, end);
   const active: Record<string, number> = {};
   const resting: Record<string, number> = {};

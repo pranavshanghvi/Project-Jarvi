@@ -1,7 +1,7 @@
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getImportedBurn, parseBurnLink, parseLooseNumber, saveImportedBurn, setBurnForDay } from './importedBurn';
+import { fillRestingEstimate, getImportedBurn, parseBurnLink, parseLooseNumber, saveImportedBurn, setBurnForDay } from './importedBurn';
 
 const now = new Date(2026, 10, 11, 21, 0, 0); // local 11 Nov 2026, 9 PM
 
@@ -28,6 +28,33 @@ describe('parseBurnLink', () => {
 
   it('crosses a month boundary for yesterday', () => {
     expect(Object.keys(parseBurnLink('#yactive=500', new Date(2026, 10, 1, 8)))).toEqual(['2026-10-31']);
+  });
+});
+
+describe('fillRestingEstimate', () => {
+  const sixPm = new Date(2026, 10, 11, 18, 0, 0);
+
+  it('adds the part of today that has passed, and a full day for earlier days', () => {
+    const days = { '2026-11-11': { active: 520, resting: 0 }, '2026-11-10': { active: 610, resting: 0 } };
+    expect(fillRestingEstimate(days, 1600, sixPm)).toEqual({
+      '2026-11-11': { active: 520, resting: 1200 }, // three quarters of the day gone
+      '2026-11-10': { active: 610, resting: 1600 },
+    });
+  });
+
+  it('never overrides a resting figure that was sent or typed', () => {
+    const days = { '2026-11-11': { active: 520, resting: 1450 } };
+    expect(fillRestingEstimate(days, 1600, sixPm)).toEqual(days);
+  });
+
+  it('does nothing without a profile to estimate from, and never invents a day with no data', () => {
+    const days = { '2026-11-11': { active: 520, resting: 0 } };
+    expect(fillRestingEstimate(days, null, sixPm)).toEqual(days);
+    expect(fillRestingEstimate({ '2026-11-11': { active: 0, resting: 0 } }, 1600, sixPm)).toEqual({ '2026-11-11': { active: 0, resting: 0 } });
+  });
+
+  it('reads the one-number link the simple Shortcut sends', () => {
+    expect(parseBurnLink('#active=520.4', sixPm)).toEqual({ '2026-11-11': { active: 520, resting: 0 } });
   });
 });
 

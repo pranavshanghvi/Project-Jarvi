@@ -92,6 +92,23 @@ export async function setBurnForDay(date: string, burn: DayBurn): Promise<void> 
   await AsyncStorage.setItem(KEY, JSON.stringify(all));
 }
 
+// The simple Shortcut sends only active calories. Resting calories (what the body uses just
+// staying alive) can be worked out from a person's age, sex, height and weight, which is how
+// Apple arrives at its own figure. `restingPerDay` is that full-day estimate; for today only the
+// part of the day that has passed so far is counted, so the total grows through the day the way
+// Apple's does. Days that already carry a resting figure are left alone.
+export function fillRestingEstimate(days: BurnByDay, restingPerDay: number | null, now: Date): BurnByDay {
+  if (!restingPerDay || restingPerDay <= 0) return days;
+  const todayKey = toDateKey(now);
+  const elapsed = (now.getHours() * 60 + now.getMinutes()) / 1440;
+  const filled: BurnByDay = {};
+  for (const [date, burn] of Object.entries(days)) {
+    if (burn.resting > 0 || burn.active <= 0) filled[date] = burn;
+    else filled[date] = { active: burn.active, resting: Math.round(restingPerDay * (date === todayKey ? elapsed : 1)) };
+  }
+  return filled;
+}
+
 export async function getImportedBurn(start: Date, end: Date): Promise<BurnByDay> {
   const all = await readAll();
   const from = toDateKey(start);

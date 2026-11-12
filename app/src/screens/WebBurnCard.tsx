@@ -17,6 +17,7 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
   const [activeText, setActiveText] = useState('');
   const [restingText, setRestingText] = useState('');
   const [showSteps, setShowSteps] = useState(false);
+  const [copied, setCopied] = useState(false);
   const site = typeof window !== 'undefined' && window.location ? window.location.origin : 'this page';
 
   useEffect(() => {
@@ -34,13 +35,28 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
     onSaved();
   }
 
+  // The address the Shortcut opens. It ends in "active=" so the one number from Health is simply
+  // added on the end: nothing has to be placed in the middle of it.
+  const address = `${site}/#active=`;
+
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Some browsers refuse without asking. The address is also shown in a box that selects
+      // itself when tapped, so it can still be copied by hand.
+      setCopied(false);
+    }
+  }
+
   const steps = [
     'On your iPhone, open the Shortcuts app and tap + to start a new shortcut.',
-    'Add the action "Find Health Samples". Set the type to Active Energy, and add the filter "Start Date is today".',
-    'Add "Calculate Statistics" and set it to Sum.',
-    'Add "Find Health Samples" again, this time for Resting Energy with "Start Date is today", followed by another "Calculate Statistics" set to Sum.',
-    `Add "Open URLs" and enter: ${site}/#active=FIRST&resting=SECOND , replacing FIRST with the first Sum and SECOND with the second Sum (tap the word and pick the result from the list).`,
-    'Name it BiteLog and add it to your Home Screen. Tap it whenever you open BiteLog and the day\'s numbers come with you.',
+    'Add the action "Find Health Samples". Set the type to Active Energy and add the filter "Start Date is today".',
+    'Add the action "Calculate Statistics" and set it to Sum.',
+    'Add the action "Open URLs". Paste the address below into it, then tap "Statistics" in the row of suggestions above the keyboard so it lands on the end.',
+    'Name the shortcut BiteLog and add it to your Home Screen. Tap it whenever you open BiteLog.',
   ];
 
   return (
@@ -65,13 +81,18 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
           {SHORTCUT_LINK ? (
             <Body>Open this on your iPhone and tap "Add Shortcut": {SHORTCUT_LINK}</Body>
           ) : (
-            steps.map((step, index) => (
-              <View key={index} style={{ flexDirection: 'row', gap: 10 }}>
-                <Muted style={{ width: 16, color: colors.text }}>{index + 1}</Muted>
-                <Muted style={{ flex: 1, lineHeight: 19 }}>{step}</Muted>
-              </View>
-            ))
+            <>
+              {steps.map((step, index) => (
+                <View key={index} style={{ flexDirection: 'row', gap: 10 }}>
+                  <Muted style={{ width: 16, color: colors.text }}>{index + 1}</Muted>
+                  <Muted style={{ flex: 1, lineHeight: 19 }}>{step}</Muted>
+                </View>
+              ))}
+              <TextInput value={address} editable={false} selectTextOnFocus accessibilityLabel="Address for the Shortcut" style={[box, { flex: 0, fontSize: 14 }]} />
+              <PrimaryButton title={copied ? 'Copied' : 'Copy the address'} onPress={copyAddress} />
+            </>
           )}
+          <Muted style={{ fontSize: 12 }}>The Shortcut sends your active calories. BiteLog works out the resting part from your profile, so fill in About you first.</Muted>
           <Muted style={{ fontSize: 12 }}>Your numbers travel after the # in the address, which browsers never send to any server. They are stored only in this browser.</Muted>
         </View>
       )}
