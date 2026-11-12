@@ -24,13 +24,16 @@ import ProfileScreen from '../screens/ProfileScreen';
 import TodayScreen from '../screens/TodayScreen';
 import TutorialScreen from '../screens/TutorialScreen';
 import WeightScreen from '../screens/WeightScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
 import { TabBar, TabName } from '../ui/kit';
 import { colors } from '../ui/theme';
 import { AppNav, RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const ONBOARDING_SEEN = 'jarvi.onboardingSeen';
-const TUTORIAL_SEEN = 'jarvi.tutorialSeen';
+// 'welcomeSeen' rather than the earlier 'tutorialSeen', so anyone who opened the version that had
+// the tour but no landing page still sees the landing page once.
+const TUTORIAL_SEEN = 'jarvi.welcomeSeen';
 
 // The four tabs live inside one screen so the floating tab bar stays put while the content swaps.
 function TabsScreen({ navigation }: any) {
@@ -85,13 +88,14 @@ function TabsScreen({ navigation }: any) {
       // First launch only: ask the profile questions once. "Not now" is respected.
       const [profile, seen, tutorialSeen] = await Promise.all([getProfile(), AsyncStorage.getItem(ONBOARDING_SEEN), AsyncStorage.getItem(TUTORIAL_SEEN)]);
       onboardingChecked.current = true;
-      // The very first thing a new person sees is the short tour, so someone who was only sent a
-      // link knows what this is. It then hands on to the profile questions if those are still due.
+      // The very first thing a new person sees is the landing page, which offers the short tour,
+      // so someone who was only sent a link knows what this is. It then hands on to the profile
+      // questions if those are still due.
       if (!tutorialSeen) {
         const thenOnboard = !profile && !seen;
         await AsyncStorage.setItem(TUTORIAL_SEEN, '1');
         if (thenOnboard) await AsyncStorage.setItem(ONBOARDING_SEEN, '1');
-        navigation.navigate('Tutorial', { thenOnboard });
+        navigation.navigate('Welcome', { thenOnboard });
         return;
       }
       if (!profile && !seen) {
@@ -131,7 +135,7 @@ function TabsScreen({ navigation }: any) {
     openProfile: () => navigation.navigate('Profile'),
     openGoals: () => navigation.navigate('Goals'),
     openWeight: () => navigation.navigate('Weight'),
-    openTutorial: () => navigation.navigate('Tutorial'),
+    openTutorial: () => navigation.navigate('Welcome'),
   };
 
   return (
@@ -199,6 +203,7 @@ export default function RootNavigator() {
     <NavigationContainer theme={theme}>
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.page } }}>
         <Stack.Screen name="Tabs" component={TabsScreen} />
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Tutorial" component={TutorialScreen} />
         <Stack.Screen name="MealDetail" component={MealDetailScreen} />
         <Stack.Screen name="GlassesImport" component={GlassesImportWrapper} />

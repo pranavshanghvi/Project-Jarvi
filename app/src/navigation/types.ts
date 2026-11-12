@@ -11,6 +11,7 @@ export interface MealDraft {
 
 export type RootStackParamList = {
   Tabs: undefined;
+  Welcome: { thenOnboard?: boolean } | undefined;
   Tutorial: { thenOnboard?: boolean } | undefined;
   MealDetail: { entryId?: number; draft?: MealDraft };
   GlassesImport: undefined;

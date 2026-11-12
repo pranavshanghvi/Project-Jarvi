@@ -1,13 +1,13 @@
 import { ReactNode, useRef, useState } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BalanceRing, BarsChart, Legend } from '../ui/charts';
+import { BarsChart, Legend } from '../ui/charts';
 import { Body, Glass, Glow, Icon, IconName, Muted, Num, OutlineButton, PrimaryButton, Row, Title } from '../ui/kit';
 import { LearnLabel } from '../ui/learn';
 import { colors } from '../ui/theme';
 
-// First-run tour. Shown once to a new person (RootNavigator gates it on a stored flag), can be
-// skipped at any point, and can be replayed from the bottom of the Today screen. The slides walk
+// The tour, opened from the landing page (WelcomeScreen). It can be skipped at any point and
+// replayed any time from the bottom of the Today screen. The slides walk
 // through one ordinary day, so someone who was only sent a link knows what they have been sent.
 // Every picture is drawn with the app's real building blocks and made-up example numbers.
 
@@ -65,21 +65,6 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 const SLIDES: Slide[] = [
-  {
-    eyebrow: 'Welcome',
-    title: 'Know what you eat against what you burn',
-    body: 'BiteLog keeps a running tally through the day. Here is how an ordinary day goes, in under a minute.',
-    picture: (
-      <View style={{ alignItems: 'center' }}>
-        <BalanceRing eaten={1520} burned={2140}>
-          <Num style={{ fontSize: 34 }}>−620</Num>
-          <Muted>calorie deficit</Muted>
-          <Muted style={{ fontSize: 12, fontWeight: '600', color: colors.burned, marginTop: 4 }}>Goal −500 met</Muted>
-        </BalanceRing>
-        <Legend items={[{ label: 'Eaten', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
-      </View>
-    ),
-  },
   {
     eyebrow: 'In the morning',
     title: 'Your burn is counted for you',
@@ -198,7 +183,7 @@ const SLIDES: Slide[] = [
   {
     eyebrow: 'Ready',
     title: 'Start with one photo',
-    body: `Your food log, weight and goal stay on this ${onPhone ? 'phone' : 'browser'}. There is no account, and nobody else can see them. A food photo is sent to an AI service to be read and is not kept by BiteLog. The numbers are estimates, not medical advice. You can replay this tour from the bottom of the Today screen.`,
+    body: `Your food log, weight and goal stay on this ${onPhone ? 'phone' : 'browser'}. There is no account, and nobody else can see them. A food photo is sent to an AI service to be read and is not kept by BiteLog. The numbers are estimates, not medical advice. You can come back to this tour from the bottom of the Today screen.`,
     picture: (
       <View style={{ alignItems: 'center', gap: 14 }}>
         <View style={{ width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CCFC2', borderWidth: 1, borderColor: 'rgba(190, 255, 245, 0.55)' }}>

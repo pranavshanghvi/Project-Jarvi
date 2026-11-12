@@ -187,7 +187,7 @@ export default function TodayScreen({ date, onDateChange, refreshKey, nav }: Pro
           )
         )}
       </Glass>
-      <OutlineButton title="How BiteLog works" onPress={nav.openTutorial} />
+      <OutlineButton title="About BiteLog and the tour" onPress={nav.openTutorial} />
     </Screen>
   );
 }
