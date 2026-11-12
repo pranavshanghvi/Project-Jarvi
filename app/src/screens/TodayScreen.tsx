@@ -124,7 +124,7 @@ export default function TodayScreen({ date, onDateChange, refreshKey, nav }: Pro
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Glass onPress={() => nav.goTab('food')} label="Food log">
-            <Muted>Eaten</Muted>
+            <Muted>Consumed</Muted>
             <Num style={{ fontSize: 26, color: colors.eaten }}>{formatCalories(eaten)}</Num>
             <Muted style={{ fontSize: 12 }}>{logged ? `${day!.entries.length} ${day!.entries.length === 1 ? 'meal' : 'meals'}` : 'Nothing logged yet'}</Muted>
           </Glass>

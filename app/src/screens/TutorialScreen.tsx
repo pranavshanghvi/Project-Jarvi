@@ -113,7 +113,7 @@ const SLIDES: Slide[] = [
   {
     eyebrow: 'Through the day',
     title: 'Everything you ate, with the time',
-    body: 'The Food tab keeps every meal in order with the time you ate it. The Today screen sets eaten against burned, and shows when in the day each meal and workout happened.',
+    body: 'The Food tab keeps every meal in order with the time you ate it. The Today screen sets consumed against burned, and shows when in the day each meal and workout happened.',
     picture: (
       <Glass padding={0} style={{ paddingHorizontal: 14 }}>
         <Row first title="Oatmeal, berries" detail="8:05 AM · Breakfast" value="420" valueColor={colors.eaten} chevron />
@@ -165,18 +165,18 @@ const SLIDES: Slide[] = [
   {
     eyebrow: 'Over time',
     title: 'Look back over weeks, months and years',
-    body: 'History shows eaten against burned for any period, and which days you logged. Switch any chart between bars, line, pie and flow to see it the way you like.',
+    body: 'History shows consumed against burned for any period, and which days you logged. Switch any chart between bars, line, pie and flow to see it the way you like.',
     picture: (
       <Glass>
         <BarsChart
           width={260}
           labels={['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed']}
           series={[
-            { label: 'Eaten', color: colors.eaten, values: [1900, 2050, 2300, 1800, 1750, 1880, 1520] },
+            { label: 'Consumed', color: colors.eaten, values: [1900, 2050, 2300, 1800, 1750, 1880, 1520] },
             { label: 'Burned', color: colors.burned, values: [2200, 2350, 2100, 2500, 2250, 2150, 2140] },
           ]}
         />
-        <Legend items={[{ label: 'Eaten', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
+        <Legend items={[{ label: 'Consumed', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
       </Glass>
     ),
   },

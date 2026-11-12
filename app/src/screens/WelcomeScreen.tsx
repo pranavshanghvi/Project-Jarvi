@@ -54,7 +54,7 @@ export default function WelcomeScreen({ route, navigation }: any) {
             <Muted>calorie deficit</Muted>
             <Muted style={{ fontSize: 12, fontWeight: '600', color: colors.burned, marginTop: 4 }}>Goal −500 met</Muted>
           </BalanceRing>
-          <Legend items={[{ label: 'Eaten', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
+          <Legend items={[{ label: 'Consumed', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
         </View>
 
         <View style={{ gap: 8 }}>

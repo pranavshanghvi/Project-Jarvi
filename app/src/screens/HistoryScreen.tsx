@@ -129,7 +129,7 @@ export default function HistoryScreen({ refreshKey, nav }: { refreshKey: number;
                 <LineChart
                   labels={labels}
                   series={[
-                    { label: 'Eaten', color: colors.eaten, values: buckets.map((b) => (b.loggedDays > 0 ? b.eaten : null)) },
+                    { label: 'Consumed', color: colors.eaten, values: buckets.map((b) => (b.loggedDays > 0 ? b.eaten : null)) },
                     { label: 'Burned', color: colors.burned, values: buckets.map((b) => (b.burned > 0 ? b.burned : null)) },
                   ]}
                 />
@@ -137,12 +137,12 @@ export default function HistoryScreen({ refreshKey, nav }: { refreshKey: number;
                 <BarsChart
                   labels={labels}
                   series={[
-                    { label: 'Eaten', color: colors.eaten, values: buckets.map((b) => b.eaten) },
+                    { label: 'Consumed', color: colors.eaten, values: buckets.map((b) => b.eaten) },
                     { label: 'Burned', color: colors.burned, values: buckets.map((b) => b.burned) },
                   ]}
                 />
               )}
-              <Legend items={[{ label: 'Eaten', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
+              <Legend items={[{ label: 'Consumed', color: colors.eaten }, { label: 'Burned', color: colors.burned }]} />
             </>
           )
         }
@@ -151,7 +151,7 @@ export default function HistoryScreen({ refreshKey, nav }: { refreshKey: number;
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {[
           { label: 'Days logged', value: String(summary.loggedDays), color: colors.text },
-          { label: 'Avg eaten', value: formatCalories(summary.eaten), color: colors.eaten },
+          { label: 'Avg consumed', value: formatCalories(summary.eaten), color: colors.eaten },
           { label: 'Avg burned', value: formatCalories(summary.burned), color: colors.burned },
         ].map((stat) => (
           <View key={stat.label} style={{ flex: 1 }}>
@@ -173,7 +173,7 @@ export default function HistoryScreen({ refreshKey, nav }: { refreshKey: number;
           ) : style === 'pie' ? (
             <PieChart slices={macros} centerValue={formatCalories(summary.eaten)} centerLabel="cal a day" />
           ) : style === 'flow' ? (
-            <FlowChart left={macros} middle={{ label: 'Eaten', value: macros.reduce((s, m) => s + m.value, 0) }} right={[]} />
+            <FlowChart left={macros} middle={{ label: 'Consumed', value: macros.reduce((s, m) => s + m.value, 0) }} right={[]} />
           ) : (
             <>
               <BarsChart labels={macros.map((m) => m.label)} series={[{ label: 'Calories a day', color: colors.eaten, values: macros.map((m) => m.value) }]} />
@@ -201,7 +201,7 @@ export default function HistoryScreen({ refreshKey, nav }: { refreshKey: number;
             key={bucket.key}
             first={index === 0}
             title={bucket.title}
-            detail={bucket.totalDays === 1 ? (bucket.loggedDays ? `Ate ${formatCalories(bucket.eaten)} · burned ${formatCalories(bucket.burned)}` : 'No food logged') : `${bucket.loggedDays} of ${bucket.totalDays} days logged`}
+            detail={bucket.totalDays === 1 ? (bucket.loggedDays ? `Consumed ${formatCalories(bucket.eaten)} · burned ${formatCalories(bucket.burned)}` : 'No food logged') : `${bucket.loggedDays} of ${bucket.totalDays} days logged`}
             value={bucket.loggedDays ? formatSigned(bucket.net) : '—'}
             onPress={() => openBucket(bucket)}
           />
