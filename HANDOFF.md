@@ -257,3 +257,34 @@ Tests: `cd app && npx jest` (127 pass) and `cd server && npx jest` (37 pass).
 - `tutor/.gitignore` has an uncommitted change that is not ours. Leave it.
 - `stash@{0}` holds a half-finished coloured-ring dashboard change from July. The ring drawing
   file itself was never saved, so the rings need rebuilding rather than restoring.
+
+## 2026-11-12: food logging reworked, tour redesign in progress
+
+**Live on the web (mybitelog.vercel.app); iPhone build waits for the cable.**
+
+- **A photo waits for a note.** In "Log a meal" a chosen photo now sits above the message box
+  ("Photo ready. Not read yet.") and nothing is sent until the person taps send. Photo and note go
+  as ONE read. Server prompt has a rule for photo + words together and for kitchen measures
+  (2 tbsp of a 1-cup serving = 0.125 servings). Tested: milk label + "the milk in my coffee, two
+  tablespoons, plus a teaspoon of sugar" gives 32 calories, not a cup of milk.
+- **Your usuals** (`app/src/usuals/usualsStore.ts`, AsyncStorage key `jarvi.usuals`). After saving
+  a helper meal the app offers "Keep as a usual". Usuals show at the top of "Log a meal", best
+  match for the time of day first; "Log it" saves with one tap (no photo, no AI read), "Change it"
+  loads it into the meal so far. A meal logged on 2+ of the last 14 days is offered by itself.
+- **Failures now say why.** `MealHelperError` reasons: photo / network / busy / slow / server, each
+  with its own message; a dropped connection gets one silent retry. The server writes
+  `[meal-chat] failed {...}` to its log (never the photo or words).
+- **Open bug, not reproduced:** at about 1:17 PM two plate photos failed on Pranav's phone with
+  the old vague message. The server log shows NO request from that time (only my tests), so it
+  failed before reaching the server. Same plate reads fine from here in about 25 s. If it happens
+  again the new message tells which stage failed.
+- Known rough edges: a non-food picture can still be "read" as food (the model invented a chicken
+  sandwich from a picture of text); replies take 6 to 35 s; `0.13 × 1 cup` reads awkwardly.
+- "Eaten" is now "Consumed" everywhere it labels the calories-in figure. Photo limit is 6.
+
+**Tour redesign (design only, app tour unchanged):** six animated scenes on the design canvas
+(screen 12) and screen 13 for the logging flow. Generator scripts were in the session scratchpad
+(`tour-build/gen.py`, `gen_note.py`). Pranav asked for REAL PHOTOS instead of drawings, wants the
+logo wherever the name appears, no "20 seconds", and "Consumed". Candidate free photos were found
+on Pexels/Unsplash (links only, nothing downloaded; he asked to see links first). Next: he picks
+photos, then the tour is rebuilt in `app/src/screens/TutorialScreen.tsx`.

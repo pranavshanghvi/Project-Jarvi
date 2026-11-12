@@ -44,6 +44,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
     res.status(200).json(result);
   } catch (error: any) {
+    // Written to the server log so a failure can be traced afterwards: which kind it was, and
+    // how much was sent. Never the photo or the words themselves.
+    console.error('[meal-chat] failed', JSON.stringify({ reason: String(error?.message ?? error).slice(0, 300), allDeclined: !!error?.allDeclined, declined: error?.declined ?? null, images: images.length, imageBytes: images.reduce((sum, image) => sum + image.imageBase64.length, 0), items: items.length, messageLength: message.length }));
     if (error?.allDeclined) {
       res.status(503).json({ error: 'The meal helper is unavailable right now.', declined: error.declined });
       return;

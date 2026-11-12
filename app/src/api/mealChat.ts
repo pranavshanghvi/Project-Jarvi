@@ -44,16 +44,56 @@ function cleanItem(raw: any): ChatItem {
   };
 }
 
+// Why a turn failed, so the screen can say something useful instead of a shrug. (On 2026-11-12 two
+// photo reads failed on a real phone and the single vague message gave no clue that the request
+// had never left the phone.)
+export type FailureReason = 'photo' | 'network' | 'busy' | 'slow' | 'server';
+
+export class MealHelperError extends Error {
+  constructor(public reason: FailureReason, public detail: string) {
+    super(`Meal helper failed (${reason}): ${detail}`);
+  }
+}
+
+export function failureReason(error: unknown): FailureReason {
+  if (error instanceof MealHelperError) return error.reason;
+  return /took too long/i.test(String((error as any)?.message ?? '')) ? 'slow' : 'server';
+}
+
+export const FAILURE_TEXT: Record<FailureReason, string> = {
+  photo: 'I could not open that photo. Take or choose it again.',
+  network: 'I could not reach the server. Check your connection, then tap Try again.',
+  busy: 'The free AI reader is busy right now. Give it a minute, then tap Try again.',
+  slow: 'That took too long, so I stopped waiting. Tap Try again.',
+  server: 'Something went wrong while reading that. Tap Try again, or enter it by hand.',
+};
+
 export async function sendMealTurn(input: { items: ChatItem[]; message?: string; photoUri?: string }): Promise<MealTurnResult> {
-  const images = input.photoUri ? [{ imageBase64: await prepareForUpload(input.photoUri), mimeType: 'image/jpeg' }] : [];
-  const response = await fetch(`${API_BASE_URL}/api/meal-chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(PROXY_SECRET ? { 'x-proxy-secret': PROXY_SECRET } : {}) },
-    body: JSON.stringify({ items: input.items, message: input.message ?? '', images }),
-  });
+  let images: { imageBase64: string; mimeType: string }[] = [];
+  if (input.photoUri) {
+    try {
+      images = [{ imageBase64: await prepareForUpload(input.photoUri), mimeType: 'image/jpeg' }];
+    } catch (error: any) {
+      throw new MealHelperError('photo', String(error?.message ?? error));
+    }
+  }
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/meal-chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(PROXY_SECRET ? { 'x-proxy-secret': PROXY_SECRET } : {}) },
+      body: JSON.stringify({ items: input.items, message: input.message ?? '', images }),
+    });
+  } catch (error: any) {
+    // fetch only throws when no answer came back at all: offline, or the connection dropped.
+    throw new MealHelperError('network', String(error?.message ?? error));
+  }
   // 503 means every free AI provider is out for now. The caller says so; nothing here ever
-  // falls back to a paid model.
-  if (!response.ok) throw new Error(`Meal helper request failed with status ${response.status}`);
+  // falls back to a paid model. 413 means the photo was too large to send.
+  if (!response.ok) {
+    const reason: FailureReason = response.status === 503 ? 'busy' : response.status === 413 ? 'photo' : response.status === 504 ? 'slow' : 'server';
+    throw new MealHelperError(reason, `status ${response.status}`);
+  }
   const body = await response.json();
   return {
     reply: typeof body?.reply === 'string' && body.reply.trim() ? body.reply.trim() : 'Updated.',

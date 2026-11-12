@@ -240,6 +240,7 @@ const ICON_PATHS = {
   mic: 'M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
   send: 'M12 19V5M6 11l6-6 6 6',
   stop: 'M8 8h8v8H8z',
+  usual: 'M7 4h10v16l-5-4-5 4z',
 } as const;
 export type IconName = keyof typeof ICON_PATHS | 'today';
 
