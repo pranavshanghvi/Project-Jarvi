@@ -92,10 +92,13 @@ and `bitelog.vercel.app` is someone else's live app also called BiteLog: the nam
 Health: verified in a browser with a real food photo, a typed-in meal, weight, goal and the
 "?" explanations. Each person's data stays in their own browser.
 
-- Calories burned on the web: an Apple Shortcut on the person's iPhone reads Health and opens
-  `https://mybitelog.vercel.app/#active=NUMBER&resting=NUMBER`. The app saves the figures and
-  strips them from the address. The receiving side is tested; the Shortcut itself is NOT built
-  or tested (it can only be made on an iPhone). Steps are shown in the app on the Burned tab.
+- Calories burned on the web: an Apple Shortcut on the person's iPhone reads today's Active
+  Energy from Health and opens `https://mybitelog.vercel.app/#active=NUMBER`. One number only
+  (simplified 2026-11-11 after he found the two-number version too fiddly): the resting part is
+  estimated from the person's profile. The app saves the figure and strips it from the address,
+  and also picks it up when the page is already open. The five steps are on the Burned tab of the
+  web version, with the address and a **Copy the address** button inside step 4. The receiving
+  side is tested; the Shortcut itself is NOT built or tested (it can only be made on an iPhone).
   When Pranav has built it and has an iCloud share link, put the link in `SHORTCUT_LINK` in
   `app/src/screens/WebBurnCard.tsx` and everyone else gets a one-tap install.
 - There is also a type-it-in card for the burn on the Burned tab.
@@ -103,10 +106,11 @@ Health: verified in a browser with a real food photo, a typed-in meal, weight, g
   time the Shortcut ran, and a browser stores only a few megabytes (photos are kept as tiny
   thumbnails; the oldest are dropped first if space runs out). Clearing browser data erases it.
 - A person's web data is tied to the site's address. Settle the final address BEFORE sharing.
-- To republish the web version: `npx expo export -p web --output-dir <new folder>` from `app/`,
-  copy only `_expo assets index.html favicon.ico metadata.json` to a clean folder, and
-  `vercel deploy --prod --yes` there with `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` set for the
-  `jarvi-web` project. Do not `vercel link` inside the build folder: it downloads a settings file.
+- To republish the web version: from `app/`, `npx expo export -p web --output-dir <new folder>`,
+  then `python3 scripts/prepare-web.py <that folder> <another new folder>` (makes a clean copy
+  and adds the share picture, icons and page description), then `vercel deploy --prod --yes` in
+  the second folder with `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` set for the `jarvi-web` project.
+  Do not `vercel link` inside the build folder: it downloads a settings file.
 - The server only accepts browser calls from that address (`server/lib/cors.ts`). A new address
   must be added there or in the `ALLOWED_ORIGINS` setting.
 - Everyone shares one free AI allowance (roughly 200 photos a day in total).
@@ -119,6 +123,15 @@ Snaptly's tutorial (skippable, swipeable). Then the profile questions. Both are 
 from "About BiteLog and the tour" at the bottom of Today. Shown once, gated on the stored flag
 `jarvi.welcomeSeen`. The wording differs on purpose between iPhone (burn arrives by itself) and
 web (Shortcut or typed in), so people sent the link are not promised something the web cannot do.
+
+**Logo and thumbnail (2026-11-11).** Three concepts are in `app/assets/brand/` (`concepts.png`
+shows them side by side). Concept A, "Bitten Rings" (the app's teal and orange rings with a bite
+taken out), is installed everywhere: iPhone app icon (`app/assets/icon.png`), browser tab icon,
+Home Screen icon for the web version, the top of the landing page, and the picture that appears
+when the link is shared in Messages or WhatsApp (`og-image.png`, 1200x630). To switch to B or C:
+copy `brand/icon-b.png` over `assets/icon.png`, remake the small sizes from it, run
+`npx expo prebuild --platform ios`, rebuild the phone and republish the web. He has not yet said
+which he prefers. Messaging apps remember a link's picture for a while, so an old preview can linger.
 
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
