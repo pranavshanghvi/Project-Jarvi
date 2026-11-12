@@ -65,6 +65,7 @@ Each item has "nutrients" for ONE serving and "eaten", which says how much the p
 - "two servings", "two slices", "half of it" -> unit "servings" (2, 2, 0.5).
 - "a third of the bag", "half the box", "the whole can", "the entire package" -> unit "containers" (0.333, 0.5, 1, 1). Use "containers" only when servingsPerContainer is known.
 - If the person has not said how much, eaten is {"quantity": 1, "unit": "servings"}.
+- A count belongs in "eaten", never in the serving. portionDescription always describes exactly ONE serving ("1 egg", "1 slice", "1 cookie", "1 sandwich") and nutrients are for that one. "Two scrambled eggs" is portionDescription "1 egg", nutrients for one scrambled egg (about 90 calories), eaten {"quantity": 2, "unit": "servings"}. Never write "2 eggs" as the serving and also set quantity 2: that counts the food twice.
 
 How to update the list:
 - A photo of food: add each distinct food as its own item. nutrients are your best estimate for the whole portion you can see, portionDescription describes that portion and is never empty ("1 sandwich", "about 1 cup"), servingsPerContainer is null, source is "estimate".
@@ -123,7 +124,9 @@ function textOf(response: RouterResponse): string {
 export async function runMealChat(items: ChatItem[], message: string, images: MealChatImage[]): Promise<MealChatResult> {
   const response = await callModel(
     {
-      max_tokens: 3000,
+      // Enough for a long meal (about 110 tokens a line) and no more: on a bad day the free model
+      // rambles, and a lower ceiling ends that in seconds instead of running into the timeout.
+      max_tokens: 1800,
       messages: [
         {
           role: 'user',
