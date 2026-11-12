@@ -17,7 +17,7 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
   const [activeText, setActiveText] = useState('');
   const [restingText, setRestingText] = useState('');
   const [showSteps, setShowSteps] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const site = typeof window !== 'undefined' && window.location ? window.location.origin : 'this page';
 
   useEffect(() => {
@@ -39,16 +39,31 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
   // added on the end: nothing has to be placed in the middle of it.
   const address = `${site}/#active=`;
 
+  // Tries the modern way, then the older one that still works where the first is refused. If
+  // neither is allowed, say so, rather than leaving a button that appears to do nothing.
   async function copyAddress() {
+    let done = false;
     try {
       await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      done = true;
     } catch {
-      // Some browsers refuse without asking. The address is also shown in a box that selects
-      // itself when tapped, so it can still be copied by hand.
-      setCopied(false);
+      try {
+        const scratch = document.createElement('textarea');
+        scratch.value = address;
+        scratch.setAttribute('readonly', '');
+        scratch.style.position = 'fixed';
+        scratch.style.opacity = '0';
+        document.body.appendChild(scratch);
+        scratch.select();
+        scratch.setSelectionRange(0, address.length);
+        done = document.execCommand('copy');
+        document.body.removeChild(scratch);
+      } catch {
+        done = false;
+      }
     }
+    setCopyState(done ? 'copied' : 'failed');
+    setTimeout(() => setCopyState('idle'), 4000);
   }
 
   const steps = [
@@ -89,7 +104,8 @@ export default function WebBurnCard({ active, resting, onSaved }: { active: numb
                 </View>
               ))}
               <TextInput value={address} editable={false} selectTextOnFocus accessibilityLabel="Address for the Shortcut" style={[box, { flex: 0, fontSize: 14 }]} />
-              <PrimaryButton title={copied ? 'Copied' : 'Copy the address'} onPress={copyAddress} />
+              <PrimaryButton title={copyState === 'copied' ? 'Copied' : 'Copy the address'} onPress={copyAddress} />
+              {copyState === 'failed' && <Muted style={{ color: colors.text }}>This browser would not copy it. Press and hold the address in the box above, then choose Copy.</Muted>}
             </>
           )}
           <Muted style={{ fontSize: 12 }}>The Shortcut sends your active calories. BiteLog works out the resting part from your profile, so fill in About you first.</Muted>
