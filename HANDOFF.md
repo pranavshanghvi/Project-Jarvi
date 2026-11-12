@@ -112,6 +112,14 @@ Health: verified in a browser with a real food photo, a typed-in meal, weight, g
 - Everyone shares one free AI allowance (roughly 200 photos a day in total).
 - TestFlight remains the route if automatic Watch data for other people ever matters.
 
+**Landing page and tour (2026-11-11).** A first-time visitor (web or phone) lands on
+`WelcomeScreen` (what BiteLog is, three points, "See how it works", "Start using BiteLog"), which
+opens `TutorialScreen`: eight slides following the day Pranav described, in the same pattern as
+Snaptly's tutorial (skippable, swipeable). Then the profile questions. Both are reachable later
+from "About BiteLog and the tour" at the bottom of Today. Shown once, gated on the stored flag
+`jarvi.welcomeSeen`. The wording differs on purpose between iPhone (burn arrives by itself) and
+web (Shortcut or typed in), so people sent the link are not promised something the web cannot do.
+
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
 - `app/src/screens/`: one file per screen. `AddMealSheet` is the + sheet.
@@ -193,7 +201,7 @@ Known traps, already handled:
 - Expo packages must all be on matching versions (`npx expo install --fix`), or the app crashes
   at launch.
 
-Tests: `cd app && npx jest` (125 pass) and `cd server && npx jest` (37 pass).
+Tests: `cd app && npx jest` (127 pass) and `cd server && npx jest` (37 pass).
 
 ## Git state
 
