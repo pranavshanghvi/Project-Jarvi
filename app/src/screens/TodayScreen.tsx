@@ -6,7 +6,7 @@ import { dailyNetTarget, dayOnTarget, Goal, goalProgress } from '../goals/goals'
 import { getGoal } from '../goals/goalStore';
 import { getWeightUnit } from '../settings/settingsStore';
 import { BalanceRing } from '../ui/charts';
-import { Body, Glass, Header, IconButton, Muted, Num, Row, Screen } from '../ui/kit';
+import { Body, Glass, Header, IconButton, Muted, Num, OutlineButton, Row, Screen } from '../ui/kit';
 import { colors, formatCalories, formatLongDate, formatSigned, formatTime, ringNumberSize, useChartWidth } from '../ui/theme';
 import { formatWeight, WeightUnit } from '../units';
 import { latestWeight, WeightEntry } from '../weight/weightStore';
@@ -187,6 +187,7 @@ export default function TodayScreen({ date, onDateChange, refreshKey, nav }: Pro
           )
         )}
       </Glass>
+      <OutlineButton title="How BiteLog works" onPress={nav.openTutorial} />
     </Screen>
   );
 }

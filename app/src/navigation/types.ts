@@ -11,6 +11,7 @@ export interface MealDraft {
 
 export type RootStackParamList = {
   Tabs: undefined;
+  Tutorial: { thenOnboard?: boolean } | undefined;
   MealDetail: { entryId?: number; draft?: MealDraft };
   GlassesImport: undefined;
   Profile: { onboarding?: boolean } | undefined;
@@ -27,4 +28,5 @@ export interface AppNav {
   openProfile: () => void;
   openGoals: () => void;
   openWeight: () => void;
+  openTutorial: () => void;
 }

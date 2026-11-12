@@ -9,7 +9,7 @@ import { colors, numberFont } from './theme';
 
 // The soft teal and orange glow behind every screen. Glass needs colour behind it to blur,
 // otherwise a see-through card on a black page is just a black card.
-function Glow() {
+export function Glow() {
   const { width, height } = useWindowDimensions();
   const w = Math.max(320, width);
   const h = Math.max(600, height);

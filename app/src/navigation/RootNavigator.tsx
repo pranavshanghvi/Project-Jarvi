@@ -22,6 +22,7 @@ import HistoryScreen from '../screens/HistoryScreen';
 import MealDetailScreen from '../screens/MealDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TodayScreen from '../screens/TodayScreen';
+import TutorialScreen from '../screens/TutorialScreen';
 import WeightScreen from '../screens/WeightScreen';
 import { TabBar, TabName } from '../ui/kit';
 import { colors } from '../ui/theme';
@@ -29,6 +30,7 @@ import { AppNav, RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const ONBOARDING_SEEN = 'jarvi.onboardingSeen';
+const TUTORIAL_SEEN = 'jarvi.tutorialSeen';
 
 // The four tabs live inside one screen so the floating tab bar stays put while the content swaps.
 function TabsScreen({ navigation }: any) {
@@ -81,8 +83,17 @@ function TabsScreen({ navigation }: any) {
   useEffect(() => {
     (async () => {
       // First launch only: ask the profile questions once. "Not now" is respected.
-      const [profile, seen] = await Promise.all([getProfile(), AsyncStorage.getItem(ONBOARDING_SEEN)]);
+      const [profile, seen, tutorialSeen] = await Promise.all([getProfile(), AsyncStorage.getItem(ONBOARDING_SEEN), AsyncStorage.getItem(TUTORIAL_SEEN)]);
       onboardingChecked.current = true;
+      // The very first thing a new person sees is the short tour, so someone who was only sent a
+      // link knows what this is. It then hands on to the profile questions if those are still due.
+      if (!tutorialSeen) {
+        const thenOnboard = !profile && !seen;
+        await AsyncStorage.setItem(TUTORIAL_SEEN, '1');
+        if (thenOnboard) await AsyncStorage.setItem(ONBOARDING_SEEN, '1');
+        navigation.navigate('Tutorial', { thenOnboard });
+        return;
+      }
       if (!profile && !seen) {
         await AsyncStorage.setItem(ONBOARDING_SEEN, '1');
         // Apple's Health sheet is held back until these questions are answered or skipped: two
@@ -120,6 +131,7 @@ function TabsScreen({ navigation }: any) {
     openProfile: () => navigation.navigate('Profile'),
     openGoals: () => navigation.navigate('Goals'),
     openWeight: () => navigation.navigate('Weight'),
+    openTutorial: () => navigation.navigate('Tutorial'),
   };
 
   return (
@@ -187,6 +199,7 @@ export default function RootNavigator() {
     <NavigationContainer theme={theme}>
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.page } }}>
         <Stack.Screen name="Tabs" component={TabsScreen} />
+        <Stack.Screen name="Tutorial" component={TutorialScreen} />
         <Stack.Screen name="MealDetail" component={MealDetailScreen} />
         <Stack.Screen name="GlassesImport" component={GlassesImportWrapper} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
