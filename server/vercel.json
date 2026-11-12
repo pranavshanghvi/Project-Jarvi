@@ -8,6 +8,10 @@
     "api/read-scale.ts": {
       "memory": 512,
       "maxDuration": 60
+    },
+    "api/meal-chat.ts": {
+      "memory": 512,
+      "maxDuration": 60
     }
   }
 }

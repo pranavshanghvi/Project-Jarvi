@@ -20,7 +20,7 @@ function cleanAddedSugar(nutrients: any): number {
   return Math.min(added, Math.max(0, nutrients.sugarG));
 }
 
-function extractJson(raw: string): string {
+export function extractJson(raw: string): string {
   const trimmed = raw.trim();
   const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
   if (fenceMatch) return fenceMatch[1];
@@ -30,6 +30,21 @@ function extractJson(raw: string): string {
     return trimmed.slice(firstBrace, lastBrace + 1);
   }
   return trimmed;
+}
+
+// One food line, checked: every number the app adds up must be there, or the whole answer is
+// refused rather than quietly logging a meal with holes in it.
+export function parseItem(item: any): DetectedFoodItem {
+  const missing = REQUIRED_NUTRIENT_KEYS.filter((key) => typeof item?.nutrients?.[key] !== 'number');
+  if (missing.length > 0) {
+    throw new Error(`Claude item "${item?.name ?? 'unknown'}" is missing nutrient fields: ${missing.join(', ')}`);
+  }
+  return {
+    name: item.name,
+    confidence: item.confidence === 'low' ? 'low' : 'normal',
+    portionDescription: item.portionDescription ?? '',
+    nutrients: { ...item.nutrients, addedSugarG: cleanAddedSugar(item.nutrients) },
+  };
 }
 
 export function parseClaudeResponse(raw: string): AnalyzePhotoResponse {
@@ -44,18 +59,7 @@ export function parseClaudeResponse(raw: string): AnalyzePhotoResponse {
     throw new Error('Claude response missing "items" array');
   }
 
-  const items: DetectedFoodItem[] = parsed.items.map((item: any) => {
-    const missing = REQUIRED_NUTRIENT_KEYS.filter((key) => typeof item?.nutrients?.[key] !== 'number');
-    if (missing.length > 0) {
-      throw new Error(`Claude item "${item?.name ?? 'unknown'}" is missing nutrient fields: ${missing.join(', ')}`);
-    }
-    return {
-      name: item.name,
-      confidence: item.confidence === 'low' ? 'low' : 'normal',
-      portionDescription: item.portionDescription ?? '',
-      nutrients: { ...item.nutrients, addedSugarG: cleanAddedSugar(item.nutrients) },
-    };
-  });
+  const items: DetectedFoodItem[] = parsed.items.map(parseItem);
 
   return { items };
 }
