@@ -133,6 +133,14 @@ copy `brand/icon-b.png` over `assets/icon.png`, remake the small sizes from it, 
 `npx expo prebuild --platform ios`, rebuild the phone and republish the web. He has not yet said
 which he prefers. Messaging apps remember a link's picture for a while, so an old preview can linger.
 
+**WhatsApp preview showed a blank card (2026-11-11, open).** On his computer, WhatsApp showed
+only the address for the BiteLog link. A control test settled it: `https://www.apple.com` also
+came up blank in the same chat, so his WhatsApp is not making previews for ANY link; the site is
+fine (it serves the picture and title to WhatsApp's reader, checked). Likely WhatsApp's own
+"Disable link previews" privacy setting, or the computer version; not yet confirmed by him. Do not
+change the site again for this. Next time a preview fails, run the known-good-link test first.
+`/hello/` on the site was a one-off test page and disappears at the next publish.
+
 How the code is laid out, for whoever picks this up:
 - `app/src/ui/`: the look (colours, glass card, buttons, tab bar) and all charts.
 - `app/src/screens/`: one file per screen. `AddMealSheet` is the + sheet.
