@@ -50,15 +50,22 @@ function TabsScreen({ navigation }: any) {
   // bookmarking the page does not carry old numbers around.
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    const days = parseBurnLink(window.location.hash, new Date());
-    if (Object.keys(days).length === 0) return;
-    saveImportedBurn(days).then(() => {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      const today = days[toDateKey(new Date())];
-      setNotice(today ? `Updated from your iPhone: ${formatCalories(today.active + today.resting)} burned so far today` : 'Updated from your iPhone');
-      setRefreshKey((k) => k + 1);
-      setTimeout(() => setNotice(''), 5000);
-    });
+    function takeBurnFromAddress() {
+      const days = parseBurnLink(window.location.hash, new Date());
+      if (Object.keys(days).length === 0) return;
+      saveImportedBurn(days).then(() => {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        const today = days[toDateKey(new Date())];
+        setNotice(today ? `Updated from your iPhone: ${formatCalories(today.active)} active calories so far today` : 'Updated from your iPhone');
+        setRefreshKey((k) => k + 1);
+        setTimeout(() => setNotice(''), 5000);
+      });
+    }
+    takeBurnFromAddress();
+    // If BiteLog is already open in this tab, the Shortcut only changes the end of the address
+    // and the page does not reload, so listen for that change as well.
+    window.addEventListener('hashchange', takeBurnFromAddress);
+    return () => window.removeEventListener('hashchange', takeBurnFromAddress);
   }, []);
 
   // iOS shows its Health sheet the first time (and again when new kinds of data are added);
