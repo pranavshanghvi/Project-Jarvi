@@ -133,7 +133,7 @@ copy `brand/icon-b.png` over `assets/icon.png`, remake the small sizes from it, 
 `npx expo prebuild --platform ios`, rebuild the phone and republish the web. He has not yet said
 which he prefers. Messaging apps remember a link's picture for a while, so an old preview can linger.
 
-**WhatsApp preview showed a blank card (2026-11-11, open).** On his computer, WhatsApp showed
+**WhatsApp preview showed a blank card (2026-11-11, resolved: he reported "it works now" the same evening; which change fixed it is unknown).** On his computer, WhatsApp showed
 only the address for the BiteLog link. A control test settled it: `https://www.apple.com` also
 came up blank in the same chat, so his WhatsApp is not making previews for ANY link; the site is
 fine (it serves the picture and title to WhatsApp's reader, checked). Likely WhatsApp's own
