@@ -46,6 +46,16 @@ export function formatSigned(value: number): string {
   return `${rounded < 0 ? '−' : '+'}${Math.abs(rounded).toLocaleString('en-US')}`;
 }
 
+// Text size for the figure in the middle of the Today ring. The ring's inside is about 120
+// points wide, so a longer figure ("−1,566") needs smaller type than a short one ("+130") or it
+// wraps onto a second line, which is what happened on a real phone on 2026-11-11.
+export function ringNumberSize(text: string): number {
+  if (text.length <= 4) return 36;
+  if (text.length <= 5) return 32;
+  if (text.length <= 6) return 27;
+  return 22;
+}
+
 export function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }

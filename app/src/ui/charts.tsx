@@ -271,7 +271,7 @@ export function BalanceRing({ eaten, burned, children }: { eaten: number; burned
         {burned > 0 && <Circle cx={102} cy={102} r={88} fill="none" stroke={colors.burned} strokeWidth={14} strokeLinecap="round" strokeDasharray={arc(88, burned)} transform="rotate(-90 102 102)" />}
         {eaten > 0 && <Circle cx={102} cy={102} r={68} fill="none" stroke={colors.eaten} strokeWidth={14} strokeLinecap="round" strokeDasharray={arc(68, eaten)} transform="rotate(-90 102 102)" />}
       </Svg>
-      <View style={{ alignItems: 'center', width: 116 }}>{children}</View>
+      <View style={{ alignItems: 'center', width: 118 }}>{children}</View>
     </View>
   );
 }

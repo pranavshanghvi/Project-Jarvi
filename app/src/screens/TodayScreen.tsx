@@ -7,7 +7,7 @@ import { getGoal } from '../goals/goalStore';
 import { getWeightUnit } from '../settings/settingsStore';
 import { BalanceRing } from '../ui/charts';
 import { Body, Glass, Header, IconButton, Muted, Num, Row, Screen } from '../ui/kit';
-import { colors, formatCalories, formatLongDate, formatSigned, formatTime, useChartWidth } from '../ui/theme';
+import { colors, formatCalories, formatLongDate, formatSigned, formatTime, ringNumberSize, useChartWidth } from '../ui/theme';
 import { formatWeight, WeightUnit } from '../units';
 import { latestWeight, WeightEntry } from '../weight/weightStore';
 import { AppNav } from '../navigation/types';
@@ -102,12 +102,12 @@ export default function TodayScreen({ date, onDateChange, refreshKey, nav }: Pro
         <BalanceRing eaten={eaten} burned={burned}>
           {logged ? (
             <>
-              <Num style={{ fontSize: 36 }}>{formatSigned(net)}</Num>
+              <Num fit style={{ fontSize: ringNumberSize(formatSigned(net)) }}>{formatSigned(net)}</Num>
               <Muted>{net <= 0 ? 'calorie deficit' : 'calorie surplus'}</Muted>
             </>
           ) : (
             <>
-              <Num style={{ fontSize: 30 }}>{formatCalories(burned)}</Num>
+              <Num fit style={{ fontSize: Math.min(30, ringNumberSize(formatCalories(burned))) }}>{formatCalories(burned)}</Num>
               <Muted style={{ textAlign: 'center' }}>burned so far</Muted>
             </>
           )}

@@ -112,7 +112,12 @@ export const Muted = ({ children, style, numberOfLines }: TextProps) => (
 );
 export const Heading = ({ children, style }: TextProps) => <Text style={[styles.heading, style]}>{children}</Text>;
 // Numbers use the rounded face so 1,620 reads as a figure, not as text.
-export const Num = ({ children, style }: TextProps) => <Text style={[styles.num, style]}>{children}</Text>;
+// `fit` keeps a figure on one line and lets iOS shrink it rather than wrap it.
+export const Num = ({ children, style, fit }: TextProps & { fit?: boolean }) => (
+  <Text style={[styles.num, style]} numberOfLines={fit ? 1 : undefined} adjustsFontSizeToFit={fit} minimumFontScale={fit ? 0.6 : undefined}>
+    {children}
+  </Text>
+);
 
 export function Header({ eyebrow, title, right, onBack }: { eyebrow?: string; title: string; right?: ReactNode; onBack?: () => void }) {
   return (
