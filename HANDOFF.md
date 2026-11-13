@@ -288,3 +288,43 @@ Tests: `cd app && npx jest` (127 pass) and `cd server && npx jest` (37 pass).
 logo wherever the name appears, no "20 seconds", and "Consumed". Candidate free photos were found
 on Pexels/Unsplash (links only, nothing downloaded; he asked to see links first). Next: he picks
 photos, then the tour is rebuilt in `app/src/screens/TutorialScreen.tsx`.
+
+## 2026-11-12 evening: guesses are now labelled; published-number look-up is the open decision
+
+**What happened.** Pranav logged a Dunkin' donut on the iPhone. The review screen showed
+"Bavarian cream bagel, 350 calories" with nothing saying it was the AI's guess. He asked where the
+numbers came from. Answer: the free AI model's memory. Nothing is looked up anywhere.
+
+**Shipped (commit c267605, web publish 18, iPhone build 18).**
+- Every food carries where its numbers came from (`ItemSource` in `app/src/types/nutrition.ts`):
+  `label`, `estimate`, `said`, `typed`. `said` (the person named the food in words) is shown as an
+  AI estimate too, because the numbers are still the AI's. Only a label photo or hand-typed numbers
+  are shown as trustworthy.
+- The review screen shows an amber "These numbers are an AI estimate" notice and a tag per food.
+  Typing a number flips that food to "Your numbers".
+- The source is saved with the meal (new `source` column in the phone database, added in place for
+  existing installs; meals logged earlier have no tag because their source is unknown).
+
+**Measured, same donut photo (cropped from his screenshot):**
+| Input | AI answer |
+|---|---|
+| Photo only (his phone) | "Bavarian cream bagel", 350 |
+| Photo only (rerun) | "powdered sugar donut", 250 |
+| Photo + "Dunkin Bavarian Kreme donut" | 270 |
+| Dunkin's published figure (search snippet, not checked against the PDF) | 240 |
+
+So naming the shop helps but does not make the AI's number right. The logo in the photo was only a
+fragment; a prompt change to "read the wrapper" would not have helped and was not made.
+
+**Research on free published-number sources (2026-11-12).**
+- USDA FoodData Central: free, public domain, needs a free key (Pranav would sign up at
+  fdc.nal.usda.gov/api-key-signup; 1,000 calls/hour). Good for packaged groceries and generic foods.
+  Did NOT have the Dunkin' donut. Loose matches and some bad rows, so only accept brand+name matches.
+- Open Food Facts: free, no key, volunteer-entered. HAD the Dunkin' donut (267 kcal per 100 g, about
+  240 for one donut) and a Starbucks latte. Was down (503) on first try; 10 searches/minute; needs a
+  User-Agent naming the app (do NOT put Pranav's email in it without asking); licence ODbL, credit
+  "Open Food Facts contributors". Its "serving" field is often just 100 g.
+- No free source covers restaurant chains reliably. Others (FatSecret, Nutritionix, Edamam) unverified.
+
+**Open decision:** whether to add a look-up, and which source. Asked on screen 2026-11-12 evening.
+His own nutrition-facts image for the donut never arrived (only the app screenshot came through).
