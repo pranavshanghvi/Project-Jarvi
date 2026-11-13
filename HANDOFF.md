@@ -451,3 +451,12 @@ error). Two things learned there:
   launch. Not a tour problem and not fixed here; the food-logging session should look at it,
   because it suggests the "add the column" step can run twice.
 
+
+**Tour published (2026-11-13, about 12:20 PM), at Pranav's request ("publish it to the web and my iphone").**
+- Web: mybitelog.vercel.app serves bundle `index-42390ae8…` (commit 1ab136c). All six scenes walked
+  through on the live link with no errors. The "Smart glasses work too" tag is hidden on the web.
+- iPhone 16 Plus: Release build of commit 1ab136c installed (it finished installing; only the
+  automatic launch was refused because the phone was locked). He has not yet said how it looks.
+- Still says the old things, NOT changed (outside the tour file): the landing page
+  (`WelcomeScreen.tsx`) reads "Know what you eat against what you burn", "in about 20 seconds" and
+  "the calories your Apple Watch counts", which no longer match the tour's wording rules.
