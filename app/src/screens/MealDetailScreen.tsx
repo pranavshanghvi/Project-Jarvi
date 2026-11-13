@@ -5,6 +5,7 @@ import Slider from '@react-native-community/slider';
 import { MEAL_LABELS, resolvePhotoUri } from '../data/dayData';
 import { createEntry, deleteEntry, getEntry, updateEntry } from '../db/entriesRepository';
 import { markPhotoUsed } from '../glasses/glassesPhotos';
+import { rememberCorrections } from '../usuals/correctionsStore';
 import { inferMealType } from '../nutrition/mealTagging';
 import { scaleNutrients } from '../nutrition/portionScaling';
 import { completeNutrients, ConfidenceLevel, isGuess, ItemSource, MealType, NutrientProfile, NUTRIENT_KEYS } from '../types/nutrition';
@@ -172,6 +173,9 @@ export default function MealDetailScreen({ route, navigation }: any) {
           addedItems: lines.filter((l) => !l.id).map((l) => ({ item: { ...finished(l), confidence: l.confidence, portionDescription: '', source: l.source }, portionMultiplier: l.portion })),
         });
       }
+      // Numbers the person typed are kept, so the next guess for the same food uses them instead.
+      // Saving the meal matters more than this, so a failure here is ignored.
+      rememberCorrections(lines.filter((l) => l.source === 'typed').map((l) => ({ name: l.name, nutrients: finished({ ...l, portion: 1 }).nutrients, portionDescription: l.detail }))).catch(() => {});
       navigation.popTo('Tabs');
     } catch {
       setSaving(false);
@@ -236,7 +240,7 @@ export default function MealDetailScreen({ route, navigation }: any) {
       {guesses > 0 && (
         <View accessibilityRole="alert" style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255, 176, 103, 0.45)', backgroundColor: 'rgba(255, 176, 103, 0.10)', padding: 12 }}>
           <Body style={{ color: '#FFC58F', fontWeight: '600' }}>{guesses === lines.length ? 'These numbers are an AI estimate' : `${guesses} of ${lines.length} foods are an AI estimate`}</Body>
-          <Muted style={{ fontSize: 13, marginTop: 2 }}>The AI worked these out from your photo or your words. It did not look up published nutrition facts, so the name and the numbers can be wrong. Tap Edit to put in the real ones.</Muted>
+          <Muted style={{ fontSize: 13, marginTop: 2 }}>The AI worked these out from your photo or your words. It did not look up published nutrition facts, so the name and the numbers can be wrong. Tap Edit to put in the real ones, and BiteLog will use yours the next time you log this food.</Muted>
         </View>
       )}
 

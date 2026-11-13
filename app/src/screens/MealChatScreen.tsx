@@ -13,6 +13,7 @@ import { Body, Glass, Glow, Icon, IconButton, IconName, Muted, Num, OutlineButto
 import { notify } from '../ui/notify';
 import { BottomSheet, SheetOption } from '../ui/sheet';
 import { colors, formatCalories, formatTime } from '../ui/theme';
+import { applyCorrections, Correction, getCorrections } from '../usuals/correctionsStore';
 import { findRepeat, getUsuals, rankUsuals, recordUse, removeUsual, Repeat, saveUsual, signature, suggestName, Usual, usualCalories } from '../usuals/usualsStore';
 import { useDictation } from '../voice/useDictation';
 
@@ -106,6 +107,9 @@ export default function MealChatScreen({ navigation }: any) {
   const takenAt = useRef<number | undefined>(undefined);
   // Everything the person typed or said in this meal, used only to suggest a name for a usual.
   const said = useRef('');
+  // Numbers the person has typed in before, used in place of the AI's guess for the same food.
+  const corrections = useRef<Correction[]>([]);
+  const toldAbout = useRef(new Set<string>());
   // Voice results arrive from outside React's render, so they read the latest state from here.
   const latest = useRef({ items, busy, turns, pending });
   latest.current = { items, busy, turns, pending };
@@ -121,6 +125,7 @@ export default function MealChatScreen({ navigation }: any) {
   useEffect(() => {
     let alive = true;
     (async () => {
+      getCorrections().then((all) => (corrections.current = all));
       const saved = await getUsuals();
       if (!alive) return;
       setUsuals(saved);
@@ -160,9 +165,13 @@ export default function MealChatScreen({ navigation }: any) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         result = await attempt();
       }
-      setItems(result.items);
+      // Where the person has already given the real numbers for a food, theirs replace the guess.
+      const fixed = applyCorrections(result.items, corrections.current);
+      const fresh = fixed.used.filter((c) => !toldAbout.current.has(c.name));
+      fresh.forEach((c) => toldAbout.current.add(c.name));
+      setItems(fixed.items);
       setTurns((count) => count + 1);
-      add({ from: 'helper', text: result.reply });
+      add({ from: 'helper', text: fresh.length > 0 ? `${result.reply} I used the numbers you saved for ${fresh.map((c) => c.name).join(' and ')}.` : result.reply });
     } catch (error) {
       setFailed(turn);
       add({ from: 'helper', text: FAILURE_TEXT[failureReason(error)] });
