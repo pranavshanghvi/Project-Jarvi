@@ -437,11 +437,17 @@ have long-standing "cannot find name 'describe'" type errors, unrelated); all si
 through in the local web preview with no console errors, and "Get started" goes on to the profile
 questions for a new person.
 
-**NOT checked on an iPhone or the simulator.** The simulator's installed development build is older
-than the voice add-on and stops at "Cannot find native module 'ExpoSpeechRecognition'" before any
-screen appears, so it needs a rebuild (`npx expo run:ios`) before it can show anything. Things in
-the tour that only a phone can confirm: the logo sitting inside a sentence (scenes 1 and 6), the
-travelling dots in scene 1, and the scaled-down Burned card.
+**Checked on the iPhone simulator (iPhone 17 Pro), all six scenes, after rebuilding its copy of the
+app** (`LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx expo run:ios --device "iPhone 17 Pro" --no-bundler`;
+without the two language settings the build stops in `pod install` with a "Unicode Normalization"
+error). Two things learned there:
+- **That simulator has "Slow Animations" switched on** (Simulator menu, Debug). It makes anything
+  run by the phone's animation engine, including ordinary screen slides, about ten times slower.
+  The tour's movement is therefore timed by the app's own clock (`useNativeDriver: false`
+  throughout), and scene 2 runs off a single clock so its steps cannot fall out of order.
+- **A start-up error from another part of the app showed once, right after the fresh install:**
+  "SQLiteErrorException: duplicate column name: source" (an unhandled error from the step that
+  adds the `source` column to the phone database, in `app/src/db/`). It did not show on the next
+  launch. Not a tour problem and not fixed here; the food-logging session should look at it,
+  because it suggests the "add the column" step can run twice.
 
-Not done here, on purpose: publishing to mybitelog.vercel.app and installing on the iPhone. The
-main session does both.

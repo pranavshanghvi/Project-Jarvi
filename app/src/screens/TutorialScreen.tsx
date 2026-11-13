@@ -19,8 +19,11 @@ import { colors, numberFont } from '../ui/theme';
 // Photos are free Pexels photos, cropped and shrunk (see assets/tour/CREDITS.md).
 
 const onPhone = Platform.OS === 'ios';
-// Fades and pops run on the phone's own animation engine; a browser has none, so there they run in JavaScript.
-const native = Platform.OS !== 'web';
+// Every movement in the tour is timed by the app's own clock rather than handed to the phone's
+// animation engine. The engine obeys the simulator's "Slow Animations" switch, which made the
+// tour look broken there (2026-11-13); the tour is light enough that the simpler route costs
+// nothing, and it behaves the same on a phone, in the simulator and in a browser.
+const native = false;
 
 const LOGO = require('../../assets/brand/icon-192.png');
 const PHOTO_MOVE = require('../../assets/tour/move.jpg');
@@ -59,7 +62,7 @@ function useSteps(active: boolean, still: boolean, delays: number[]): Animated.V
   return values;
 }
 
-function Pop({ step, style, children }: { step: Animated.Value; style?: StyleProp<ViewStyle>; children: ReactNode }) {
+function Pop({ step, style, children }: { step: Animated.Value | Animated.AnimatedInterpolation<number>; style?: StyleProp<ViewStyle>; children: ReactNode }) {
   return (
     <Animated.View
       style={[
@@ -278,37 +281,44 @@ const FOODS = [
 ];
 
 function EatScene({ active, still }: SceneProps) {
-  const steps = useSteps(active, still, [1500, 1900, 2300, 2900, 3500]);
-  const [found, setFound] = useState(true);
-  const scan = useRef(new Animated.Value(0)).current;
-  const scanShown = useRef(new Animated.Value(0)).current;
-
-  // A teal band sweeps down the photo twice while the label says "AI is reading", then the
-  // foods appear one by one and the meal lands in the log.
+  // The whole scene runs off ONE clock, 0 → 1, so its steps can never fall out of order: a teal
+  // band sweeps down the photo twice while the label says "AI is reading", the label changes to
+  // "3 foods found", the foods appear one by one, and the meal lands in the log. At rest the
+  // clock sits at 1, with everything showing and the band gone.
+  const clock = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    scanShown.setValue(0);
     if (!active || still) {
-      setFound(true);
+      clock.setValue(1);
       return;
     }
-    setFound(false);
-    scan.setValue(0);
-    scanShown.setValue(1);
-    const sweep = Animated.loop(Animated.timing(scan, { toValue: 1, duration: 1250, easing: Easing.linear, useNativeDriver: native }), { iterations: 2 });
-    sweep.start(() => scanShown.setValue(0));
-    const timer = setTimeout(() => setFound(true), 2400);
-    return () => {
-      sweep.stop();
-      clearTimeout(timer);
-    };
-  }, [active, still, scan, scanShown]);
+    clock.setValue(0);
+    const run = Animated.timing(clock, { toValue: 1, duration: 4200, easing: Easing.linear, useNativeDriver: native });
+    run.start();
+    return () => run.stop();
+  }, [active, still, clock]);
+
+  // A piece that fades in between two points on the clock.
+  const between = (from: number, to: number) => clock.interpolate({ inputRange: [from, to], outputRange: [0, 1], extrapolate: 'clamp' });
+  const reading = clock.interpolate({ inputRange: [0.56, 0.6], outputRange: [1, 0], extrapolate: 'clamp' });
+  const found = between(0.56, 0.6);
+  const foods = FOODS.map((_, i) => between(0.6 + i * 0.09, 0.69 + i * 0.09));
+  const logged = between(0.88, 0.96);
+  const glasses = between(0.94, 1);
+  const label = { fontSize: 12, fontWeight: '600' as const, color: colors.burned };
 
   return (
     <Photo source={PHOTO_FOOD} label="Two hands holding a phone, taking a photo of a plate of food">
       <Scrim id="tourEat" top={0.34} bottom={0.5} />
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 64, opacity: scanShown, borderBottomWidth: 3, borderBottomColor: colors.burned, backgroundColor: 'rgba(47, 184, 172, 0.2)', transform: [{ translateY: scan.interpolate({ inputRange: [0, 1], outputRange: [-64, PHOTO_HEIGHT] }) }] }} />
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute', left: 0, right: 0, top: 0, height: 64, borderBottomWidth: 3, borderBottomColor: colors.burned, backgroundColor: 'rgba(47, 184, 172, 0.2)',
+          opacity: clock.interpolate({ inputRange: [0, 0.55, 0.57], outputRange: [1, 1, 0], extrapolate: 'clamp' }),
+          transform: [{ translateY: clock.interpolate({ inputRange: [0, 0.285, 0.2851, 0.57], outputRange: [-64, PHOTO_HEIGHT, -64, PHOTO_HEIGHT], extrapolate: 'clamp' }) }],
+        }}
+      />
       {FOODS.map((food, i) => (
-        <Animated.View key={food.name} pointerEvents="none" style={[fill, { opacity: steps[i] }]}>
+        <Animated.View key={food.name} pointerEvents="none" style={[fill, { opacity: foods[i] }]}>
           <Svg width={BOARD} height={PHOTO_HEIGHT}>
             <Path d={food.line} stroke="rgba(255, 255, 255, 0.75)" strokeWidth={1.5} fill="none" />
             <Circle cx={food.x} cy={food.y} r={4} fill="#FFFFFF" />
@@ -318,11 +328,14 @@ function EatScene({ active, still }: SceneProps) {
       <View style={{ position: 'absolute', left: 14, top: 16 }}>
         <Tag>
           <Glyph d={SPARKLE} size={14} color={colors.burned} filled />
-          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.burned }}>{found ? '3 foods found' : 'AI is reading…'}</Text>
+          <View>
+            <Animated.Text style={[label, { opacity: reading }]}>AI is reading…</Animated.Text>
+            <Animated.Text style={[label, { position: 'absolute', left: 0, top: 0, opacity: found }]}>3 foods found</Animated.Text>
+          </View>
         </Tag>
       </View>
       {FOODS.map((food, i) => (
-        <Pop key={food.name} step={steps[i]} style={{ position: 'absolute', right: 14, top: food.top, width: 170 }}>
+        <Pop key={food.name} step={foods[i]} style={{ position: 'absolute', right: 14, top: food.top, width: 170 }}>
           <Glass radius={17} padding={0}>
             <View style={{ height: 32, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 11, paddingRight: 13 }}>
               <Dot color={food.color} />
@@ -333,14 +346,14 @@ function EatScene({ active, still }: SceneProps) {
         </Pop>
       ))}
       {GLASSES_WORK && (
-        <Pop step={steps[4]} style={{ position: 'absolute', left: 14, bottom: 94 }}>
+        <Pop step={glasses} style={{ position: 'absolute', left: 14, bottom: 94 }}>
           <Tag>
             <Icon name="glasses" size={16} color={colors.text} />
             <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>Smart glasses work too</Text>
           </Tag>
         </Pop>
       )}
-      <Pop step={steps[3]} style={{ position: 'absolute', left: 14, right: 14, bottom: 14 }}>
+      <Pop step={logged} style={{ position: 'absolute', left: 14, right: 14, bottom: 14 }}>
         <Glass radius={22} padding={0}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14 }}>
             <Image source={LOGO} accessibilityIgnoresInvertColors style={{ width: 34, height: 34, borderRadius: 8 }} />
@@ -666,6 +679,9 @@ export default function TutorialScreen({ route, navigation }: any) {
   const [index, setIndex] = useState(0);
   const [still, setStill] = useState(false);
   const pager = useRef<ScrollView>(null);
+  // The scene a Next or Back tap is sliding towards. While the slide is under way the scenes it
+  // passes must not count as "showing", or their pictures would restart as they leave.
+  const heading = useRef<number | null>(null);
   const last = index === SCENES.length - 1;
 
   // The board is scaled to the width of the screen, but never so tall that the words and the
@@ -681,6 +697,7 @@ export default function TutorialScreen({ route, navigation }: any) {
 
   function go(to: number) {
     const next = Math.max(0, Math.min(SCENES.length - 1, to));
+    heading.current = next;
     pager.current?.scrollTo({ x: next * width, animated: true });
     setIndex(next);
   }
@@ -694,6 +711,10 @@ export default function TutorialScreen({ route, navigation }: any) {
 
   function onScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const page = Math.round(event.nativeEvent.contentOffset.x / width);
+    if (heading.current !== null) {
+      if (page === heading.current) heading.current = null;
+      return;
+    }
     if (page !== index && page >= 0 && page < SCENES.length) setIndex(page);
   }
 
@@ -712,7 +733,17 @@ export default function TutorialScreen({ route, navigation }: any) {
           </Pressable>
         </View>
 
-        <ScrollView ref={pager} horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={onScroll} scrollEventThrottle={32} style={{ flex: 1 }}>
+        <ScrollView
+          ref={pager}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={onScroll}
+          onScrollBeginDrag={() => (heading.current = null)}
+          onMomentumScrollEnd={() => (heading.current = null)}
+          scrollEventThrottle={32}
+          style={{ flex: 1 }}
+        >
           {SCENES.map((scene, i) => (
             <ScrollView key={scene.key} style={{ width }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 12, gap: 16, flexGrow: 1, justifyContent: 'center' }} showsVerticalScrollIndicator={false}>
               <View style={{ alignItems: 'center' }}>
