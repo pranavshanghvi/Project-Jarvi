@@ -419,6 +419,9 @@ Decisions he made while reviewing, all built in:
   `BurnedScreen` with example numbers, not a made-up card. If the Burned screen's top card changes,
   update `BurnedPreview` in the tour to match.
 - "Consumed", never "eaten"; no mention of how long a photo takes to read.
+- **Scene 2 carries a small "Smart glasses work too" tag** (added after the first build, at his
+  request). It shows in the iPhone app only: glasses photos come through the phone's photo library,
+  which the web version cannot open. It was checked in the browser by switching it on temporarily.
 
 How it is built: every scene is drawn on a fixed 362-point board and the whole board is scaled to
 the screen (`ScaledBoard`), so labels stay put on the photos. One example day runs through all

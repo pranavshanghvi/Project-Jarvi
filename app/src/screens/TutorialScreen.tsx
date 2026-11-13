@@ -190,6 +190,9 @@ function Glyph({ d, size = 22, color = colors.text, strokeWidth = 2, filled }: {
 
 const PHONE = 'M9.5 2h5a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3zM10.5 5h3';
 const WATCH = 'M9.5 6h5a3.5 3.5 0 0 1 3.5 3.5v5a3.5 3.5 0 0 1-3.5 3.5h-5A3.5 3.5 0 0 1 6 14.5v-5A3.5 3.5 0 0 1 9.5 6zM9 6V2h6v4M9 18v4h6v-4';
+// Photos from smart glasses reach the app through the phone's photo library, which a website
+// cannot open, so the web version of the tour does not mention them.
+const GLASSES_WORK = onPhone;
 const SPARKLE = 'M12 2l2.6 6.4L21 11l-6.4 2.6L12 20l-2.6-6.4L3 11l6.4-2.6z';
 const LABEL = 'M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM8 7h8M8 11h8M8 15h5';
 
@@ -275,7 +278,7 @@ const FOODS = [
 ];
 
 function EatScene({ active, still }: SceneProps) {
-  const steps = useSteps(active, still, [1500, 1900, 2300, 2900]);
+  const steps = useSteps(active, still, [1500, 1900, 2300, 2900, 3500]);
   const [found, setFound] = useState(true);
   const scan = useRef(new Animated.Value(0)).current;
   const scanShown = useRef(new Animated.Value(0)).current;
@@ -329,6 +332,14 @@ function EatScene({ active, still }: SceneProps) {
           </Glass>
         </Pop>
       ))}
+      {GLASSES_WORK && (
+        <Pop step={steps[4]} style={{ position: 'absolute', left: 14, bottom: 94 }}>
+          <Tag>
+            <Icon name="glasses" size={16} color={colors.text} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>Smart glasses work too</Text>
+          </Tag>
+        </Pop>
+      )}
       <Pop step={steps[3]} style={{ position: 'absolute', left: 14, right: 14, bottom: 14 }}>
         <Glass radius={22} padding={0}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14 }}>
