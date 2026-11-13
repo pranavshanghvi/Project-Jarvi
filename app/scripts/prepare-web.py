@@ -13,8 +13,8 @@ import os, shutil, sys
 SITE = 'https://mybitelog.vercel.app'
 TITLE = 'BiteLog'
 TAGLINE = 'Food in, energy out'
-DESCRIPTION = ('Know what you eat against what you burn. Photograph your meals, bring in the calories '
-               'your Apple Watch counts, and see where the day, the week or the year stands.')
+DESCRIPTION = ('Know what you consume against what you burn. Photograph your meals, bring in the calories '
+               'you burn, and see where the day, the week or the year stands.')
 # WhatsApp's own rules for link previews (developers.facebook.com, "Link Previews"): a short
 # description (about 80 characters), a picture well under 600 KB, and the tags inside <head>.
 # The picture is a JPEG of about 60 KB rather than the 260 KB PNG, and the tags go at the top of

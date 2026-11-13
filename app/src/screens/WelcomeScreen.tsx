@@ -7,6 +7,8 @@ import { colors } from '../ui/theme';
 // The landing page: the first thing a new person sees, before any questions are asked. It says
 // what BiteLog is in a sentence, offers the one-minute tour, and lets them go straight in. It is
 // shown once by itself; after that it is one tap away from the bottom of the Today screen.
+// Wording follows the tour's rules (2026-11-13): "consume" not "eat", "smartphone" not "iPhone"
+// or "Apple Watch", and no mention of how long a photo takes to read.
 
 const onPhone = Platform.OS === 'ios';
 
@@ -58,15 +60,15 @@ export default function WelcomeScreen({ route, navigation }: any) {
         </View>
 
         <View style={{ gap: 8 }}>
-          <Title style={{ fontSize: 28, lineHeight: 33, textAlign: 'center' }}>Know what you eat against what you burn</Title>
+          <Title style={{ fontSize: 28, lineHeight: 33, textAlign: 'center' }}>Know what you consume against what you burn</Title>
           <Body style={{ color: colors.muted, lineHeight: 22, textAlign: 'center' }}>
-            Photograph your meals, bring in the calories your Apple Watch counts, and see where the day, the week or the year stands.
+            Photograph your meals, bring in the calories you burn, and see where the day, the week or the year stands.
           </Body>
         </View>
 
         <View style={{ gap: 14 }}>
-          <Point icon="camera" title="Snap a meal" detail="Calories and nutrients from one photo, in about 20 seconds" />
-          <Point icon="flame" title="Your burn, counted" detail={onPhone ? 'Read from Apple Health by itself' : 'Sent from your iPhone with one tap, or typed in'} />
+          <Point icon="camera" title="Snap a meal" detail="Calories and nutrients from one photo" />
+          <Point icon="flame" title="Your burn, counted" detail={onPhone ? 'Picked up from your smartphone by itself' : 'Sent from your smartphone with one tap, or typed in'} />
           <Point icon="history" title="Goals, weight and history" detail="A target to aim for, and every day you have logged" />
         </View>
 
