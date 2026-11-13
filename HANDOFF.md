@@ -353,3 +353,35 @@ State of each source:
   Open Food Facts entry has no real serving size. It stays an AI estimate until he types the numbers.
 
 His own nutrition-facts image for the donut never arrived (only the app screenshot came through).
+
+## 2026-11-12 late evening: corrections are remembered; web search researched, not built
+
+**His real numbers arrived** (a photo of a Gemini answer citing CalorieKing): Dunkin' Bavarian Kreme
+Donut = 240 cal, 11 g fat, 4 g sat fat, 0 mg cholesterol, 310 mg sodium, 31 g carbs, 1 g fiber,
+11 g sugar (all added), 4 g protein. The app had said 350. His own search called it a "bagel", which
+is probably where the app's "Bavarian cream bagel" name came from (his note), not the photo.
+
+**Shipped: "remember my corrections"** (commit 1ac56aa, web publish 20, iPhone build 20).
+- `app/src/usuals/correctionsStore.ts`, storage key `jarvi.corrections`, on the device only.
+- Saving a meal in the review screen keeps every food whose numbers he typed (source `typed`).
+- In the meal helper, any AI guess whose name is the same food (same words after normalising
+  spelling; or one name inside the other when the shorter has 3+ words) is replaced by his numbers,
+  tagged "Your numbers", and the reply says so once. Label and database numbers are never replaced.
+- Verified in the browser preview end to end. Not tested on the phone.
+- Gaps: no screen to view or delete saved corrections (correcting again overwrites); typing one
+  number marks the whole food "Your numbers" though the untouched numbers are still the AI's; a
+  photo-only read that the AI names differently will not match (naming the food in the note fixes it).
+
+**Researched, NOT built: a free web-search step** (so shop items can be looked up the way Gemini did).
+- Tavily: free 1,000 searches/month, no card, sign-up at app.tavily.com. Best fit; needs caching per
+  food to stay inside the allowance. Terms on storing/feeding results to an AI not yet read.
+- Serper: 2,500 free searches, no card, but apparently one-time, so not free forever.
+- Brave needs a card; Google's search API is closed to new users and shuts 2027-01-01; Bing is gone;
+  DuckDuckGo and SearXNG block automated use. Gemini's free tier has search grounding (500/day) but
+  trains on inputs, and Gemini answered 0% of probes in this project's provider report.
+- No live search could be tested (every keyless endpoint was blocked), so how often a search result
+  alone contains all the numbers is unknown. Sources disagree (240 vs 270 for the same donut).
+- Waiting on Pranav: whether to go ahead (he would create the Tavily account himself).
+
+**Still waiting on Pranav:** tour photo picks (links re-sent as full Pexels addresses), optional USDA
+key, and the web-search decision above.
