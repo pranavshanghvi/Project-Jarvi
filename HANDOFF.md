@@ -457,6 +457,13 @@ error). Two things learned there:
   through on the live link with no errors. The "Smart glasses work too" tag is hidden on the web.
 - iPhone 16 Plus: Release build of commit 1ab136c installed (it finished installing; only the
   automatic launch was refused because the phone was locked). He has not yet said how it looks.
-- Still says the old things, NOT changed (outside the tour file): the landing page
-  (`WelcomeScreen.tsx`) reads "Know what you eat against what you burn", "in about 20 seconds" and
-  "the calories your Apple Watch counts", which no longer match the tour's wording rules.
+- **Landing page wording brought in line with the tour** (commit b13e110, same day, after he
+  approved the exact words): "Know what you consume against what you burn"; the intro no longer
+  names the Apple Watch; "in about 20 seconds" is gone; the burn line says "smartphone". The
+  description shown when the link is shared (`app/scripts/prepare-web.py`) got the same wording;
+  messaging apps may show the old preview for a while.
+- Published again with that wording at about 12:27 PM: web bundle `index-015b46ca…`, walked through
+  on the live link (landing page, all six scenes, "Get started") with no errors; iPhone 16 Plus
+  Release build installed. He has not yet said how it looks on the phone.
+- After his laptop restart the local preview server on port 8081 is no longer running, and the
+  session scratch folders under /private/tmp were emptied.
