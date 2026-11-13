@@ -78,6 +78,9 @@ export default function WelcomeScreen({ route, navigation }: any) {
         <Muted style={{ fontSize: 12, textAlign: 'center' }}>
           No account. Your log stays on this {onPhone ? 'phone' : 'browser'}. The numbers are estimates, not medical advice.
         </Muted>
+        <Muted style={{ fontSize: 11, textAlign: 'center' }}>
+          Numbers marked Published come from USDA FoodData Central and from Open Food Facts contributors (openfoodfacts.org, ODbL).
+        </Muted>
       </ScrollView>
     </View>
   );

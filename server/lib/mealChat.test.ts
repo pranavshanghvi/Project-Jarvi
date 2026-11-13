@@ -1,4 +1,4 @@
-import { buildMealChatPrompt, ChatItem, parseMealChat, servingsEaten } from './mealChat';
+import { applyPublished, buildMealChatPrompt, ChatItem, keepPublished, parseMealChat, servingsEaten } from './mealChat';
 
 const nutrients = { calories: 150, proteinG: 2, carbsG: 16, fatG: 9, saturatedFatG: 1, fiberG: 1, sugarG: 1, addedSugarG: 0, sodiumMg: 110, cholesterolMg: 0 };
 const chips: ChatItem = { name: 'Kettle chips', source: 'label', confidence: 'normal', portionDescription: '1 oz (28 g)', servingsPerContainer: 8, servings: 1, nutrients };
@@ -70,5 +70,53 @@ describe('buildMealChatPrompt', () => {
     const prompt = buildMealChatPrompt([], '', 1);
     expect(prompt).toContain('nothing logged yet');
     expect(prompt).toContain('THE PERSON SAYS: (nothing)');
+  });
+});
+
+describe('published numbers', () => {
+  const published = { calories: 154, proteinG: 6.2, carbsG: 19.1, fatG: 5.3, saturatedFatG: 3.3, fiberG: 0, sugarG: 18, addedSugarG: 0, sodiumMg: 79, cholesterolMg: 0 };
+  const guess = (extra: Partial<ChatItem> = {}): ChatItem => ({ name: 'Caffe Latte', brand: 'Starbucks', source: 'said', confidence: 'low', portionDescription: '1 cup', servingsPerContainer: null, servings: 1, nutrients, ...extra });
+  const hit = async () => ({ found: { nutrients: published, portionDescription: '220 ml', from: 'Open Food Facts' as const }, usda: 'off' as const, openFoodFacts: 'hit' as const });
+  const miss = async () => ({ found: null, usda: 'off' as const, openFoodFacts: 'miss' as const });
+
+  it('replaces a guess with the published numbers and says where they came from', async () => {
+    const result = { reply: 'I added a latte.', items: [guess()] };
+    await applyPublished(result, hit, 5000);
+    expect(result.items[0]).toMatchObject({ name: 'Starbucks Caffe Latte', source: 'published', portionDescription: '220 ml', nutrients: published, confidence: 'normal' });
+    expect(result.reply).toContain('published numbers from Open Food Facts, for 220 ml');
+  });
+
+  it('leaves the guess alone when nothing matches, when there is no brand, and when there is no time left', async () => {
+    const lookup = jest.fn(miss);
+    const result = { reply: 'ok', items: [guess(), guess({ brand: null })] };
+    await applyPublished(result, lookup, 5000);
+    expect(lookup).toHaveBeenCalledTimes(1);
+    expect(result.items.map((i) => i.source)).toEqual(['said', 'said']);
+    expect(result.reply).toBe('ok');
+    const late = jest.fn(hit);
+    await applyPublished(result, late, 900);
+    expect(late).not.toHaveBeenCalled();
+  });
+
+  it('never looks up a food read off a label, and survives a look-up that throws', async () => {
+    const lookup = jest.fn(async () => { throw new Error('down'); });
+    const result = { reply: 'ok', items: [guess({ source: 'label' }), guess()] };
+    await applyPublished(result, lookup, 5000);
+    expect(lookup).toHaveBeenCalledTimes(1);
+    expect(result.items[1].source).toBe('said');
+  });
+
+  it('does not let the AI hand out the published mark or alter published numbers', () => {
+    const before = [guess({ name: 'Starbucks Caffe Latte', source: 'published', nutrients: published, portionDescription: '220 ml' })];
+    const returned = [guess({ name: 'starbucks caffe latte', source: 'published', nutrients, portionDescription: '1 cup', servings: 2 }), guess({ name: 'Muffin', source: 'published' })];
+    keepPublished(returned, before);
+    expect(returned[0]).toMatchObject({ source: 'published', nutrients: published, portionDescription: '220 ml', servings: 2 });
+    expect(returned[1].source).toBe('estimate');
+  });
+
+  it('asks the AI for the brand only when it was said or printed', () => {
+    const prompt = buildMealChatPrompt([], 'a Starbucks latte', 0);
+    expect(prompt).toContain('"brand": string | null');
+    expect(prompt).toContain('Never guess a brand');
   });
 });

@@ -21,9 +21,11 @@ export interface NutrientProfile {
 //   said     - the person named the food in words, but the NUMBERS are still the AI's (it recalled
 //              typical values; it looked nothing up). So this is shown as a guess too.
 //   typed    - the person typed the numbers in themselves
-export type ItemSource = 'label' | 'estimate' | 'said' | 'typed';
+//   published - the server found the branded food in a public nutrition database (USDA or Open
+//              Food Facts) and used those numbers. Only the server sets this, never the AI.
+export type ItemSource = 'label' | 'estimate' | 'said' | 'typed' | 'published';
 
-export const SOURCE_LABELS: Record<ItemSource, string> = { label: 'From label', estimate: 'AI estimate', said: 'AI estimate', typed: 'Your numbers' };
+export const SOURCE_LABELS: Record<ItemSource, string> = { label: 'From label', estimate: 'AI estimate', said: 'AI estimate', typed: 'Your numbers', published: 'Published' };
 
 // True when the numbers are the AI's own and were not read off a label or typed by the person.
 export function isGuess(source: ItemSource | undefined): boolean {
@@ -31,7 +33,7 @@ export function isGuess(source: ItemSource | undefined): boolean {
 }
 
 export function asItemSource(value: unknown): ItemSource | undefined {
-  return value === 'label' || value === 'estimate' || value === 'said' || value === 'typed' ? value : undefined;
+  return value === 'label' || value === 'estimate' || value === 'said' || value === 'typed' || value === 'published' ? value : undefined;
 }
 
 export interface DetectedFoodItem {

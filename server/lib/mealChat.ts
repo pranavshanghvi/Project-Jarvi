@@ -1,6 +1,7 @@
 import { callModel, RouterResponse } from './modelRouter';
 import { extractJson, parseItem } from './parseResponse';
 import { DetectedFoodItem } from './types';
+import { lookupPublished, LookupResult, words } from './foodLookup';
 
 // The meal helper: one conversation turn. The app sends what the meal looks like so far, plus
 // whatever is new (a photo of the food, a photo of a nutrition label, something the person said),
@@ -8,7 +9,8 @@ import { DetectedFoodItem } from './types';
 // app carries the list. Same rule as every other AI call in this project: free providers only.
 
 // Where a line's numbers came from, so the app can show how far to trust them.
-export type ItemSource = 'label' | 'estimate' | 'said';
+// 'published' is never set by the AI: only by the database look-up below (see foodLookup.ts).
+export type ItemSource = 'label' | 'estimate' | 'said' | 'published';
 
 // `nutrients` are for ONE serving (one label serving, or the one portion seen in a photo), and
 // `servings` is how many of those were eaten. They are kept apart on purpose: on its first live
@@ -20,6 +22,9 @@ export interface ChatItem extends DetectedFoodItem {
   source: ItemSource;
   servings: number;
   servingsPerContainer: number | null;
+  // The shop or brand, when the person said it or it was readable in the photo. Used once, to
+  // look the food up, and not sent back to the app.
+  brand?: string | null;
 }
 export interface MealChatImage {
   imageBase64: string;
@@ -77,13 +82,15 @@ How to update the list:
 - The person changes an ingredient ("no mayo", "that was water not soda"): change that item's name and its per-serving nutrients, or remove the item.
 - Leave every item the person did not mention, and that no new photo is about, exactly as it is.
 - If a photo shows no food and no label, or you cannot tell what the person means, return the list unchanged and ask ONE short question in reply.
+- "brand" is the shop, restaurant or brand that made the food ("Starbucks", "Chobani"), but ONLY when the person said it or it is clearly printed in the photo. Otherwise brand is null. Never guess a brand from how the food looks. When there is a brand, "name" is the product as that brand sells it ("Caffe Latte", "Nonfat Plain Greek Yogurt"), without the brand in it.
+- An item whose source is "published" has numbers from a nutrition database. Return it exactly as it is; you may change only its "eaten".
 
 sugarG is total sugar. addedSugarG is the part added in cooking or manufacturing (on a label it is the "Includes added sugars" line); natural sugar in whole fruit, plain milk and vegetables is not added sugar. addedSugarG is never more than sugarG.
 
 reply: one or two short plain sentences for the person saying what you saw or changed. For a label, say the calories per serving and the servings per container. Do NOT state a total for the meal or do any arithmetic: the app shows the totals. No markdown, no lists, no emoji.
 
 Respond with ONLY valid JSON, minified on a single line, in exactly this shape and nothing else:
-{"reply": string, "items": [{"name": string, "source": "label" | "estimate" | "said", "confidence": "normal" | "low", "portionDescription": string, "servingsPerContainer": number | null, "eaten": {"quantity": number, "unit": "servings" | "containers"}, "nutrients": ${NUTRIENT_SHAPE}}]}`;
+{"reply": string, "items": [{"name": string, "brand": string | null, "source": "label" | "estimate" | "said", "confidence": "normal" | "low", "portionDescription": string, "servingsPerContainer": number | null, "eaten": {"quantity": number, "unit": "servings" | "containers"}, "nutrients": ${NUTRIENT_SHAPE}}]}`;
 }
 
 const positive = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null);
@@ -108,7 +115,8 @@ export function parseMealChat(raw: string): MealChatResult {
     const servingsPerContainer = positive(item?.servingsPerContainer);
     return {
       ...parseItem(item),
-      source: item?.source === 'label' || item?.source === 'said' ? item.source : 'estimate',
+      source: item?.source === 'label' || item?.source === 'said' || item?.source === 'published' ? item.source : 'estimate',
+      brand: typeof item?.brand === 'string' && item.brand.trim() ? item.brand.trim().slice(0, 60) : null,
       servingsPerContainer,
       servings: servingsEaten(item?.eaten, servingsPerContainer),
     };
@@ -123,7 +131,56 @@ function textOf(response: RouterResponse): string {
   return block.text;
 }
 
-export async function runMealChat(items: ChatItem[], message: string, images: MealChatImage[]): Promise<MealChatResult> {
+// ── Published numbers ────────────────────────────────────────────────────────────────────────
+
+export type Lookup = (brand: string, name: string, fallbackAddedSugar: number, options: { timeoutMs: number }) => Promise<LookupResult>;
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+// The AI is not allowed to hand out the "published" mark, or to alter numbers that carry it. A food
+// that already had published numbers keeps them exactly (only how much was eaten can change); any
+// other food the AI calls "published" is put back to an estimate.
+export function keepPublished(returned: ChatItem[], sent: ChatItem[]): void {
+  for (const item of returned) {
+    if (item.source !== 'published') continue;
+    const before = sent.find((old) => old.source === 'published' && sameName(old.name, item.name));
+    if (before) {
+      item.nutrients = before.nutrients;
+      item.portionDescription = before.portionDescription;
+    } else {
+      item.source = 'estimate';
+    }
+  }
+}
+
+// At most this many foods are looked up in one turn, so a long meal cannot make the reply crawl.
+const MAX_LOOKUPS = 2;
+
+// For each guessed food that came with a brand, ask the databases. A confident match replaces the
+// AI's numbers and serving with the published ones and says so in the reply. No match changes nothing.
+export async function applyPublished(result: MealChatResult, lookup: Lookup, budgetMs: number): Promise<void> {
+  const wanted = result.items.filter((item) => item.brand && (item.source === 'estimate' || item.source === 'said')).slice(0, MAX_LOOKUPS);
+  if (wanted.length === 0 || budgetMs < 1500) return;
+  const started = Date.now();
+  const answers = await Promise.all(wanted.map((item) => lookup(item.brand!, item.name, item.nutrients.addedSugarG, { timeoutMs: budgetMs }).catch(() => null)));
+  const used: string[] = [];
+  answers.forEach((answer, index) => {
+    const item = wanted[index];
+    if (!answer?.found) return;
+    item.nutrients = answer.found.nutrients;
+    item.portionDescription = answer.found.portionDescription;
+    item.source = 'published';
+    item.confidence = 'normal';
+    if (!words(item.name).some((w) => words(item.brand!).includes(w))) item.name = `${item.brand} ${item.name}`;
+    used.push(`${item.name}: published numbers from ${answer.found.from}, for ${answer.found.portionDescription}.`);
+  });
+  if (used.length > 0) result.reply = `${result.reply} ${used.join(' ')}`.slice(0, 700);
+  // Outcomes only, never the food or the brand: enough to see whether the databases are earning their keep.
+  console.log('[meal-chat] lookup', JSON.stringify({ asked: wanted.length, used: used.length, ms: Date.now() - started, usda: answers.map((a) => a?.usda ?? 'error'), openFoodFacts: answers.map((a) => a?.openFoodFacts ?? 'error') }));
+}
+
+export async function runMealChat(items: ChatItem[], message: string, images: MealChatImage[], lookup: Lookup = lookupPublished): Promise<MealChatResult> {
+  const started = Date.now();
   const response = await callModel(
     {
       // Enough for a long meal (about 110 tokens a line) and no more: on a bad day the free model
@@ -147,5 +204,11 @@ export async function runMealChat(items: ChatItem[], message: string, images: Me
       },
     }
   );
-  return parseMealChat(textOf(response));
+  const result = parseMealChat(textOf(response));
+  keepPublished(result.items, items);
+  // The whole request must finish inside the server's 60 seconds, so the look-up gets whatever
+  // is left after the AI, up to 6 seconds, and is skipped when there is not enough.
+  await applyPublished(result, lookup, Math.min(6000, 56000 - (Date.now() - started)));
+  for (const item of result.items) delete item.brand;
+  return result;
 }

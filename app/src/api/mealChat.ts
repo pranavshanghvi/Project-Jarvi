@@ -37,7 +37,7 @@ function cleanItem(raw: any): ChatItem {
     confidence: raw?.confidence === 'low' ? 'low' : 'normal',
     portionDescription: typeof raw?.portionDescription === 'string' ? raw.portionDescription : '',
     nutrients: completeNutrients(raw?.nutrients ?? {}),
-    source: raw?.source === 'label' || raw?.source === 'said' ? raw.source : 'estimate',
+    source: raw?.source === 'label' || raw?.source === 'said' || raw?.source === 'published' ? raw.source : 'estimate',
     servings,
     servingsPerContainer: typeof raw?.servingsPerContainer === 'number' && raw.servingsPerContainer > 0 ? raw.servingsPerContainer : null,
   };
