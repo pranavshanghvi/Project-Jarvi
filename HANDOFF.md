@@ -385,3 +385,11 @@ is probably where the app's "Bavarian cream bagel" name came from (his note), no
 
 **Still waiting on Pranav:** tour photo picks (links re-sent as full Pexels addresses), optional USDA
 key, and the web-search decision above.
+
+**Web-search decision (2026-11-12 late): "Trial it first".** Nothing is built into the app. Waiting on
+Pranav to create a free Tavily account (app.tavily.com) and save the key with
+`mkdir -p ~/.config/bitelog && pbpaste > ~/.config/bitelog/tavily-key`. Then run a 10-item accuracy
+trial (Dunkin', Starbucks, McDonald's, etc.; 10 search credits) and show him results before building.
+The trial script lived in the session scratchpad (`lookup/tavily_trial.py`) and may need rewriting:
+POST https://api.tavily.com/search, bearer key, body {query, search_depth:"basic", include_answer:true,
+max_results:5}. Never print the key. iPhone build 20 (corrections memory) is installed.
