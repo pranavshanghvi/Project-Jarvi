@@ -326,5 +326,30 @@ fragment; a prompt change to "read the wrapper" would not have helped and was no
   "Open Food Facts contributors". Its "serving" field is often just 100 g.
 - No free source covers restaurant chains reliably. Others (FatSecret, Nutritionix, Edamam) unverified.
 
-**Open decision:** whether to add a look-up, and which source. Asked on screen 2026-11-12 evening.
+**Decision (2026-11-12 evening): "Both sources".** Built and deployed the same evening (commit 80bc00a,
+web publish 19).
+
+How it works (`server/lib/foodLookup.ts`, wired in at the end of `runMealChat`):
+- The AI now returns a `brand` for each food, only when the person said it or it is printed in the photo.
+- For a guessed food with a brand (at most 2 per turn), both databases are asked at once. A result is
+  used only when brand AND product name match, the entry has a real serving size (a bare "100 g" is a
+  placeholder and is refused), and calories agree with protein/carbs/fat. USDA wins when both have it.
+- A match sets source `published` (tag "Published" in the app), swaps in the published numbers and
+  serving, and adds a sentence to the reply naming the database. The AI cannot set or alter `published`.
+- No match, a slow database, or no time left: nothing changes, the AI estimate stays, labelled.
+
+State of each source:
+- **Open Food Facts: live, but weak.** Search goes to search.openfoodfacts.org (fast, no serving sizes),
+  then the top two matches are read from world.openfoodfacts.org/api/v2/product (has serving sizes, but
+  ran 9-12 s or failed on the evening it was built; the old cgi search gave 503/504). Limits: 2 s search,
+  3 s product, and a 10-minute rest after any failure. Verified live: "Chobani nonfat plain greek yogurt"
+  came back published, 80 cal for 150 g. A Starbucks latte and the Dunkin' donut stayed estimates.
+- **USDA: built, NOT live, NOT tested against the real service.** Needs `FDC_API_KEY` in the Vercel
+  project `jarvi-server` (production). Pranav must sign up himself at fdc.nal.usda.gov/api-key-signup,
+  then run `vercel env add FDC_API_KEY production` in `server/` and tell Claude, who redeploys and tests.
+  The response parsing was written from documentation (DEMO_KEY was rate-limited all evening), so the
+  first job after the key exists is a live test of a packaged grocery item.
+- The Dunkin' donut that started this is NOT fixed by the look-up: USDA does not have it and the only
+  Open Food Facts entry has no real serving size. It stays an AI estimate until he types the numbers.
+
 His own nutrition-facts image for the donut never arrived (only the app screenshot came through).
