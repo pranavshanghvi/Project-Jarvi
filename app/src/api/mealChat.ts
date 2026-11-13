@@ -1,4 +1,4 @@
-import { completeNutrients, DetectedFoodItem, NUTRIENT_KEYS, NutrientProfile } from '../types/nutrition';
+import { completeNutrients, DetectedFoodItem, ItemSource, NUTRIENT_KEYS, NutrientProfile, SOURCE_LABELS } from '../types/nutrition';
 import { prepareForUpload } from './analyzePhoto';
 
 // The meal helper: a short conversation that builds one meal. Each turn sends the meal so far
@@ -14,7 +14,8 @@ const PROXY_SECRET = process.env.EXPO_PUBLIC_PROXY_SECRET;
 export const MAX_PHOTOS = 6;
 export const MAX_TURNS = 8;
 
-export type ItemSource = 'label' | 'estimate' | 'said';
+export type { ItemSource };
+export { SOURCE_LABELS };
 
 // `nutrients` are for ONE serving and `servings` is how many were eaten. The server keeps them
 // apart so the multiplying is done by code (see totals below), never by the AI.
@@ -28,8 +29,6 @@ export interface MealTurnResult {
   reply: string;
   items: ChatItem[];
 }
-
-export const SOURCE_LABELS: Record<ItemSource, string> = { label: 'From label', estimate: 'Estimate', said: 'You said' };
 
 function cleanItem(raw: any): ChatItem {
   const servings = typeof raw?.servings === 'number' && raw.servings > 0 ? raw.servings : 1;
@@ -131,6 +130,6 @@ export function toMealItems(items: ChatItem[]): DetectedFoodItem[] {
   return items.map((item) => {
     const nutrients = {} as NutrientProfile;
     for (const key of NUTRIENT_KEYS) nutrients[key] = Math.round(item.nutrients[key] * item.servings * 10) / 10;
-    return { name: item.name, confidence: item.confidence, portionDescription: describePortion(item), nutrients };
+    return { name: item.name, confidence: item.confidence, portionDescription: describePortion(item), nutrients, source: item.source };
   });
 }

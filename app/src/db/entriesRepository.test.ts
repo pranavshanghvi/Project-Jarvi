@@ -21,7 +21,12 @@ const item: DetectedFoodItem = {
 describe('buildItemInsertParams', () => {
   it('maps a detected item and entry id into positional params', () => {
     const params = buildItemInsertParams(7, item, 1.2);
-    expect(params).toEqual([7, 'Grilled chicken', 'normal', 1.2, 250, 40, 0, 8, 2, 0, 0, 90, 100, 0]);
+    expect(params).toEqual([7, 'Grilled chicken', 'normal', 1.2, 250, 40, 0, 8, 2, 0, 0, 90, 100, 0, '']);
+  });
+
+  it('keeps where the numbers came from, so a guess is still marked as a guess after saving', () => {
+    const params = buildItemInsertParams(7, { ...item, source: 'estimate' }, 1);
+    expect(params[params.length - 1]).toBe('estimate');
   });
 });
 

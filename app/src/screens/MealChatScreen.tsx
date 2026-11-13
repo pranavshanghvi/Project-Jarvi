@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { ChatItem, describePortion, FAILURE_TEXT, failureReason, itemCalories, MAX_PHOTOS, MAX_TURNS, mealTotals, sendMealTurn, SOURCE_LABELS, toMealItems } from '../api/mealChat';
+import { ChatItem, describePortion, FAILURE_TEXT, failureReason, itemCalories, MAX_PHOTOS, MAX_TURNS, mealTotals, sendMealTurn, toMealItems } from '../api/mealChat';
 import { persistPhoto } from '../data/dayData';
 import { createEntry, deleteEntry, getEntriesInRange } from '../db/entriesRepository';
 import { toDateKey } from '../nutrition/aggregation';
 import { inferMealType } from '../nutrition/mealTagging';
 import { parsePhotoTime } from '../photos/photoTime';
 import { withTimeout } from '../photos/webImage';
-import { Body, Glass, Glow, Icon, IconButton, IconName, Muted, Num, OutlineButton, PrimaryButton, Title } from '../ui/kit';
+import { Body, Glass, Glow, Icon, IconButton, IconName, Muted, Num, OutlineButton, PrimaryButton, SourceTag, Title } from '../ui/kit';
 import { notify } from '../ui/notify';
 import { BottomSheet, SheetOption } from '../ui/sheet';
 import { colors, formatCalories, formatTime } from '../ui/theme';
@@ -34,11 +34,6 @@ interface Turn {
 }
 
 const GREETING = 'Show me what you ate. One photo is enough, or just tell me.';
-const TAG_COLORS = {
-  label: { text: '#7FE0D6', fill: 'rgba(47, 184, 172, 0.16)' },
-  said: { text: '#7FE0D6', fill: 'rgba(47, 184, 172, 0.16)' },
-  estimate: { text: '#FFC58F', fill: 'rgba(255, 176, 103, 0.16)' },
-};
 
 function Bubble({ message }: { message: Message }) {
   const mine = message.from === 'you';
@@ -459,9 +454,7 @@ export default function MealChatScreen({ navigation }: any) {
                         <Body numberOfLines={1}>{item.name}</Body>
                         <Muted numberOfLines={1} style={{ fontSize: 12 }}>{describePortion(item)}</Muted>
                       </View>
-                      <Text style={{ fontSize: 11, fontWeight: '600', color: TAG_COLORS[item.source].text, backgroundColor: TAG_COLORS[item.source].fill, borderRadius: 8, overflow: 'hidden', paddingVertical: 3, paddingHorizontal: 7 }}>
-                        {SOURCE_LABELS[item.source]}
-                      </Text>
+                      <SourceTag source={item.source} />
                       <Num style={{ fontSize: 15, minWidth: 38, textAlign: 'right' }}>{formatCalories(itemCalories(item))}</Num>
                       <Pressable onPress={() => setItems((all) => all.filter((_, i) => i !== index))} accessibilityRole="button" accessibilityLabel={`Remove ${item.name}`} hitSlop={10} style={({ pressed }) => [{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.5 }]}>
                         <Icon name="close" size={14} color={colors.muted} />

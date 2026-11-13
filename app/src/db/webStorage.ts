@@ -1,4 +1,4 @@
-import { completeNutrients, DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
+import { completeNutrients, DetectedFoodItem, ItemSource, MealType, NutrientProfile } from '../types/nutrition';
 import { toDateKey } from '../nutrition/aggregation';
 import { StoredEntry } from './entriesRepository';
 
@@ -53,6 +53,7 @@ export async function createEntryWeb(
       confidence: item.confidence,
       portionMultiplier,
       nutrients: item.nutrients,
+      source: item.source,
     })),
   });
   writeAll(entries);
@@ -106,7 +107,7 @@ export async function updateEntryWeb(
   changes: {
     timestamp?: string;
     mealType?: MealType;
-    items?: { id: number; name?: string; portionMultiplier: number; nutrients: NutrientProfile }[];
+    items?: { id: number; name?: string; source?: ItemSource; portionMultiplier: number; nutrients: NutrientProfile }[];
     removedItemIds?: number[];
     addedItems?: { item: DetectedFoodItem; portionMultiplier: number }[];
   }
@@ -122,13 +123,14 @@ export async function updateEntryWeb(
       item.portionMultiplier = change.portionMultiplier;
       item.nutrients = change.nutrients;
       if (change.name !== undefined) item.name = change.name;
+      if (change.source !== undefined) item.source = change.source;
     }
   }
   if (changes.removedItemIds?.length) {
     entry.items = entry.items.filter((i) => !changes.removedItemIds!.includes(i.id));
   }
   for (const { item, portionMultiplier } of changes.addedItems ?? []) {
-    entry.items.push({ id: nextId(), entryId, name: item.name, confidence: item.confidence, portionMultiplier, nutrients: item.nutrients });
+    entry.items.push({ id: nextId(), entryId, name: item.name, confidence: item.confidence, portionMultiplier, nutrients: item.nutrients, source: item.source });
   }
   writeAll(entries);
 }

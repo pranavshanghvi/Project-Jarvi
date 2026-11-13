@@ -14,6 +14,10 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (!columns.some((column) => column.name === 'added_sugar_g')) {
     await db.execAsync('ALTER TABLE items ADD COLUMN added_sugar_g REAL NOT NULL DEFAULT 0;');
   }
+  // Same again for where a food's numbers came from. Meals logged before this have '' (unknown).
+  if (!columns.some((column) => column.name === 'source')) {
+    await db.execAsync("ALTER TABLE items ADD COLUMN source TEXT NOT NULL DEFAULT '';");
+  }
   dbInstance = db;
   return db;
 }

@@ -7,8 +7,8 @@ import { createEntry, deleteEntry, getEntry, updateEntry } from '../db/entriesRe
 import { markPhotoUsed } from '../glasses/glassesPhotos';
 import { inferMealType } from '../nutrition/mealTagging';
 import { scaleNutrients } from '../nutrition/portionScaling';
-import { completeNutrients, ConfidenceLevel, MealType, NutrientProfile, NUTRIENT_KEYS } from '../types/nutrition';
-import { Body, Glass, Header, Icon, IconButton, Muted, Num, OutlineButton, PrimaryButton, Screen, Title } from '../ui/kit';
+import { completeNutrients, ConfidenceLevel, isGuess, ItemSource, MealType, NutrientProfile, NUTRIENT_KEYS } from '../types/nutrition';
+import { Body, Glass, Header, Icon, IconButton, Muted, Num, OutlineButton, PrimaryButton, Screen, SourceTag, Title } from '../ui/kit';
 import { Learn, LearnLabel } from '../ui/learn';
 import { colors, formatCalories, formatTime } from '../ui/theme';
 
@@ -18,6 +18,8 @@ interface Line {
   name: string;
   detail?: string;
   confidence: ConfidenceLevel;
+  // Where the numbers came from. Undefined only for meals saved before this was recorded.
+  source?: ItemSource;
   base: NutrientProfile;
   portion: number;
 }
@@ -87,7 +89,7 @@ export default function MealDetailScreen({ route, navigation }: any) {
 
   useEffect(() => {
     if (draft) {
-      setLines(draft.items.map((item: any) => ({ name: item.name, detail: item.portionDescription, confidence: item.confidence, base: completeNutrients(item.nutrients), portion: 1 })));
+      setLines(draft.items.map((item: any) => ({ name: item.name, detail: item.portionDescription, confidence: item.confidence, source: item.source ?? 'estimate', base: completeNutrients(item.nutrients), portion: 1 })));
       return;
     }
     getEntry(entryId).then((entry) => {
@@ -100,6 +102,7 @@ export default function MealDetailScreen({ route, navigation }: any) {
           id: item.id,
           name: item.name,
           confidence: item.confidence,
+          source: item.source,
           // Saved nutrients already include the portion, so divide it back out to get the 1× amounts.
           base: scaleNutrients(completeNutrients(item.nutrients), 1 / (item.portionMultiplier || 1)),
           portion: item.portionMultiplier || 1,
@@ -125,12 +128,13 @@ export default function MealDetailScreen({ route, navigation }: any) {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, name } : l)));
   }
   // The number typed is what was actually eaten, so store it as the 1x amount for this portion.
+  // A number the person typed is theirs, so the food stops being marked as the AI's guess.
   function setAmount(index: number, key: keyof NutrientProfile, amount: number) {
-    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, base: { ...l.base, [key]: amount / (l.portion || 1) } } : l)));
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, source: 'typed', base: { ...l.base, [key]: amount / (l.portion || 1) } } : l)));
   }
   // For a food the photo reader missed, or a meal typed in with no photo at all.
   function addLine() {
-    setLines((prev) => [...prev, { name: '', confidence: 'normal', base: completeNutrients({}), portion: 1 }]);
+    setLines((prev) => [...prev, { name: '', confidence: 'normal', source: 'typed', base: completeNutrients({}), portion: 1 }]);
     setEditing(lines.length);
   }
   // What gets saved for one food: a name is never blank, and added sugar never exceeds sugar.
@@ -152,7 +156,7 @@ export default function MealDetailScreen({ route, navigation }: any) {
           draft.photoUri,
           mealType,
           lines.map((l) => ({
-            item: { ...finished(l), confidence: l.confidence, portionDescription: l.detail ?? '' },
+            item: { ...finished(l), confidence: l.confidence, portionDescription: l.detail ?? '', source: l.source },
             portionMultiplier: l.portion,
           })),
           when
@@ -163,9 +167,9 @@ export default function MealDetailScreen({ route, navigation }: any) {
         await updateEntry(entryId, {
           timestamp: when.toISOString(),
           mealType,
-          items: lines.filter((l) => l.id).map((l) => ({ id: l.id!, portionMultiplier: l.portion, ...finished(l) })),
+          items: lines.filter((l) => l.id).map((l) => ({ id: l.id!, portionMultiplier: l.portion, source: l.source, ...finished(l) })),
           removedItemIds: removedIds,
-          addedItems: lines.filter((l) => !l.id).map((l) => ({ item: { ...finished(l), confidence: l.confidence, portionDescription: '' }, portionMultiplier: l.portion })),
+          addedItems: lines.filter((l) => !l.id).map((l) => ({ item: { ...finished(l), confidence: l.confidence, portionDescription: '', source: l.source }, portionMultiplier: l.portion })),
         });
       }
       navigation.popTo('Tabs');
@@ -180,6 +184,7 @@ export default function MealDetailScreen({ route, navigation }: any) {
     confirmAction('Delete this meal?', 'It will be removed from your log and your totals.', 'Delete', () => deleteEntry(entryId).then(() => navigation.popTo('Tabs')));
   }
 
+  const guesses = lines.filter((l) => isGuess(l.source)).length;
   const names = lines.map((l) => l.name.trim() || 'Food');
   const title = lines.length === 0 ? (photo ? 'No food found' : 'New meal') : lines.length <= 2 ? names.join(', ') : `${names[0]} +${lines.length - 1}`;
 
@@ -228,6 +233,13 @@ export default function MealDetailScreen({ route, navigation }: any) {
         </Glass>
       )}
 
+      {guesses > 0 && (
+        <View accessibilityRole="alert" style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255, 176, 103, 0.45)', backgroundColor: 'rgba(255, 176, 103, 0.10)', padding: 12 }}>
+          <Body style={{ color: '#FFC58F', fontWeight: '600' }}>{guesses === lines.length ? 'These numbers are an AI estimate' : `${guesses} of ${lines.length} foods are an AI estimate`}</Body>
+          <Muted style={{ fontSize: 13, marginTop: 2 }}>The AI worked these out from your photo or your words. It did not look up published nutrition facts, so the name and the numbers can be wrong. Tap Edit to put in the real ones.</Muted>
+        </View>
+      )}
+
       {lines.length === 0 ? (
         <Glass>
           <Body>{photo ? 'No food found in this photo.' : 'Nothing added yet.'}</Body>
@@ -239,7 +251,10 @@ export default function MealDetailScreen({ route, navigation }: any) {
             <View key={line.id ?? `new-${index}`} style={[{ paddingVertical: 10 }, index > 0 && { borderTopWidth: 1, borderTopColor: colors.hairline }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Pressable style={{ flex: 1 }} onPress={() => setEditing(editing === index ? null : index)} accessibilityRole="button" accessibilityLabel={`Edit ${line.name || 'this food'}`}>
-                  <Body>{line.name.trim() || 'New food'}</Body>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <Body>{line.name.trim() || 'New food'}</Body>
+                    {line.source ? <SourceTag source={line.source} /> : null}
+                  </View>
                   <Muted style={{ fontSize: 12 }}>
                     {[line.detail, `${Math.round(line.portion * 100)}% portion`, line.confidence === 'low' ? 'not sure about this one' : null].filter(Boolean).join(' · ')}
                   </Muted>

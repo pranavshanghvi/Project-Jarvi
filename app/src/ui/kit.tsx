@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { colors, numberFont } from './theme';
+import { isGuess, ItemSource, SOURCE_LABELS } from '../types/nutrition';
 
 // ── Page ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -326,3 +327,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CCFC2', borderWidth: 1, borderColor: 'rgba(190, 255, 245, 0.55)',
   },
 });
+
+// The small tag saying where a food's numbers came from. A guess is amber; numbers read off a
+// label or typed by the person are teal.
+export function SourceTag({ source }: { source: ItemSource }) {
+  const guess = isGuess(source);
+  return (
+    <Text style={{ fontSize: 11, fontWeight: '600', color: guess ? '#FFC58F' : '#7FE0D6', backgroundColor: guess ? 'rgba(255, 176, 103, 0.16)' : 'rgba(47, 184, 172, 0.16)', borderRadius: 8, overflow: 'hidden', paddingVertical: 3, paddingHorizontal: 7 }}>
+      {SOURCE_LABELS[source]}
+    </Text>
+  );
+}

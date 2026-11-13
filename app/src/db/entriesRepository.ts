@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { getDatabase } from './client';
-import { DetectedFoodItem, MealType, NutrientProfile } from '../types/nutrition';
+import { asItemSource, DetectedFoodItem, ItemSource, MealType, NutrientProfile } from '../types/nutrition';
 import { toDateKey } from '../nutrition/aggregation';
 import {
   createEntryWeb,
@@ -20,6 +20,7 @@ export interface StoredItem {
   confidence: 'normal' | 'low';
   portionMultiplier: number;
   nutrients: NutrientProfile;
+  source?: ItemSource; // missing when the meal was saved before this was recorded
 }
 
 export interface StoredEntry {
@@ -51,6 +52,7 @@ export function buildItemInsertParams(
     n.sodiumMg,
     n.cholesterolMg,
     n.addedSugarG ?? 0,
+    item.source ?? '',
   ];
 }
 
@@ -73,6 +75,7 @@ export function mapItemRow(row: any): StoredItem {
       cholesterolMg: row.cholesterol_mg,
       addedSugarG: row.added_sugar_g ?? 0,
     },
+    source: asItemSource(row.source),
   };
 }
 
@@ -97,8 +100,8 @@ export async function createEntry(
     await db.runAsync(
       `INSERT INTO items (
         entry_id, name, confidence, portion_multiplier,
-        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, added_sugar_g
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, added_sugar_g, source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       params
     );
   }
@@ -210,7 +213,7 @@ export async function updateEntry(
   changes: {
     timestamp?: string;
     mealType?: MealType;
-    items?: { id: number; name?: string; portionMultiplier: number; nutrients: NutrientProfile }[];
+    items?: { id: number; name?: string; source?: ItemSource; portionMultiplier: number; nutrients: NutrientProfile }[];
     removedItemIds?: number[];
     // Foods the reader missed, typed in by hand on an already-saved meal.
     addedItems?: { item: DetectedFoodItem; portionMultiplier: number }[];
@@ -238,6 +241,9 @@ export async function updateEntry(
     if (item.name !== undefined) {
       await db.runAsync('UPDATE items SET name = ? WHERE id = ? AND entry_id = ?;', [item.name, item.id, entryId]);
     }
+    if (item.source !== undefined) {
+      await db.runAsync('UPDATE items SET source = ? WHERE id = ? AND entry_id = ?;', [item.source, item.id, entryId]);
+    }
   }
   for (const itemId of changes.removedItemIds ?? []) {
     await db.runAsync('DELETE FROM items WHERE id = ? AND entry_id = ?;', [itemId, entryId]);
@@ -246,8 +252,8 @@ export async function updateEntry(
     await db.runAsync(
       `INSERT INTO items (
         entry_id, name, confidence, portion_multiplier,
-        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, added_sugar_g
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        calories, protein_g, carbs_g, fat_g, saturated_fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, added_sugar_g, source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       buildItemInsertParams(entryId, item, portionMultiplier)
     );
   }
