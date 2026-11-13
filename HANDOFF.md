@@ -393,3 +393,52 @@ trial (Dunkin', Starbucks, McDonald's, etc.; 10 search credits) and show him res
 The trial script lived in the session scratchpad (`lookup/tavily_trial.py`) and may need rewriting:
 POST https://api.tavily.com/search, bearer key, body {query, search_depth:"basic", include_answer:true,
 max_results:5}. Never print the key. iPhone build 20 (corrections memory) is installed.
+
+## 2026-11-13: tour rebuilt with real photos (committed, NOT yet published)
+
+The first-run tour (`app/src/screens/TutorialScreen.tsx`) is now six picture-led scenes with very
+few words, replacing the eight text-heavy slides. Design Pranav approved ("Yes, build it"):
+https://claude.ai/artifact/9ofpA7FWfMauQwPi3pbx2n (private to him).
+
+| # | Scene | Picture |
+|---|---|---|
+| 1 | Every move is counted | Runner photo; burn flows to "Smartphone", then into a small live copy of the Burned screen |
+| 2 | Snap your plate | Food photo; AI band sweeps, three foods are named, the meal is logged |
+| 3 | Consumed minus burned | The two photos as a sum, 1,520 − 2,140, and the Today ring showing −620 |
+| 4 | The gap moves your weight | Scale photo; "Consumed < = > Burned" takes turns; 500 under a day ≈ 1 lb a week |
+| 5 | Weeks add up | Week of bars with goal ticks, weight line falling toward the goal |
+| 6 | Start with one photo | The + button, photo / label / voice, and the privacy and "not medical advice" small print |
+
+Decisions he made while reviewing, all built in:
+- **A runner, not a watch.** He first picked a watch photo, then said it made the app look as if it
+  needed a smart watch. Scene 1 shows someone running; a small "Watch optional" tag remains.
+- **"Smartphone", never "iPhone"** in the tour's wording.
+- **The logo always appears with the word "BiteLog" beside it**, because a first-time visitor
+  cannot know what the logo stands for. (This replaces the earlier "logo instead of the word".)
+- **The Burned picture in scene 1 is the app's own Burned card**, built from the same parts as
+  `BurnedScreen` with example numbers, not a made-up card. If the Burned screen's top card changes,
+  update `BurnedPreview` in the tour to match.
+- "Consumed", never "eaten"; no mention of how long a photo takes to read.
+
+How it is built: every scene is drawn on a fixed 362-point board and the whole board is scaled to
+the screen (`ScaledBoard`), so labels stay put on the photos. One example day runs through all
+scenes (1,520 consumed, 2,140 burned of which 412 active). Movement stops when the phone's
+"Reduce Motion" setting is on. The web wording of scene 1 differs on purpose (the burn is sent with
+one tap or typed in; a website cannot read it by itself).
+
+Photos: `app/assets/tour/` (five files, 284 KB in total), free Pexels photos; source pages are in
+`app/assets/tour/CREDITS.md`. No new packages were added.
+
+Checked: `npx jest` in `app/` (156 pass); no type errors outside the test files (the test files
+have long-standing "cannot find name 'describe'" type errors, unrelated); all six scenes walked
+through in the local web preview with no console errors, and "Get started" goes on to the profile
+questions for a new person.
+
+**NOT checked on an iPhone or the simulator.** The simulator's installed development build is older
+than the voice add-on and stops at "Cannot find native module 'ExpoSpeechRecognition'" before any
+screen appears, so it needs a rebuild (`npx expo run:ios`) before it can show anything. Things in
+the tour that only a phone can confirm: the logo sitting inside a sentence (scenes 1 and 6), the
+travelling dots in scene 1, and the scaled-down Burned card.
+
+Not done here, on purpose: publishing to mybitelog.vercel.app and installing on the iPhone. The
+main session does both.
