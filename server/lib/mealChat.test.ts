@@ -1,4 +1,4 @@
-import { applyPublished, buildMealChatPrompt, ChatItem, keepPublished, parseMealChat, servingsEaten } from './mealChat';
+import { applyPublished, applyTable, buildMealChatPrompt, ChatItem, keepPublished, parseMealChat, servingsEaten } from './mealChat';
 
 const nutrients = { calories: 150, proteinG: 2, carbsG: 16, fatG: 9, saturatedFatG: 1, fiberG: 1, sugarG: 1, addedSugarG: 0, sodiumMg: 110, cholesterolMg: 0 };
 const chips: ChatItem = { name: 'Kettle chips', source: 'label', confidence: 'normal', portionDescription: '1 oz (28 g)', servingsPerContainer: 8, servings: 1, nutrients };
@@ -118,5 +118,72 @@ describe('published numbers', () => {
     const prompt = buildMealChatPrompt([], 'a Starbucks latte', 0);
     expect(prompt).toContain('"brand": string | null');
     expect(prompt).toContain('Never guess a brand');
+  });
+});
+
+describe('weight x the food table', () => {
+  const guessed = (extra: Partial<ChatItem> = {}): ChatItem => ({ name: 'Grilled chicken breast', source: 'estimate', confidence: 'normal', portionDescription: '1 chicken breast', servingsPerContainer: null, servings: 1, grams: 200, nutrients: { ...nutrients, calories: 180 }, ...extra });
+
+  it('works the numbers out from the weight and the table, and keeps what the AI guessed beside them', () => {
+    const items = [guessed()];
+    applyTable(items, []);
+    expect(items[0].tableFood).toMatch(/^Chicken breast/);
+    expect(items[0].nutrients.calories).toBeGreaterThan(300); // 200 g of chicken breast, not the AI's 180
+    expect(items[0].nutrients.proteinG).toBeGreaterThan(40);
+    expect(items[0].aiCalories).toBe(180);
+  });
+
+  it('gives the same food and weight the same numbers whatever the AI guessed', () => {
+    const a = [guessed({ nutrients: { ...nutrients, calories: 250 } })];
+    const b = [guessed({ nutrients: { ...nutrients, calories: 350 } })];
+    applyTable(a, []);
+    applyTable(b, []);
+    expect(a[0].nutrients).toEqual(b[0].nutrients);
+  });
+
+  it('keeps the AI\'s numbers when there is no weight, no such food, or a label or published source', () => {
+    const items = [guessed({ grams: null }), guessed({ name: 'Chicken tikka masala' }), guessed({ source: 'label' }), guessed({ source: 'published' })];
+    applyTable(items, []);
+    for (const item of items) {
+      expect(item.nutrients.calories).toBe(180);
+      expect(item.tableFood).toBeNull();
+    }
+  });
+
+  it('distrusts a match that is wildly out of line with the AI, since that is more likely the wrong food', () => {
+    const items = [guessed({ name: 'Olive oil', grams: 200, nutrients: { ...nutrients, calories: 120 } })]; // 200 g of oil would be 1,800
+    applyTable(items, []);
+    expect(items[0].nutrients.calories).toBe(120);
+    expect(items[0].tableFood).toBeNull();
+  });
+
+  it('leaves a food that came back untouched exactly as it was, so corrected numbers are not recalculated', () => {
+    const corrected = guessed({ nutrients: { ...nutrients, calories: 240 }, grams: null });
+    const items = [guessed({ nutrients: { ...nutrients, calories: 240 } })]; // the AI echoed the numbers and added a weight
+    applyTable(items, [corrected]);
+    expect(items[0].nutrients.calories).toBe(240);
+    expect(items[0].tableFood).toBeNull();
+  });
+
+  it('recalculates when the person changes the weight', () => {
+    const before = guessed();
+    applyTable([before], []);
+    const items = [{ ...before, grams: 100 }];
+    applyTable(items, [before]);
+    expect(items[0].nutrients.calories).toBeLessThan(before.nutrients.calories);
+  });
+
+  it('asks the AI for a weight judged from the photo, not from a standard serving', () => {
+    const prompt = buildMealChatPrompt([], '', 1);
+    expect(prompt).toContain('"grams": number | null');
+    expect(prompt).toContain('NOT from a standard serving size');
+  });
+
+  it('reads the weight and drops one that is not believable', () => {
+    const read = (grams: any) => parseMealChat(JSON.stringify({ reply: 'ok', items: [fromModel({ quantity: 1, unit: 'servings' }, { grams })] })).items[0].grams;
+    expect(read(151.6)).toBe(152);
+    expect(read(-5)).toBeNull();
+    expect(read('a lot')).toBeNull();
+    expect(read(90000)).toBeNull();
   });
 });

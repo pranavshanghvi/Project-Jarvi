@@ -1,10 +1,23 @@
 import * as SQLite from 'expo-sqlite';
 import { ENTRIES_TABLE_SQL, ITEMS_TABLE_SQL } from './schema';
 
-let dbInstance: SQLite.SQLiteDatabase | null = null;
+// The one opening of the database, shared by everyone who asks. Several screens ask at the same
+// moment when the app starts; before this was shared, each ran the "add the missing column" step
+// below, and the second one failed with "duplicate column name: source" (seen 2026-11-13 on a
+// fresh install). Now the first caller does the work and the rest wait for the same result.
+let opening: Promise<SQLite.SQLiteDatabase> | null = null;
 
-export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (dbInstance) return dbInstance;
+export function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (!opening) {
+    opening = openAndUpgrade().catch((error) => {
+      opening = null; // let the next caller try again rather than hand out a failure for good
+      throw error;
+    });
+  }
+  return opening;
+}
+
+async function openAndUpgrade(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('jarvi.db');
   await db.execAsync(ENTRIES_TABLE_SQL);
   await db.execAsync(ITEMS_TABLE_SQL);
@@ -18,6 +31,5 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (!columns.some((column) => column.name === 'source')) {
     await db.execAsync("ALTER TABLE items ADD COLUMN source TEXT NOT NULL DEFAULT '';");
   }
-  dbInstance = db;
   return db;
 }

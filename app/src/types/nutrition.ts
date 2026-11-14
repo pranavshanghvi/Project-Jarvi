@@ -42,6 +42,9 @@ export interface DetectedFoodItem {
   confidence: ConfidenceLevel;
   portionDescription: string;
   nutrients: NutrientProfile;
+  // The weight of this portion in grams, when the AI judged one from a photo. It is the part of a
+  // photo read most likely to be off, so the review screen shows it for the person to correct.
+  grams?: number;
 }
 
 export interface AnalyzePhotoResponse {

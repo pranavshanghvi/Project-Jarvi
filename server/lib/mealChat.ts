@@ -2,6 +2,10 @@ import { callModel, RouterResponse } from './modelRouter';
 import { extractJson, parseItem } from './parseResponse';
 import { DetectedFoodItem } from './types';
 import { lookupPublished, LookupResult, words } from './foodLookup';
+import { findFood, nutrientsFor } from './foodTable';
+import { steadyAnswers } from './steady';
+
+steadyAnswers();
 
 // The meal helper: one conversation turn. The app sends what the meal looks like so far, plus
 // whatever is new (a photo of the food, a photo of a nutrition label, something the person said),
@@ -25,6 +29,16 @@ export interface ChatItem extends DetectedFoodItem {
   // The shop or brand, when the person said it or it was readable in the photo. Used once, to
   // look the food up, and not sent back to the app.
   brand?: string | null;
+  // The weight of ONE serving in grams, as the AI judged it from the photo (or read it off a
+  // label). The app shows it so the person can correct the portion, which is where a photo read
+  // goes most wrong.
+  grams?: number | null;
+  // Set when the numbers were worked out as weight x the food table (foodTable.ts) rather than
+  // taken from the AI's memory: the table's name for the food.
+  tableFood?: string | null;
+  // What the AI itself guessed for one serving, kept beside the table's answer so the two can be
+  // compared when accuracy is measured.
+  aiCalories?: number;
 }
 export interface MealChatImage {
   imageBase64: string;
@@ -50,6 +64,7 @@ function forModel(item: ChatItem) {
     source: item.source,
     confidence: item.confidence,
     portionDescription: item.portionDescription,
+    grams: item.grams ?? null,
     servingsPerContainer: item.servingsPerContainer,
     eaten: { quantity: item.servings, unit: 'servings' },
     nutrients: item.nutrients,
@@ -73,7 +88,8 @@ Each item has "nutrients" for ONE serving and "eaten", which says how much the p
 - A count belongs in "eaten", never in the serving. portionDescription always describes exactly ONE serving ("1 egg", "1 slice", "1 cookie", "1 sandwich") and nutrients are for that one. "Two scrambled eggs" is portionDescription "1 egg", nutrients for one scrambled egg (about 90 calories), eaten {"quantity": 2, "unit": "servings"}. Never write "2 eggs" as the serving and also set quantity 2: that counts the food twice.
 
 How to update the list:
-- A photo of food: add each distinct food as its own item. nutrients are your best estimate for the whole portion you can see, portionDescription describes that portion and is never empty ("1 sandwich", "about 1 cup"), servingsPerContainer is null, source is "estimate".
+- A photo of food: add each distinct food as its own item, and do not leave a food out because it is small or partly hidden. Name it plainly with how it is cooked, the way a nutrition table would: "grilled chicken breast", "white rice, cooked", "raw spinach", "fried egg", "french fries". Say "fried", "in cream sauce" or "with dressing" when you can see it. nutrients are your best estimate for the whole portion you can see, portionDescription says how much that is in everyday words and is never empty or just the food's name ("1 sandwich", "about 1 cup", "3 small pieces"), servingsPerContainer is null, source is "estimate".
+- "grams" is the weight in grams of ONE serving, the same serving portionDescription describes. For a food in a photo, judge it from the photo and NOT from a standard serving size: compare the food with the plate (a dinner plate is about 27 cm across, a side plate about 18 cm), the cutlery or a hand, and allow for how thick it is or how deep it is piled. A photo makes food look smaller than it is and the usual mistake is to guess too low, so do not fall back on "3 oz" or "half a cup": most plates of food hold more than that. For scale: a cooked chicken breast is 120 to 200 g, a fish fillet 120 to 180 g, a cup of cooked rice or pasta 160 to 200 g, a slice of pizza 100 to 140 g, a large egg 50 g, a medium apple 180 g, a slice of bread 30 g, a tablespoon of oil or butter 14 g. For a label, grams is the printed serving weight when it is given in grams. When you cannot tell a weight at all, grams is null.
 - A photo of a Nutrition Facts label: copy the printed numbers for ONE serving exactly as printed, and servingsPerContainer from the label. portionDescription is the printed serving size, for example "1 oz (28 g)". FIRST look for a food already in the list that could be the same product (the list has "kettle chips" and the label is for "kettle cooked potato chips": that is the same food). If there is one, REPLACE that item: keep its place in the list and its "eaten", give it the label's nutrients, serving size and servingsPerContainer, and set its source to "label". The same food must never appear twice. Only when nothing in the list matches, add the label as a new item with source "label".
 - A photo AND words together: the words explain the photo. They can say what the food is, how much of it the person had, and what else was in the meal. Apply the photo and the words in the same answer. Example: a milk label with the words "the milk in my coffee, two tablespoons, plus a teaspoon of sugar" gives three items: the milk from the label (source "label") with "eaten" set to the amount actually had, black coffee (source "said", about 2 calories a cup), and sugar (source "said", portionDescription "1 tsp", 16 calories).
 - An amount given in a kitchen measure: set eaten.quantity to that amount as a share of ONE serving, unit "servings". 1 cup = 16 tablespoons = 48 teaspoons = 8 fl oz = 240 ml. Two tablespoons of a food whose serving is 1 cup is quantity 0.125. Half a cup of a food whose serving is 1 cup is quantity 0.5.
@@ -87,13 +103,19 @@ How to update the list:
 
 sugarG is total sugar. addedSugarG is the part added in cooking or manufacturing (on a label it is the "Includes added sugars" line); natural sugar in whole fruit, plain milk and vegetables is not added sugar. addedSugarG is never more than sugarG.
 
-reply: one or two short plain sentences for the person saying what you saw or changed. For a label, say the calories per serving and the servings per container. Do NOT state a total for the meal or do any arithmetic: the app shows the totals. No markdown, no lists, no emoji.
+reply: one or two short plain sentences for the person saying what you saw or changed. For a label, say the calories per serving and the servings per container. For any other food do not state its calories: the app works them out. Do NOT state a total for the meal or do any arithmetic: the app shows the totals. No markdown, no lists, no emoji.
 
 Respond with ONLY valid JSON, minified on a single line, in exactly this shape and nothing else:
-{"reply": string, "items": [{"name": string, "brand": string | null, "source": "label" | "estimate" | "said", "confidence": "normal" | "low", "portionDescription": string, "servingsPerContainer": number | null, "eaten": {"quantity": number, "unit": "servings" | "containers"}, "nutrients": ${NUTRIENT_SHAPE}}]}`;
+{"reply": string, "items": [{"name": string, "brand": string | null, "source": "label" | "estimate" | "said", "confidence": "normal" | "low", "portionDescription": string, "grams": number | null, "servingsPerContainer": number | null, "eaten": {"quantity": number, "unit": "servings" | "containers"}, "nutrients": ${NUTRIENT_SHAPE}}]}`;
 }
 
 const positive = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null);
+
+// A weight is kept only when it is a believable weight for one serving of food.
+function cleanGrams(value: unknown): number | null {
+  const grams = positive(value);
+  return grams !== null && grams >= 1 && grams <= 3000 ? Math.round(grams) : null;
+}
 
 // The one place a portion is worked out. A share of the container needs the container's size; if
 // the model gave a share without one, there is nothing to multiply by, so it counts as servings.
@@ -117,6 +139,7 @@ export function parseMealChat(raw: string): MealChatResult {
       ...parseItem(item),
       source: item?.source === 'label' || item?.source === 'said' || item?.source === 'published' ? item.source : 'estimate',
       brand: typeof item?.brand === 'string' && item.brand.trim() ? item.brand.trim().slice(0, 60) : null,
+      grams: cleanGrams(item?.grams),
       servingsPerContainer,
       servings: servingsEaten(item?.eaten, servingsPerContainer),
     };
@@ -153,6 +176,39 @@ export function keepPublished(returned: ChatItem[], sent: ChatItem[]): void {
   }
 }
 
+// ── Weight x the food table ──────────────────────────────────────────────────────────────────
+//
+// For a food the AI estimated and gave a weight for, the calories and the rest are worked out here
+// as that weight x the table's values for the food (see foodTable.ts for why). The AI's own numbers
+// stay when the table has no such food, when there is no weight, and when the two disagree so
+// wildly (more than four times apart) that the likelier story is a wrong match, not a wrong guess.
+//
+// A food that was already on the list and came back untouched is left exactly as it was, so
+// numbers the person corrected in the app are never recalculated behind their back.
+const FAR_APART = 4;
+
+export function applyTable(returned: ChatItem[], sent: ChatItem[]): void {
+  for (const item of returned) {
+    item.aiCalories = item.nutrients.calories;
+    const before = sent.find((old) => sameName(old.name, item.name));
+    // "Untouched" means the same calories and, where a weight was known before, the same weight.
+    if (before && before.nutrients.calories === item.nutrients.calories && (before.grams == null || before.grams === item.grams)) {
+      item.grams = before.grams ?? item.grams ?? null;
+      item.tableFood = before.tableFood ?? null;
+      continue;
+    }
+    item.tableFood = null;
+    if ((item.source !== 'estimate' && item.source !== 'said') || !item.grams) continue;
+    const food = findFood(item.name);
+    if (!food) continue;
+    const fromTable = nutrientsFor(food, item.grams, item.nutrients);
+    const [low, high] = [Math.min(fromTable.calories, item.nutrients.calories), Math.max(fromTable.calories, item.nutrients.calories)];
+    if (high >= 60 && high > low * FAR_APART) continue;
+    item.nutrients = fromTable;
+    item.tableFood = food.name;
+  }
+}
+
 // At most this many foods are looked up in one turn, so a long meal cannot make the reply crawl.
 const MAX_LOOKUPS = 2;
 
@@ -171,6 +227,8 @@ export async function applyPublished(result: MealChatResult, lookup: Lookup, bud
     item.portionDescription = answer.found.portionDescription;
     item.source = 'published';
     item.confidence = 'normal';
+    item.grams = null; // the published serving is its own size, not the weight the AI judged
+    item.tableFood = null;
     if (!words(item.name).some((w) => words(item.brand!).includes(w))) item.name = `${item.brand} ${item.name}`;
     used.push(`${item.name}: published numbers from ${answer.found.from}, for ${answer.found.portionDescription}.`);
   });
@@ -206,6 +264,7 @@ export async function runMealChat(items: ChatItem[], message: string, images: Me
   );
   const result = parseMealChat(textOf(response));
   keepPublished(result.items, items);
+  applyTable(result.items, items);
   // The whole request must finish inside the server's 60 seconds, so the look-up gets whatever
   // is left after the AI, up to 6 seconds, and is skipped when there is not enough.
   await applyPublished(result, lookup, Math.min(6000, 56000 - (Date.now() - started)));

@@ -467,3 +467,63 @@ error). Two things learned there:
   Release build installed. He has not yet said how it looks on the phone.
 - After his laptop restart the local preview server on port 8081 is no longer running, and the
   session scratch folders under /private/tmp were emptied.
+
+## 2026-11-14: photo accuracy measured and reworked; brainstorm written up
+
+**Read first:** `docs/brainstorms/2026-11-14-nutrition-accuracy.md`. Pranav asked for that write-up
+("Brainstorming ideas for nutrition accuracy") and said "we will come back to it later". It holds
+the research, the before/after scores, the decisions waiting on him, and the undecided ideas
+(one big database, web search, more AI providers).
+
+He chose "Full package" for photo accuracy: steadier AI, weight x a food table, a one-tap portion
+check, a cooking-oil question, all measured on test photos.
+
+**Live on the server (jarvi-server, deployed about 1:05 PM):**
+- `server/lib/steady.ts`: sets the AI's "temperature" to 0 as each request leaves, because the
+  vendored router has no setting for it and must not be edited.
+- `server/lib/mealChat.ts`: the AI now returns `grams` (weight of one serving) and is told to judge
+  it from the photo, not a standard serving. `applyTable` works the numbers out as weight x the
+  table and keeps the AI's own when there is no weight, no match, or the two are more than 4x
+  apart. A food that comes back untouched on a later turn is never recalculated. Each item now
+  also carries `tableFood` and `aiCalories`.
+- `server/lib/foodTable.ts` + `foodTableData.json` (711 KB, 5,280 foods): USDA "Survey Foods"
+  (FNDDS 2021-2023, public domain), built by `server/scripts/build-food-table.py`. Matching is by
+  words with rules against wrong picks; it is deliberately willing to find nothing.
+- 85 server tests pass. Previous production deployment, if a rollback is ever wanted:
+  `jarvi-server-g4m65fx8h-pranavshanghvi-1128s-projects.vercel.app`.
+
+**Scores (15 weighed Nutrition5k meals x 3 reads, through the live server):**
+
+| Measure | Before | After |
+|---|---|---|
+| Typical miss per read | 38% | 41% |
+| Direction | 29% low | 2% high |
+| Swing, same photo | 25% | 9% |
+| Reads within 20% | 20% | 23% |
+
+Steadier and no longer low, but not more accurate per read. With the table switched off, the same
+"after" reads score 39% miss and 25% low, so the table is what removed the low bias. The remaining
+error is wrong foods and wrong weights, which is the job of the portion check. 10 of the 45 "after"
+reads failed: Cloudflare timed out once and the router rested it for a minute. Not caused by the
+new logic, but it is the argument for a second free provider.
+
+**In the app, not yet built into a release:** `grams` and `tableFood` carried through
+(`app/src/api/mealChat.ts`, `app/src/types/nutrition.ts`), and a fix for the "duplicate column name:
+source" start-up error (`app/src/db/client.ts`: the database is now opened once and shared). 156
+app tests pass. Nothing published to the web or the phone today.
+
+**Waiting on Pranav:**
+1. Portion control style A, B or C, and whether to keep the oil question. Design (private to him):
+   https://claude.ai/artifact/BFs7KKqgwPd6n6qAbfaaS1. Do not build the review-screen changes until
+   he picks. The amber "AI estimate" notice text also needs new wording once the weight shows.
+2. Who BiteLog is for (personal, free public, or paid later). He closed that question unanswered.
+3. Tavily account (web search trial) and USDA key, both from Nov 12.
+
+**The scoring kit is in the session scratch folder and will not survive a restart.** To rebuild:
+download `dish_metadata_cafe1.csv` and the overhead `rgb.png` photos from
+`storage.googleapis.com/nutrition5k_dataset/nutrition5k_dataset/` (he approved these downloads on
+Nov 14), pick dishes of 250 to 900 calories with 2 to 6 main ingredients, convert to JPEG, and post
+each to `/api/meal-chat` three times. The 15 dish ids used: 1558722103, 1565031376, 1566851155,
+1566587143, 1565640272, 1561661500, 1564590288, 1563552016, 1561752035, 1562950091, 1565118067,
+1565898659, 1566590007, 1563996308, 1564685482. Each full run costs 45 of the roughly 100 to 200
+free photo reads a day.

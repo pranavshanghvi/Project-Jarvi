@@ -23,6 +23,11 @@ export interface ChatItem extends DetectedFoodItem {
   source: ItemSource;
   servings: number;
   servingsPerContainer: number | null;
+  // The weight of ONE serving in grams, as the AI judged it (missing when it could not tell), and the
+  // name of the food-table entry the numbers were worked out from, when they were. Both go back
+  // to the server on the next turn so it knows what it already settled.
+  grams?: number;
+  tableFood?: string;
 }
 
 export interface MealTurnResult {
@@ -40,6 +45,8 @@ function cleanItem(raw: any): ChatItem {
     source: raw?.source === 'label' || raw?.source === 'said' || raw?.source === 'published' ? raw.source : 'estimate',
     servings,
     servingsPerContainer: typeof raw?.servingsPerContainer === 'number' && raw.servingsPerContainer > 0 ? raw.servingsPerContainer : null,
+    ...(typeof raw?.grams === 'number' && raw.grams > 0 ? { grams: raw.grams } : {}),
+    ...(typeof raw?.tableFood === 'string' && raw.tableFood ? { tableFood: raw.tableFood } : {}),
   };
 }
 
@@ -130,6 +137,7 @@ export function toMealItems(items: ChatItem[]): DetectedFoodItem[] {
   return items.map((item) => {
     const nutrients = {} as NutrientProfile;
     for (const key of NUTRIENT_KEYS) nutrients[key] = Math.round(item.nutrients[key] * item.servings * 10) / 10;
-    return { name: item.name, confidence: item.confidence, portionDescription: describePortion(item), nutrients, source: item.source };
+    const grams = item.grams ? Math.round(item.grams * item.servings) : undefined;
+    return { name: item.name, confidence: item.confidence, portionDescription: describePortion(item), nutrients, source: item.source, ...(grams ? { grams } : {}) };
   });
 }
